@@ -51,7 +51,7 @@ try {
     # Ignore if remote origin didn't exist
 }
 
-$remoteUrl = "https://$GithubToken@github.com/nayakelisaya88/EliSecureChat.git"
+$remoteUrl = "https://$GithubToken@github.com/ElisayaNayak12/EliSecureChat.git"
 & git remote add origin $remoteUrl
 Write-Host "[SUCCESS] Remote origin configured." -ForegroundColor Green
 
@@ -63,7 +63,7 @@ try {
     Write-Host ""
     Write-Host "===================================================" -ForegroundColor Green
     Write-Host "SUCCESS! Your code has been pushed to GitHub!" -ForegroundColor Green
-    Write-Host "Repository URL: https://github.com/nayakelisaya88/EliSecureChat" -ForegroundColor Green
+    Write-Host "Repository URL: https://github.com/ElisayaNayak12/EliSecureChat" -ForegroundColor Green
     Write-Host "===================================================" -ForegroundColor Green
 } catch {
     Write-Host "[ERROR] Push failed: $_" -ForegroundColor Red
