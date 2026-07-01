@@ -1,4 +1,4 @@
-# Secure Secret Chat App (Runnable Full Stack)
+# EliSecureChat App (Runnable Full Stack)
 
 This workspace is now fully runnable on desktop with:
 
