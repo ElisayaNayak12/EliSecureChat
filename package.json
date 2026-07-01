@@ -1,0 +1,26 @@
+{
+  "name": "secure-secret-chat",
+  "version": "0.1.0",
+  "private": true,
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -k \"npm run backend:dev\" \"npm run web:dev\" \"npm run admin:dev\"",
+    "backend:dev": "npm --workspace @secure-chat/backend run start:dev",
+    "backend:build": "npm --workspace @secure-chat/backend run build",
+    "backend:start": "npm --workspace @secure-chat/backend run start",
+    "web:dev": "npm --workspace @secure-chat/web run dev",
+    "web:build": "npm --workspace @secure-chat/web run build",
+    "web:preview": "npm --workspace @secure-chat/web run preview",
+    "admin:dev": "npm --workspace @secure-chat/admin run dev",
+    "admin:build": "npm --workspace @secure-chat/admin run build",
+    "admin:preview": "npm --workspace @secure-chat/admin run preview",
+    "smoke:test": "powershell -ExecutionPolicy Bypass -File ./scripts/smoke-test.ps1",
+    "realtime:test": "node ./scripts/two-user-realtime-test.mjs"
+  }
+}

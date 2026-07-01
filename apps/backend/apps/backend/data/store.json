@@ -1,0 +1,74 @@
+{
+  "users": [
+    {
+      "id": "ec619c7d-d384-43ea-8efd-fa784a914be2",
+      "name": "User One",
+      "phone": "9000000001",
+      "email": "user1@example.com",
+      "passwordHash": "a06adc7a790e9572f7c279e04f9ec1d3:816739c4709b110a8b9977c50e7d95b798d045cd51d4f2683c611dad2f8f61daf7030924285c9e87dfff63d198adc96d7df9fd81cf5c1d4dd92e54401d73bf68",
+      "avatarUrl": "/api/uploads/virat18_12-1777049477418-43775609.jpg",
+      "createdAt": "2026-04-24T16:23:57.705Z",
+      "lastSeenAt": "2026-07-01T01:39:04.860Z",
+      "status": "SUSPENDED",
+      "suspensionReason": "Account deactivated by user request. Suspended pending review by ELiSecureChat Trust & Safety team.",
+      "suspendedAt": "2026-07-01T01:39:04.244Z",
+      "suspendedBy": "self"
+    },
+    {
+      "id": "fd258ad6-bb2e-4a46-b2f0-e5a83903e53a",
+      "name": "User Two",
+      "phone": "9000000002",
+      "email": "user2@example.com",
+      "passwordHash": "8e7b53b551ea2f39426a2b6758da0d2f:73f50a9b9f66799d7fd3c249d40921c4e7c84a7e2db4ff72f816453fd17fcadec29477cf997d9caadac11cab2d0410d220c137958520883db3a52d5f50e855c5",
+      "avatarUrl": "/api/uploads/virat_kohli_has_played_in_all_editions_f-1777049535873-166672017.webp",
+      "createdAt": "2026-04-24T16:24:01.087Z",
+      "lastSeenAt": "2026-06-30T16:35:52.876Z",
+      "status": "ACTIVE"
+    }
+  ],
+  "chats": [
+    {
+      "id": "c0395bdf-6e76-43f3-8460-e61eb8b52c3b",
+      "type": "ONE_TO_ONE",
+      "memberIds": [
+        "ec619c7d-d384-43ea-8efd-fa784a914be2",
+        "fd258ad6-bb2e-4a46-b2f0-e5a83903e53a"
+      ],
+      "createdAt": "2026-06-30T17:15:44.161Z"
+    }
+  ],
+  "messages": [],
+  "deleteRequests": [],
+  "communities": [],
+  "recoveryRequests": [
+    {
+      "id": "f0b3a4c6-8eb1-4af7-bba5-23a1ed085d2d",
+      "userId": "ec619c7d-d384-43ea-8efd-fa784a914be2",
+      "userName": "User One",
+      "phone": "9000000001",
+      "email": "user1@example.com",
+      "reason": "i i'm the real woner of this aacount i have my complet deatsil where i have given the user name User1 and my Real Nmae as per the aadharcard deatsil  and i'm not  doing anything wrong",
+      "hasDocument": true,
+      "hasVideo": false,
+      "aiVerification": {
+        "status": "COMPLETED",
+        "faceMatchScore": 66,
+        "documentAuthentic": true,
+        "nameMatch": true,
+        "isAuthorized": false,
+        "processedAt": "2026-07-01T01:50:16.133Z",
+        "summary": "Verification incomplete. Face match: 66%.  "
+      },
+      "status": "PENDING_ADMIN",
+      "createdAt": "2026-07-01T01:50:16.128Z"
+    }
+  ],
+  "adminSessions": [
+    "admin_4febadcf-fc0d-4a93-8ae1-4d1043a45d37",
+    "admin_b4a4b8f3-a910-4fe4-aacb-980d86838d1f",
+    "admin_79cea422-0ca0-461f-8bc2-8e22835e0b3e",
+    "admin_5bbcceb8-ca66-424f-a0e3-c33ccc4fdd3d",
+    "admin_a6ec24d1-8675-49f6-bad6-e482307e0d51",
+    "admin_903657f9-b5d8-4578-a71e-8b94cbd0b50b"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "@secure-chat/mobile",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "lint": "echo \"Mobile source starter created. Integrate into RN CLI project to run.\""
+  },
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-native": "^0.81.0",
+    "socket.io-client": "^4.8.1"
+  }
+}
+

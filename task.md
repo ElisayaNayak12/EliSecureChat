@@ -1,0 +1,10 @@
+- [x] Register `@secure-chat/admin` in workspace and update root scripts
+- [x] Refactor User Web App (`apps/web`) to remove admin mode references
+- [x] Create Admin Web App (`apps/admin`) scaffolding (package.json, tsconfig.json, vite.config.ts, index.html)
+- [x] Copy and configure core Admin Web App source files (App.tsx, api.ts, styles.css, components, pages)
+- [x] Install dependencies and run clean build checks
+- [x] Manually verify User 1, User 2, and Admin flows in separate browser tabs
+- [x] Implement clear chat history callback and UI menu button
+- [x] Implement simulated real-time voice and video calling in `App.tsx` and `ConversationPanel.tsx`
+- [x] Verify calling, history clearing, and delete requests manually
+- [x] Fix file upload button leakage in ConversationPanel and ProfilePanel

@@ -1,0 +1,183 @@
+{
+  "users": [
+    {
+      "id": "752ce948-c0fd-47d4-864d-c26cb0d08dbb",
+      "createdAt": "2026-07-01T02:14:56.626Z",
+      "lastSeenAt": "2026-07-01T02:16:50.966Z",
+      "status": "ACTIVE",
+      "name": "User One",
+      "phone": "9000000001",
+      "email": "user1@example.com",
+      "passwordHash": "b86367845efeea178b58726428d3cf18:ca716ad159e0ad9be8bf406d3f9eef9cbfd9ff5cc90426c56b46291a078410764f95450f5cbbb167b3281fb5731030dbf5f0187c60e39704973e7211abecd024",
+      "avatarUrl": "/api/uploads/ELISAYA_PIC__1_-1782872120105-955184342.jpg"
+    },
+    {
+      "id": "c75b829e-6d15-4640-bf2f-1f6ae3cee08b",
+      "createdAt": "2026-07-01T02:15:50.416Z",
+      "lastSeenAt": "2026-07-01T02:16:31.073Z",
+      "status": "ACTIVE",
+      "name": "User Two",
+      "phone": "9000000002",
+      "email": "user2@example.com",
+      "passwordHash": "645526f388ad1769045132a09f742ae3:ac0ef3d3d79af3270e666714c09bb515767e24a7202f31f7c757403ed05b55317c2136bac3f4e515c910a3d80604e34e4d8f3ea5564549bbdebb1cb6134f8478",
+      "avatarUrl": "/api/uploads/virat18_12-1782872187513-976255382.jpg"
+    }
+  ],
+  "chats": [
+    {
+      "id": "8eaf78a8-953e-42c2-a1aa-e319ff9005c3",
+      "type": "ONE_TO_ONE",
+      "memberIds": [
+        "c75b829e-6d15-4640-bf2f-1f6ae3cee08b",
+        "752ce948-c0fd-47d4-864d-c26cb0d08dbb"
+      ],
+      "createdAt": "2026-07-01T02:16:31.020Z"
+    }
+  ],
+  "messages": [
+    {
+      "id": "0cb6efd6-eb54-45cd-8993-8067423404e4",
+      "chatId": "8eaf78a8-953e-42c2-a1aa-e319ff9005c3",
+      "senderId": "c75b829e-6d15-4640-bf2f-1f6ae3cee08b",
+      "encryptedContent": "aGk=",
+      "messageType": "TEXT",
+      "reactions": [],
+      "isEdited": false,
+      "createdAt": "2026-07-01T02:16:45.962Z",
+      "readBy": [
+        "c75b829e-6d15-4640-bf2f-1f6ae3cee08b",
+        "752ce948-c0fd-47d4-864d-c26cb0d08dbb"
+      ],
+      "deliveredTo": [
+        "c75b829e-6d15-4640-bf2f-1f6ae3cee08b",
+        "752ce948-c0fd-47d4-864d-c26cb0d08dbb"
+      ]
+    },
+    {
+      "id": "ae61f38d-d667-4593-afb7-564323bed8d6",
+      "chatId": "8eaf78a8-953e-42c2-a1aa-e319ff9005c3",
+      "senderId": "752ce948-c0fd-47d4-864d-c26cb0d08dbb",
+      "encryptedContent": "aGVsbG8=",
+      "messageType": "TEXT",
+      "reactions": [],
+      "isEdited": false,
+      "createdAt": "2026-07-01T02:17:05.645Z",
+      "readBy": [
+        "752ce948-c0fd-47d4-864d-c26cb0d08dbb",
+        "c75b829e-6d15-4640-bf2f-1f6ae3cee08b"
+      ],
+      "deliveredTo": [
+        "752ce948-c0fd-47d4-864d-c26cb0d08dbb",
+        "c75b829e-6d15-4640-bf2f-1f6ae3cee08b"
+      ]
+    },
+    {
+      "id": "f9a2cdba-fd98-481f-8609-1f6c2cd8940f",
+      "chatId": "8eaf78a8-953e-42c2-a1aa-e319ff9005c3",
+      "senderId": "752ce948-c0fd-47d4-864d-c26cb0d08dbb",
+      "encryptedContent": "W0NBTExfSU5JVElBVEVEOnZvaWNlOlVzZXIgT25lXQ==",
+      "messageType": "SYSTEM",
+      "reactions": [],
+      "isEdited": false,
+      "createdAt": "2026-07-01T02:17:46.677Z",
+      "readBy": [
+        "752ce948-c0fd-47d4-864d-c26cb0d08dbb",
+        "c75b829e-6d15-4640-bf2f-1f6ae3cee08b"
+      ],
+      "deliveredTo": [
+        "752ce948-c0fd-47d4-864d-c26cb0d08dbb",
+        "c75b829e-6d15-4640-bf2f-1f6ae3cee08b"
+      ]
+    },
+    {
+      "id": "2d37b970-5332-420e-8d18-acf09c48cdb4",
+      "chatId": "8eaf78a8-953e-42c2-a1aa-e319ff9005c3",
+      "senderId": "752ce948-c0fd-47d4-864d-c26cb0d08dbb",
+      "encryptedContent": "W0NBTExfRU5ERURd",
+      "messageType": "SYSTEM",
+      "reactions": [],
+      "isEdited": false,
+      "createdAt": "2026-07-01T02:17:48.360Z",
+      "readBy": [
+        "752ce948-c0fd-47d4-864d-c26cb0d08dbb",
+        "c75b829e-6d15-4640-bf2f-1f6ae3cee08b"
+      ],
+      "deliveredTo": [
+        "752ce948-c0fd-47d4-864d-c26cb0d08dbb",
+        "c75b829e-6d15-4640-bf2f-1f6ae3cee08b"
+      ]
+    },
+    {
+      "id": "41bcc1d5-c431-4e3d-b505-2487cdb5dd1f",
+      "chatId": "8eaf78a8-953e-42c2-a1aa-e319ff9005c3",
+      "senderId": "752ce948-c0fd-47d4-864d-c26cb0d08dbb",
+      "encryptedContent": "W0NBTExfSU5JVElBVEVEOnZpZGVvOlVzZXIgT25lXQ==",
+      "messageType": "SYSTEM",
+      "reactions": [],
+      "isEdited": false,
+      "createdAt": "2026-07-01T02:18:01.144Z",
+      "readBy": [
+        "752ce948-c0fd-47d4-864d-c26cb0d08dbb",
+        "c75b829e-6d15-4640-bf2f-1f6ae3cee08b"
+      ],
+      "deliveredTo": [
+        "752ce948-c0fd-47d4-864d-c26cb0d08dbb",
+        "c75b829e-6d15-4640-bf2f-1f6ae3cee08b"
+      ]
+    },
+    {
+      "id": "555ded83-8273-4801-b426-a54714e2e4e7",
+      "chatId": "8eaf78a8-953e-42c2-a1aa-e319ff9005c3",
+      "senderId": "c75b829e-6d15-4640-bf2f-1f6ae3cee08b",
+      "encryptedContent": "W0NBTExfQUNDRVBURURd",
+      "messageType": "SYSTEM",
+      "reactions": [],
+      "isEdited": false,
+      "createdAt": "2026-07-01T02:18:05.808Z",
+      "readBy": [
+        "c75b829e-6d15-4640-bf2f-1f6ae3cee08b",
+        "752ce948-c0fd-47d4-864d-c26cb0d08dbb"
+      ],
+      "deliveredTo": [
+        "c75b829e-6d15-4640-bf2f-1f6ae3cee08b",
+        "752ce948-c0fd-47d4-864d-c26cb0d08dbb"
+      ]
+    },
+    {
+      "id": "0f8adfdb-2320-4e95-b4ee-7050ee62c3c7",
+      "chatId": "8eaf78a8-953e-42c2-a1aa-e319ff9005c3",
+      "senderId": "c75b829e-6d15-4640-bf2f-1f6ae3cee08b",
+      "encryptedContent": "W0NBTExfRU5ERURd",
+      "messageType": "SYSTEM",
+      "reactions": [],
+      "isEdited": false,
+      "createdAt": "2026-07-01T02:18:14.857Z",
+      "readBy": [
+        "c75b829e-6d15-4640-bf2f-1f6ae3cee08b",
+        "752ce948-c0fd-47d4-864d-c26cb0d08dbb"
+      ],
+      "deliveredTo": [
+        "c75b829e-6d15-4640-bf2f-1f6ae3cee08b",
+        "752ce948-c0fd-47d4-864d-c26cb0d08dbb"
+      ]
+    }
+  ],
+  "deleteRequests": [
+    {
+      "id": "8b5784d7-4305-4ecc-b57e-0e7b8341d561",
+      "chatId": "8eaf78a8-953e-42c2-a1aa-e319ff9005c3",
+      "requestedBy": "752ce948-c0fd-47d4-864d-c26cb0d08dbb",
+      "targetUserId": "c75b829e-6d15-4640-bf2f-1f6ae3cee08b",
+      "status": "REJECTED",
+      "createdAt": "2026-07-01T02:17:16.068Z",
+      "rejectedAt": "2026-07-01T02:17:33.319Z"
+    }
+  ],
+  "communities": [],
+  "recoveryRequests": [],
+  "adminSessions": [
+    "admin_a4aa24fb-599c-4b84-a11f-295d9a0ce299",
+    "admin_1c27cbc8-05ce-4a4d-9037-9a00f8d90a8c",
+    "admin_67c7e12c-5df3-4d6f-bf30-e21a5707abf3"
+  ]
+}
