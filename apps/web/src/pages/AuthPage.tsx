@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import type { CountryCode } from "libphonenumber-js/min";
-import { LockIcon, ChatIcon } from "../components/Icons";
+import { LockIcon, ChatIcon, HandIcon, ShieldIcon } from "../components/Icons";
 import { api, type SignUpPending } from "../api";
 import type { LoginResponse } from "../types";
 import { OtpInput, PasswordField, PhoneField, ResendButton, passwordProblem, phoneE164, readError, type PhoneValue } from "../components/AuthFields";
@@ -283,12 +283,12 @@ export default function AuthPage({ onSignIn, onSignedUp, backendReady, status }:
         <div className="auth-hero-copy">
           <span className="auth-hero-overline">Private by design</span>
           <h2 className="auth-hero-title">
-            Conversations,
+            Private conversations,
             <br />
-            beautifully sealed.
+            signed or spoken.
           </h2>
           <p className="auth-hero-sub">
-            End-to-end encrypted messages and calls, with sign language and caption assistance.
+            Messages, voice notes and video calls that only you and the people you talk to can read, with live captions and sign language assistance built in.
           </p>
         </div>
 
@@ -304,10 +304,19 @@ export default function AuthPage({ onSignIn, onSignedUp, backendReady, status }:
           </div>
         </div>
 
-        <ul className="auth-hero-features">
-          <li><span className="dot" />End-to-end encrypted</li>
-          <li><span className="dot" />Verified accounts</li>
-          <li><span className="dot" />Sign language assist</li>
+        <ul className="auth-hero-points">
+          <li>
+            <span className="ahp-icon"><LockIcon size={18} /></span>
+            <span><strong>End-to-end encrypted</strong>Keys stay on your devices. Not even our servers can read your chats.</span>
+          </li>
+          <li>
+            <span className="ahp-icon"><HandIcon size={18} /></span>
+            <span><strong>Built for Deaf and hearing people</strong>Live captions and sign assistance run on your device during calls.</span>
+          </li>
+          <li>
+            <span className="ahp-icon"><ShieldIcon size={18} /></span>
+            <span><strong>Verified accounts</strong>Every account confirms a real email address before it is created.</span>
+          </li>
         </ul>
       </section>
 
@@ -488,11 +497,15 @@ export default function AuthPage({ onSignIn, onSignedUp, backendReady, status }:
           </button>
         </form>
 
+        <p className="auth-safety-note">
+          <ShieldIcon size={14} /> We will never ask for your code by call, SMS or email.
+        </p>
         <div className="auth-footer-stats">
           <div className="stat-indicator">
             <span className={`indicator-dot ${backendReady ? "active" : "inactive"}`} />
-            <span>API Server: {backendReady ? "Connected" : "Offline"}</span>
+            <span>{backendReady ? "Secure server connected" : "Server offline"}</span>
           </div>
+          <span className="auth-legal">© 2026 EliSecureChat · Privacy · Terms · Accessibility</span>
         </div>
       </div>
     </div>

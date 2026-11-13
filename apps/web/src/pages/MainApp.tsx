@@ -1,4 +1,5 @@
 import { useState } from "react";
+import HomeDashboard from "../components/HomeDashboard";
 import type { Appearance, WallpaperId } from "../types";
 import Avatar from "../components/Avatar";
 import {
@@ -468,46 +469,18 @@ export default function MainApp(props: MainAppProps) {
               onSendTypingStop={onSendTypingStop}
             />
           ) : (
-            <div className="conversation-empty-view">
-              <div className="empty-hero-mark aura-rise">
-                <span className="empty-hero-glow" />
-                <span className="aura-tile aura-tile-xl">
-                  <LockIcon size={44} />
-                </span>
-                <span className="empty-hero-spark s1" />
-                <span className="empty-hero-spark s2" />
-                <span className="empty-hero-spark s3" />
-              </div>
-              <span className="empty-overline aura-rise" data-i="1">Hello, {currentUser.name.split(" ")[0]}</span>
-              <h2 className="aura-rise" data-i="2">Your conversations, sealed.</h2>
-              <p className="aura-rise" data-i="3">
-                Pick a conversation on the left, or start a new one from your contacts. Everything you send stays between you.
-              </p>
-
-              <div className="empty-feature-row">
-                {[
-                  { icon: <ShieldIcon size={22} />, label: "Screen shield" },
-                  { icon: <ChatIcon size={22} />, label: "Realtime sync" },
-                  { icon: <LockIcon size={22} />, label: "Mutual erasure" },
-                ].map((f, i) => (
-                  <div key={f.label} className="empty-feature aura-rise" data-i={String(4 + i)}>
-                    <span className="aura-tile">{f.icon}</span>
-                    <span className="empty-feature-label">{f.label}</span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="empty-metrics-row aura-rise" data-i="7">
-                <div className="metric-pill">
-                  <span className={`pill-dot ${backendReady ? "online" : "offline"}`} />
-                  <span>API {backendReady ? "live" : "offline"}</span>
-                </div>
-                <div className="metric-pill">
-                  <span className={`pill-dot ${socketConnected ? "online" : "offline"}`} />
-                  <span>Realtime {socketConnected ? "connected" : "connecting"}</span>
-                </div>
-              </div>
-            </div>
+            <HomeDashboard
+              currentUser={currentUser}
+              summaries={summaries}
+              preferences={preferences}
+              backendReady={backendReady}
+              socketConnected={socketConnected}
+              onOpenChat={onOpenChat}
+              goTo={(tab) => { setUserTab(tab); setIsMobileChatOpen(false); }}
+              previewOf={(s) => (s.lastMessage ? messageSnippet(e2ee.view(s.lastMessage.encryptedContent).text, s.lastMessage.fileName) : "No messages yet")}
+              resolveUrl={resolveUrl}
+              onlineUsers={onlineUsers}
+            />
           )}
         </div>
       </div>

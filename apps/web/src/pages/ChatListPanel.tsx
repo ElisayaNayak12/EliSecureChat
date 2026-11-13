@@ -1,3 +1,4 @@
+import { useState } from "react";
 import Avatar from "../components/Avatar";
 import { SearchIcon, RefreshIcon } from "../components/Icons";
 import type { ChatSummary, User } from "../types";
@@ -35,6 +36,11 @@ export default function ChatListPanel({
   messageSnippet,
   decryptMessage,
 }: ChatListPanelProps) {
+  const [filter, setFilter] = useState<"all" | "unread" | "direct" | "groups">("all");
+  const unreadChats = summaries.filter((s) => s.unreadCount > 0).length;
+  const shown = summaries.filter((s) =>
+    filter === "unread" ? s.unreadCount > 0 : filter === "groups" ? s.chat.type === "COMMUNITY" : filter === "direct" ? s.chat.type === "ONE_TO_ONE" : true,
+  );
   return (
     <div className="chats-list-panel animate-fade-in">
       <div className="panel-header">
@@ -97,13 +103,25 @@ export default function ChatListPanel({
             </ul>
           )}
         </div>
+        <div className="chat-filters" role="tablist" aria-label="Filter chats">
+          {([
+            ["all", "All"],
+            ["unread", unreadChats ? `Unread ${unreadChats}` : "Unread"],
+            ["direct", "People"],
+            ["groups", "Groups"],
+          ] as const).map(([id, label]) => (
+            <button key={id} type="button" role="tab" aria-selected={filter === id} className={filter === id ? "on" : ""} onClick={() => setFilter(id)}>
+              {label}
+            </button>
+          ))}
+        </div>
         <div className="sidebar-section">
           <h3>Recent</h3>
-          {summaries.length === 0 ? (
-            <div className="empty-sidebar-state">No conversations yet</div>
+          {shown.length === 0 ? (
+            <div className="empty-sidebar-state">{summaries.length === 0 ? "No conversations yet" : "No chats in this filter"}</div>
           ) : (
             <ul className="chat-summary-list">
-              {summaries.map((s, idx) => {
+              {shown.map((s, idx) => {
                 const title = s.peer?.name ?? s.chat.title ?? "Chat";
                 const isSelected = s.chat.id === activeChatId;
                 const isPeerOnline = s.peer ? onlineUsers.has(s.peer.id) : false;

@@ -7,6 +7,7 @@ import "./aura.css";
 import "./verdant.css";
 import "./themes.css";
 import "./expressions.css";
+import "./home.css";
 import "./signconnect.css";
 import "./accessibility.css";
 import { applyCachedAccessibility } from "./preferences";
