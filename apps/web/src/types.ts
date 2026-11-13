@@ -163,8 +163,14 @@ export type UserPreferences = {
   accessibility: { textSize: TextSize; highContrast: boolean; reduceMotion: boolean; visualAlerts: boolean };
   voice: { voiceName: string | null; speakingRate: number };
   theme: "system" | "light" | "dark";
+  appearance: Appearance;
   updatedAt: string | null;
 };
+
+export type DesignId = "verdant" | "indigo" | "emerald" | "ocean" | "midnight";
+export type AccentId = "leaf" | "indigo" | "clay" | "ocean" | "rose";
+export type WallpaperId = "botanical" | "aurora" | "marble" | "sunset" | "midnight-glow" | "linen" | "waves" | "indigo-mesh" | "rose-silk" | "minimal";
+export type Appearance = { design: DesignId; accent: AccentId | null; wallpaper: WallpaperId; bubbles: "rounded" | "compact" };
 
 export type PreferencesPatch = {
   preferredLanguage?: string;
@@ -172,6 +178,7 @@ export type PreferencesPatch = {
   accessibility?: Partial<UserPreferences["accessibility"]>;
   voice?: Partial<UserPreferences["voice"]>;
   theme?: UserPreferences["theme"];
+  appearance?: Partial<Appearance>;
 };
 
 /* ---- SignConnect Phase 3/7: calls and human sign-video library ---- */

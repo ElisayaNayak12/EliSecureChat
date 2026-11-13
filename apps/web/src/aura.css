@@ -1113,32 +1113,8 @@ button, input, select, textarea { font-family: inherit; }
 }
 .btn-unpin:hover { background: var(--aura-tile-100); color: var(--aura-tile-500); }
 
-/* wallpapers - AURA tuned presets (0 Aura, 1 Sky, 2 Midnight, 3 Dusk) */
+/* chat wallpapers live in themes.css */
 .chat-scroll-area { padding: 24px 28px 12px; }
-.chat-scroll-area.wallpaper-0 {
-  background-color: var(--aura-canvas);
-  background-image:
-    radial-gradient(rgba(var(--aura-tile-rgb), 0.10) 1px, transparent 1px),
-    radial-gradient(60% 50% at 100% 0%, rgba(var(--aura-tile-rgb), 0.08), transparent 70%),
-    radial-gradient(50% 40% at 0% 100%, rgba(var(--aura-cta-rgb), 0.07), transparent 70%);
-  background-size: 22px 22px, 100% 100%, 100% 100%;
-  background-position: 0 0, 0 0, 0 0;
-}
-.chat-scroll-area.wallpaper-1 {
-  background: var(--aura-gradient-sky);
-  background-attachment: local;
-}
-.chat-scroll-area.wallpaper-2 {
-  background:
-    radial-gradient(60% 40% at 80% 10%, rgba(var(--aura-cta-rgb), 0.25), transparent 70%),
-    linear-gradient(180deg, #13244A 0%, #0B1C3D 55%, #070F22 100%);
-}
-.chat-scroll-area.wallpaper-3 {
-  background:
-    radial-gradient(70% 50% at 10% 0%, rgba(255, 179, 71, 0.22), transparent 70%),
-    radial-gradient(70% 50% at 100% 100%, rgba(var(--aura-tile-rgb), 0.22), transparent 70%),
-    var(--aura-canvas);
-}
 .wallpaper-select-btn {
   width: 60px;
   height: 60px;
@@ -1149,15 +1125,6 @@ button, input, select, textarea { font-family: inherit; }
 }
 .wallpaper-select-btn:hover { transform: translateY(var(--aura-hover-lift)); }
 .wallpaper-select-btn.active { box-shadow: 0 0 0 2px var(--aura-surface), 0 0 0 4px var(--aura-tile-500); }
-.wallpaper-preview-btn-0 {
-  background-color: var(--aura-canvas);
-  background-image: radial-gradient(rgba(var(--aura-tile-rgb), 0.45) 1px, transparent 1px);
-  background-size: 8px 8px;
-}
-.wallpaper-preview-btn-1 { background: linear-gradient(180deg, #CFE6FF 0%, #EAF4FF 100%); }
-.wallpaper-preview-btn-2 { background: linear-gradient(180deg, #13244A 0%, #070F22 100%); }
-.wallpaper-preview-btn-3 { background: linear-gradient(135deg, #FFD9A8 0%, #F5F6FA 50%, #BFD8FA 100%); }
-
 /* empty thread */
 .chat-empty-circle {
   width: 64px;

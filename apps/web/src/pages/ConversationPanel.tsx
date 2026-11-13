@@ -1,4 +1,6 @@
 import { useRef, useEffect, useState, useMemo } from "react";
+import type { WallpaperId } from "../types";
+import { WALLPAPERS } from "../theme";
 import VoiceRecorder from "../components/VoiceRecorder";
 import EncryptionInfo from "../e2ee/EncryptionInfo";
 import Avatar from "../components/Avatar";
@@ -42,8 +44,8 @@ interface ConversationPanelProps {
   isSendingAttachment: boolean;
   draft: string;
   setDraft: (val: string) => void;
-  chatWallpaperIndex: number;
-  setChatWallpaperIndex: (val: number | ((prev: number) => number)) => void;
+  chatWallpaper: WallpaperId;
+  setChatWallpaper: (val: WallpaperId) => void;
   activeTypingUsers: string[];
   activePeer: User | null;
   activeChatTitle: string;
@@ -94,8 +96,8 @@ export default function ConversationPanel({
   isSendingAttachment,
   draft,
   setDraft,
-  chatWallpaperIndex,
-  setChatWallpaperIndex,
+  chatWallpaper,
+  setChatWallpaper,
   activeTypingUsers,
   activePeer,
   chatId,
@@ -249,7 +251,8 @@ export default function ConversationPanel({
   };
 
   const changeWallpaper = () => {
-    setChatWallpaperIndex((prev: number) => (prev + 1) % 4);
+    const i = WALLPAPERS.findIndex((w) => w.id === chatWallpaper);
+    setChatWallpaper(WALLPAPERS[(i + 1) % WALLPAPERS.length].id);
     setChatMenuOpen(false);
   };
 
@@ -449,7 +452,7 @@ export default function ConversationPanel({
 
           {/* Messages Feed Container */}
           <div
-            className={`chat-scroll-area wallpaper-${chatWallpaperIndex}`}
+            className={`chat-scroll-area wallpaper-${chatWallpaper}`}
             style={customWallpaper ? { backgroundImage: `url(${customWallpaper})`, backgroundSize: "cover", backgroundPosition: "center" } : {}}
           >
             {decryptedMessages.length === 0 ? (

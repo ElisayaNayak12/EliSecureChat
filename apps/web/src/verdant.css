@@ -362,27 +362,7 @@ body,
 }
 .btn-composer-send:hover:not(:disabled) { transform: translateY(var(--aura-hover-lift)) scale(1.04); }
 
-/* wallpapers: 0 Grove (foliage shows through), 1 Sage mist, 2 Forest, 3 Moss dawn */
-.chat-scroll-area.wallpaper-0 {
-  background-color: transparent;
-  background-image: radial-gradient(rgba(var(--aura-tile-rgb), 0.08) 1px, transparent 1px);
-  background-size: 22px 22px;
-}
-.chat-scroll-area.wallpaper-2 {
-  background:
-    radial-gradient(60% 40% at 80% 10%, rgba(132, 170, 112, 0.22), transparent 70%),
-    linear-gradient(180deg, #1D2D22 0%, #111B15 55%, #0B130E 100%);
-}
-.chat-scroll-area.wallpaper-3 {
-  background:
-    radial-gradient(70% 50% at 10% 0%, rgba(230, 214, 160, 0.20), transparent 70%),
-    radial-gradient(70% 50% at 100% 100%, rgba(132, 170, 112, 0.24), transparent 70%),
-    var(--aura-canvas);
-}
-.wallpaper-preview-btn-0 { background: var(--verdant-backdrop); }
-.wallpaper-preview-btn-1 { background: linear-gradient(180deg, #DDE8D3 0%, #F1F4EC 100%); }
-.wallpaper-preview-btn-2 { background: linear-gradient(180deg, #1D2D22 0%, #0B130E 100%); }
-.wallpaper-preview-btn-3 { background: linear-gradient(135deg, #EFE3BE 0%, #ECEFE7 50%, #B9D0A6 100%); }
+/* chat wallpapers: see themes.css */
 
 /* empty state: glass feature chips like the reference category row */
 .conversation-empty-view { background: transparent; }

@@ -81,3 +81,16 @@ test("the default theme is 'system' so a saved accessibility change never forces
   const next = applyPreferencesPatch(DEFAULT_PREFERENCES, { accessibility: { textSize: "large" } }, fixedNow);
   assert.equal(next.theme, "system");
 });
+
+
+test("appearance: design, accent, wallpaper and bubble style are validated and saved", async () => {
+  const { applyPreferencesPatch, DEFAULT_PREFERENCES } = await import("../src/users/preferences");
+  const next = applyPreferencesPatch(DEFAULT_PREFERENCES, { appearance: { design: "emerald", accent: "rose", wallpaper: "aurora", bubbles: "compact" } });
+  assert.deepEqual(next.appearance, { design: "emerald", accent: "rose", wallpaper: "aurora", bubbles: "compact" });
+  const back = applyPreferencesPatch(next, { appearance: { accent: null } });
+  assert.equal(back.appearance.accent, null);
+  assert.equal(back.appearance.design, "emerald", "partial updates keep other fields");
+  assert.throws(() => applyPreferencesPatch(DEFAULT_PREFERENCES, { appearance: { design: "neon" } }), /appearance.design/);
+  assert.throws(() => applyPreferencesPatch(DEFAULT_PREFERENCES, { appearance: { wallpaper: "dots" } }), /appearance.wallpaper/);
+  assert.throws(() => applyPreferencesPatch(DEFAULT_PREFERENCES, { appearance: { sparkle: true } }), /Unknown field/);
+});

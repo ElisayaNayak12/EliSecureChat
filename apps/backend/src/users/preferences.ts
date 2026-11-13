@@ -9,6 +9,11 @@ import { findSignLanguage, isSpokenLanguage } from "../languages/language-packs"
 
 export const TEXT_SIZES = ["default", "large", "x-large"] as const;
 export const THEMES = ["system", "light", "dark"] as const;
+/** The 5 app designs users can switch between (Settings > Appearance). */
+export const DESIGNS = ["verdant", "indigo", "emerald", "ocean", "midnight"] as const;
+export const ACCENTS = ["leaf", "indigo", "clay", "ocean", "rose"] as const;
+export const WALLPAPERS = ["botanical", "aurora", "marble", "sunset", "midnight-glow", "linen", "waves", "indigo-mesh", "rose-silk", "minimal"] as const;
+export const BUBBLES = ["rounded", "compact"] as const;
 
 export type TextSize = (typeof TEXT_SIZES)[number];
 export type ThemePreference = (typeof THEMES)[number];
@@ -28,6 +33,13 @@ export type UserPreferences = {
     speakingRate: number; // 0.5 - 2.0
   };
   theme: ThemePreference;
+  appearance: {
+    design: (typeof DESIGNS)[number];
+    /** null = the design's own accent colour. */
+    accent: (typeof ACCENTS)[number] | null;
+    wallpaper: (typeof WALLPAPERS)[number];
+    bubbles: (typeof BUBBLES)[number];
+  };
   updatedAt: string | null;
 };
 
@@ -38,6 +50,7 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   voice: { voiceName: null, speakingRate: 1 },
   /** "system" = no explicit choice; clients keep their local/device theme. */
   theme: "system",
+  appearance: { design: "verdant", accent: null, wallpaper: "botanical", bubbles: "rounded" },
   updatedAt: null,
 };
 
@@ -58,6 +71,7 @@ export function resolvePreferences(stored: Partial<UserPreferences> | undefined)
     ...stored,
     accessibility: { ...DEFAULT_PREFERENCES.accessibility, ...(stored?.accessibility ?? {}) },
     voice: { ...DEFAULT_PREFERENCES.voice, ...(stored?.voice ?? {}) },
+    appearance: { ...DEFAULT_PREFERENCES.appearance, ...(stored?.appearance ?? {}) },
   };
 }
 
@@ -70,7 +84,7 @@ export function applyPreferencesPatch(current: UserPreferences, patch: unknown, 
 
   const issues: string[] = [];
   const next: UserPreferences = resolvePreferences(current);
-  const allowed = new Set(["preferredLanguage", "preferredSignLanguage", "accessibility", "voice", "theme"]);
+  const allowed = new Set(["preferredLanguage", "preferredSignLanguage", "accessibility", "voice", "theme", "appearance"]);
   for (const key of Object.keys(patch)) {
     if (!allowed.has(key)) issues.push(`Unknown field "${key}".`);
   }
@@ -92,6 +106,28 @@ export function applyPreferencesPatch(current: UserPreferences, patch: unknown, 
     const v = patch.theme;
     if (!THEMES.includes(v as ThemePreference)) issues.push(`theme must be one of ${THEMES.join(", ")}.`);
     else next.theme = v as ThemePreference;
+  }
+
+  if ("appearance" in patch) {
+    const a = patch.appearance;
+    if (!isPlainObject(a)) issues.push("appearance must be an object.");
+    else {
+      for (const key of Object.keys(a)) {
+        if (!(key in DEFAULT_PREFERENCES.appearance)) issues.push(`Unknown field "appearance.${key}".`);
+      }
+      const pick = <T extends readonly string[]>(key: "design" | "wallpaper" | "bubbles", list: T) => {
+        if (!(key in a)) return;
+        if (!list.includes(a[key] as string)) issues.push(`appearance.${key} must be one of ${list.join(", ")}.`);
+        else (next.appearance as Record<string, unknown>)[key] = a[key];
+      };
+      pick("design", DESIGNS);
+      pick("wallpaper", WALLPAPERS);
+      pick("bubbles", BUBBLES);
+      if ("accent" in a) {
+        if (a.accent !== null && !ACCENTS.includes(a.accent as (typeof ACCENTS)[number])) issues.push(`appearance.accent must be null or one of ${ACCENTS.join(", ")}.`);
+        else next.appearance.accent = a.accent as UserPreferences["appearance"]["accent"];
+      }
+    }
   }
 
   if ("accessibility" in patch) {

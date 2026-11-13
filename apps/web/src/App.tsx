@@ -1,11 +1,12 @@
 import { FormEvent, useEffect, useMemo, useRef, useState, type ComponentProps } from "react";
 import { applyAccessibility, flashVisualAlert } from "./preferences";
+import { applyAppearance, cachedAppearance } from "./theme";
 import { api } from "./api";
 import { absoluteUrl } from "./config";
 import { getAccessToken, logoutSession, onSessionChange, refreshSession, setSession, withMediaToken } from "./session";
 import { e2ee, MissingKeysError } from "./e2ee/e2ee";
 import { socket } from "./socket";
-import type { AdminOverview, ChatSummary, Community, DeleteRequest, LoginResponse, Message, User, PreferencesPatch, UserPreferences } from "./types";
+import type { AdminOverview, ChatSummary, Community, DeleteRequest, LoginResponse, Message, User, PreferencesPatch, UserPreferences, Appearance, WallpaperId } from "./types";
 import AuthPage from "./pages/AuthPage";
 import MainApp from "./pages/MainApp";
 import Avatar from "./components/Avatar";
@@ -83,7 +84,7 @@ export function App() {
   const [summaries, setSummaries] = useState<ChatSummary[]>([]);
   const [contacts, setContacts] = useState<User[]>([]);
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
-  const [chatWallpaperIndex, setChatWallpaperIndex] = useState(0);
+  const [appearance, setAppearance] = useState<Appearance>(cachedAppearance);
   const [customWallpaper, setCustomWallpaper] = useState<string | null>(localStorage.getItem("custom_wallpaper"));
   const [dismissedDeleteNoticeIds, setDismissedDeleteNoticeIds] = useState<string[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -248,6 +249,10 @@ export function App() {
             else warm();
           }, 5000);
         }
+        if (prefs.appearance) {
+          setAppearance(prefs.appearance);
+          applyAppearance(prefs.appearance);
+        }
         // "system" means no explicit choice, so the local/device theme stays in charge.
         if (prefs.theme === "light" || prefs.theme === "dark") {
           setTheme(prefs.theme);
@@ -269,6 +274,7 @@ export function App() {
       ...patch,
       accessibility: { ...previous.accessibility, ...(patch.accessibility ?? {}) },
       voice: { ...previous.voice, ...(patch.voice ?? {}) },
+      appearance: { ...previous.appearance, ...(patch.appearance ?? {}) },
     };
     setPreferences(optimistic);
     applyAccessibility(optimistic);
@@ -282,6 +288,20 @@ export function App() {
       throw err;
     }
   };
+
+  /** Design, accent, bubble style or wallpaper changed in Settings: show it at once, then save it to the profile. */
+  const updateAppearance = (patch: Partial<Appearance>) => {
+    const next = { ...appearance, ...patch };
+    setAppearance(next);
+    applyAppearance(next);
+    if (currentUser) {
+      api
+        .updatePreferences(currentUser.id, { appearance: patch })
+        .then(setPreferences)
+        .catch((err: Error) => setStatus(`Appearance not saved to your profile: ${err.message}`));
+    }
+  };
+  const setChatWallpaper = (wallpaper: WallpaperId) => updateAppearance({ wallpaper });
 
   // Theme Sync on Mount
   useEffect(() => {
@@ -1152,8 +1172,10 @@ export function App() {
           setUserTab={setUserTab}
           theme={theme}
           onToggleTheme={toggleTheme}
-          chatWallpaperIndex={chatWallpaperIndex}
-          setChatWallpaperIndex={setChatWallpaperIndex}
+          chatWallpaper={appearance.wallpaper}
+          setChatWallpaper={setChatWallpaper}
+          appearance={appearance}
+          onUpdateAppearance={updateAppearance}
           isMobileChatOpen={isMobileChatOpen}
           setIsMobileChatOpen={setIsMobileChatOpen}
           onlineUsers={onlineUsers}

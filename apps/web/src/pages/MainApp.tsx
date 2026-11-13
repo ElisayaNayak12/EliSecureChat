@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { Appearance, WallpaperId } from "../types";
 import Avatar from "../components/Avatar";
 import {
   ChatIcon,
@@ -34,8 +35,10 @@ interface MainAppProps {
   setUserTab: (tab: UserTab) => void;
   theme: "light" | "dark";
   onToggleTheme: () => void;
-  chatWallpaperIndex: number;
-  setChatWallpaperIndex: (val: number | ((prev: number) => number)) => void;
+  chatWallpaper: WallpaperId;
+  setChatWallpaper: (val: WallpaperId) => void;
+  appearance: Appearance;
+  onUpdateAppearance: (patch: Partial<Appearance>) => void;
   isMobileChatOpen: boolean;
   setIsMobileChatOpen: (val: boolean) => void;
   onlineUsers: Set<string>;
@@ -112,8 +115,10 @@ export default function MainApp(props: MainAppProps) {
     setUserTab,
     theme,
     onToggleTheme,
-    chatWallpaperIndex,
-    setChatWallpaperIndex,
+    chatWallpaper,
+    setChatWallpaper,
+    appearance,
+    onUpdateAppearance,
     onScreenshotAttempt,
     customWallpaper,
     onCustomWallpaperChange,
@@ -241,8 +246,10 @@ export default function MainApp(props: MainAppProps) {
           <SettingsPanel
             theme={theme}
             onToggleTheme={onToggleTheme}
-            chatWallpaperIndex={chatWallpaperIndex}
-            setChatWallpaperIndex={setChatWallpaperIndex}
+            chatWallpaper={chatWallpaper}
+            setChatWallpaper={setChatWallpaper}
+            appearance={appearance}
+            onUpdateAppearance={onUpdateAppearance}
             onNavigateToProfile={() => setUserTab("profile")}
             customWallpaper={customWallpaper}
             onCustomWallpaperChange={onCustomWallpaperChange}
@@ -425,8 +432,8 @@ export default function MainApp(props: MainAppProps) {
               isSendingAttachment={isSendingAttachment}
               draft={draft}
               setDraft={setDraft}
-              chatWallpaperIndex={chatWallpaperIndex}
-              setChatWallpaperIndex={setChatWallpaperIndex}
+              chatWallpaper={chatWallpaper}
+              setChatWallpaper={setChatWallpaper}
               activeTypingUsers={activeTypingUsers}
               activePeer={activePeer}
               activeChatTitle={activeChatTitle}
