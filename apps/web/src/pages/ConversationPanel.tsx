@@ -1,4 +1,7 @@
 import { useRef, useEffect, useState, useMemo } from "react";
+import ExpressionPanel, { GifCard } from "../components/ExpressionPanel";
+import { LeafySticker } from "../stickers/leafy";
+import { gifText, parseRich, stickerText, suggestFor } from "../stickers/expressions";
 import type { WallpaperId } from "../types";
 import { WALLPAPERS } from "../theme";
 import VoiceRecorder from "../components/VoiceRecorder";
@@ -56,6 +59,7 @@ interface ConversationPanelProps {
   approveDeleteFromPopup: (id: string) => Promise<void>;
   rejectDeleteFromPopup: (req: DeleteRequest) => Promise<void>;
   onSendMessage: () => Promise<void>;
+  onSendRich: (text: string) => Promise<void>;
   onToggleReaction: (msgId: string, emoji: string) => Promise<void>;
   onPinMessage: (msgId: string) => Promise<void>;
   onUnpinMessage: () => Promise<void>;
@@ -112,6 +116,7 @@ export default function ConversationPanel({
   approveDeleteFromPopup,
   rejectDeleteFromPopup,
   onSendMessage,
+  onSendRich,
   onToggleReaction,
   onPinMessage,
   onUnpinMessage,
@@ -249,6 +254,8 @@ export default function ConversationPanel({
       void onSendMessage();
     }
   };
+
+  const suggestions = useMemo(() => suggestFor(draft), [draft]);
 
   const changeWallpaper = () => {
     const i = WALLPAPERS.findIndex((w) => w.id === chatWallpaper);
@@ -474,6 +481,7 @@ export default function ConversationPanel({
                   const isMine = m.senderId === currentUser.id;
                   const statusLabel = isMine ? getDeliveryLabel(m, currentUser) : "";
                   const showText = !(m.attachmentUrl && isAutoAttachmentText(m.plainText, m.fileName));
+                  const rich = m.attachmentUrl ? null : parseRich(m.plainText);
                   const replied = m.replyToMessageId ? messageMap.get(m.replyToMessageId) : undefined;
 
                   // Render date pill if date changed from previous message
@@ -490,7 +498,7 @@ export default function ConversationPanel({
                       )}
 
                       <div className={`message-bubble-wrapper ${isMine ? "mine" : "incoming"}`}>
-                        <div className={`message-bubble ${isMine ? "bubble-mine" : "bubble-incoming"}`}>
+                        <div className={`message-bubble ${isMine ? "bubble-mine" : "bubble-incoming"} ${rich ? "bubble-rich" : ""}`}>
                           {/* Replied block */}
                           {replied && (
                             <div className="reply-preview-container">
@@ -545,7 +553,9 @@ export default function ConversationPanel({
                           )}
 
                           {/* Message Text */}
-                          {showText && <div className="message-plain-text">{m.plainText}</div>}
+                          {rich?.kind === "sticker" && <div className="message-sticker"><LeafySticker sticker={rich.sticker} size={150} /></div>}
+                          {rich?.kind === "gif" && <div className="message-gif"><GifCard gif={rich.gif} /></div>}
+                          {showText && !rich && <div className="message-plain-text">{m.plainText}</div>}
 
                           {/* Reactions */}
                           {m.reactions && m.reactions.length > 0 && (
@@ -676,6 +686,24 @@ export default function ConversationPanel({
                 <button className="btn btn-secondary btn-xs" onClick={() => void onToggleBlock(activePeer.id)}>Unblock</button>
               </div>
             )}
+            {suggestions && !isPeerBlocked && (
+              <div className="smart-suggest" aria-label="Suggestions for your message">
+                <span className="smart-suggest-label">Suggested</span>
+                {suggestions.emoji.map((e) => (
+                  <button key={e} type="button" className="ss-emoji" onClick={() => setDraft(draft.trimEnd() + " " + e)} aria-label={`Add ${e}`}>{e}</button>
+                ))}
+                {suggestions.stickers.map((st) => (
+                  <button key={st.id} type="button" className="ss-sticker" onClick={() => void onSendRich(stickerText(st.id))} title={`Send ${st.label} sticker`} aria-label={`Send ${st.label} sticker`}>
+                    <LeafySticker sticker={st} size={44} />
+                  </button>
+                ))}
+                {suggestions.gifs.map((g) => (
+                  <button key={g.id} type="button" className="ss-gif" onClick={() => void onSendRich(gifText(g.id))} title={`Send ${g.label} GIF`} aria-label={`Send ${g.label} GIF`}>
+                    <GifCard gif={g} small />
+                  </button>
+                ))}
+              </div>
+            )}
             <div className={`composer-input-row ${isPeerBlocked ? "is-blocked" : ""}`}>
               <input
                 ref={fileInputRef}
@@ -693,41 +721,12 @@ export default function ConversationPanel({
               </button>
 
               {isEmojiPickerOpen && (
-                <div className="simple-emoji-popup animate-slide-up">
-                  {QUICK_REACTIONS.map((e) => (
-                    <button
-                      key={e}
-                      type="button"
-                      className="picker-emoji-item"
-                      onClick={() => {
-                        setDraft(draft + e);
-                        setIsEmojiPickerOpen(false);
-                      }}
-                    >
-                      {e}
-                    </button>
-                  ))}
-                  <button
-                    type="button"
-                    className="picker-emoji-item"
-                    onClick={() => {
-                      setDraft(draft + "🔒");
-                      setIsEmojiPickerOpen(false);
-                    }}
-                  >
-                    🔒
-                  </button>
-                  <button
-                    type="button"
-                    className="picker-emoji-item"
-                    onClick={() => {
-                      setDraft(draft + "🛡️");
-                      setIsEmojiPickerOpen(false);
-                    }}
-                  >
-                    🛡️
-                  </button>
-                </div>
+                <ExpressionPanel
+                  onEmoji={(e) => setDraft(draft + e)}
+                  onSticker={(id) => { setIsEmojiPickerOpen(false); void onSendRich(stickerText(id)); }}
+                  onGif={(id) => { setIsEmojiPickerOpen(false); void onSendRich(gifText(id)); }}
+                  onClose={() => setIsEmojiPickerOpen(false)}
+                />
               )}
 
               <input

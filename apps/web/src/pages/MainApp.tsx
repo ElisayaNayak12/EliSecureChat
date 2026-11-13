@@ -66,6 +66,7 @@ interface MainAppProps {
   approveDeleteFromPopup: (id: string) => Promise<void>;
   rejectDeleteFromPopup: (req: DeleteRequest) => Promise<void>;
   onSendMessage: () => Promise<void>;
+  onSendRich: (text: string) => Promise<void>;
   onSendVoice: (file: File) => Promise<void>;
   onToggleBlock: (peerId: string) => Promise<void>;
   onToggleReaction: (msgId: string, emoji: string) => Promise<void>;
@@ -148,6 +149,7 @@ export default function MainApp(props: MainAppProps) {
     approveDeleteFromPopup,
     rejectDeleteFromPopup,
     onSendMessage,
+    onSendRich,
     onSendVoice,
     onToggleBlock,
     onToggleReaction,
@@ -444,6 +446,7 @@ export default function MainApp(props: MainAppProps) {
               approveDeleteFromPopup={approveDeleteFromPopup}
               rejectDeleteFromPopup={rejectDeleteFromPopup}
               onSendMessage={onSendMessage}
+              onSendRich={onSendRich}
               onToggleReaction={onToggleReaction}
               onPinMessage={onPinMessage}
               onUnpinMessage={onUnpinMessage}

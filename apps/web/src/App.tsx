@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useMemo, useRef, useState, type ComponentProps } from "react";
 import { applyAccessibility, flashVisualAlert } from "./preferences";
 import { applyAppearance, cachedAppearance } from "./theme";
+import { richLabel } from "./stickers/expressions";
 import { api } from "./api";
 import { absoluteUrl } from "./config";
 import { getAccessToken, logoutSession, onSessionChange, refreshSession, setSession, withMediaToken } from "./session";
@@ -600,6 +601,8 @@ export function App() {
   }
 
   function messageSnippet(text: string, fileName?: string) {
+    const rich = richLabel(text);
+    if (rich) return rich;
     if (isAutoAttachmentText(text, fileName)) {
       return fileName ? `[Attachment] ${fileName}` : "[Attachment]";
     }
@@ -797,13 +800,14 @@ export function App() {
     try { await emitAck("typing_stop", { chatId: activeChatId, userId: currentUser.id }); } catch {}
   }
 
-  async function sendMessage(voiceFile?: File) {
+  /** richText: a sticker or GIF (sent as encrypted text) - leaves the typed draft alone. */
+  async function sendMessage(voiceFile?: File, richText?: string) {
     if (!ensureBackend()) return;
     if (!currentUser || !activeChatId) return;
-    const file = voiceFile ?? pendingFile;
-    if (!voiceFile && !draft.trim() && !pendingFile) return;
+    const file = richText ? null : voiceFile ?? pendingFile;
+    if (!voiceFile && !richText && !draft.trim() && !pendingFile) return;
 
-    const text = voiceFile ? "" : draft.trim();
+    const text = richText ?? (voiceFile ? "" : draft.trim());
     const memberIds = summaries.find((s) => s.chat.id === activeChatId)?.chat.memberIds ?? [currentUser.id];
     const seal = async (plain: string) => {
       try {
@@ -890,7 +894,7 @@ export function App() {
         fileSize: attachment?.fileSize,
       });
     }
-    if (!voiceFile) {
+    if (!voiceFile && !richText) {
       setDraft("");
       setPendingFile(null);
     }
@@ -1203,6 +1207,7 @@ export function App() {
           approveDeleteFromPopup={approveDeleteFromPopup}
           rejectDeleteFromPopup={rejectDeleteFromPopup}
           onSendMessage={() => sendMessage()}
+          onSendRich={(text: string) => sendMessage(undefined, text)}
           onSendVoice={(f: File) => sendMessage(f)}
           onToggleBlock={toggleBlock}
           onToggleReaction={toggleReaction}
