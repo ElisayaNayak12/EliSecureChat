@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useMemo, useRef, useState, type ComponentProps } 
 import { applyAccessibility, flashVisualAlert } from "./preferences";
 import { applyAppearance, cachedAppearance } from "./theme";
 import { richLabel } from "./stickers/expressions";
+import { capsuleLabel } from "./features/capsule";
 import { api } from "./api";
 import { absoluteUrl } from "./config";
 import { getAccessToken, logoutSession, onSessionChange, refreshSession, setSession, withMediaToken } from "./session";
@@ -601,7 +602,7 @@ export function App() {
   }
 
   function messageSnippet(text: string, fileName?: string) {
-    const rich = richLabel(text);
+    const rich = richLabel(text) ?? capsuleLabel(text);
     if (rich) return rich;
     if (isAutoAttachmentText(text, fileName)) {
       return fileName ? `[Attachment] ${fileName}` : "[Attachment]";

@@ -191,6 +191,19 @@ export default function LanguageAccessibilitySettings({ preferences, onUpdatePre
       {/* Accessibility */}
       <div className="settings-section">
         <h3>Accessibility</h3>
+        <div className="a11y-profiles" role="group" aria-label="Accessibility profiles">
+          {([
+            { id: "deaf", title: "Deaf or hard of hearing", desc: "Flash alerts, captions and sign help in calls.", patch: { accessibility: { visualAlerts: true }, ...(preferences.preferredSignLanguage ? {} : { preferredSignLanguage: "isl" }) } },
+            { id: "vision", title: "Low vision", desc: "Extra-large text and high contrast.", patch: { accessibility: { textSize: "x-large", highContrast: true } } },
+            { id: "calm", title: "Calm and focused", desc: "Less movement and larger text.", patch: { accessibility: { reduceMotion: true, textSize: "large" } } },
+            { id: "standard", title: "Standard", desc: "Back to the default settings.", patch: { accessibility: { textSize: "default", highContrast: false, reduceMotion: false, visualAlerts: false } } },
+          ] as { id: string; title: string; desc: string; patch: PreferencesPatch }[]).map((p) => (
+            <button key={p.id} type="button" className="a11y-profile" disabled={!backendReady} onClick={() => void save(p.patch)}>
+              <strong>{p.title}</strong>
+              <span>{p.desc}</span>
+            </button>
+          ))}
+        </div>
         <div className="settings-card pref-rows">
           <div className="setting-row">
             <div className="setting-label-col">

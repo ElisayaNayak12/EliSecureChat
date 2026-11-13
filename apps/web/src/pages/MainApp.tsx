@@ -1,4 +1,6 @@
 import { useState } from "react";
+import VaultPanel from "../components/VaultPanel";
+import { hiddenChatIds } from "../features/vault";
 import HomeDashboard from "../components/HomeDashboard";
 import type { Appearance, WallpaperId } from "../types";
 import Avatar from "../components/Avatar";
@@ -187,9 +189,14 @@ export default function MainApp(props: MainAppProps) {
   } = props;
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [vaultOpen, setVaultOpen] = useState(false);
+  const [vaultTick, setVaultTick] = useState(0);
+  void vaultTick;
+  const vaultHidden = hiddenChatIds(currentUser.id);
+  const visibleSummaries = summaries.filter((s) => !vaultHidden.has(s.chat.id));
 
   // Filters active chat threads based on search input
-  const filteredSummaries = summaries.filter((s) => {
+  const filteredSummaries = visibleSummaries.filter((s) => {
     const needle = searchQuery.trim().toLowerCase();
     if (!needle) return true;
     const title = (s.peer?.name ?? s.chat.title ?? "").toLowerCase();
@@ -214,6 +221,7 @@ export default function MainApp(props: MainAppProps) {
             search={searchQuery}
             setSearch={setSearchQuery}
             onOpenChat={onOpenChat}
+            onOpenVault={() => setVaultOpen(true)}
             onStartChat={onStartChat}
             activeChatId={activeChatId}
             onlineUsers={onlineUsers}
@@ -471,7 +479,7 @@ export default function MainApp(props: MainAppProps) {
           ) : (
             <HomeDashboard
               currentUser={currentUser}
-              summaries={summaries}
+              summaries={visibleSummaries}
               preferences={preferences}
               backendReady={backendReady}
               socketConnected={socketConnected}
@@ -484,6 +492,16 @@ export default function MainApp(props: MainAppProps) {
           )}
         </div>
       </div>
+
+      {vaultOpen && (
+        <VaultPanel
+          userId={currentUser.id}
+          summaries={summaries}
+          onOpenChat={onOpenChat}
+          onChanged={() => setVaultTick((t) => t + 1)}
+          onClose={() => setVaultOpen(false)}
+        />
+      )}
 
       {/* Mobile Bottom Navigation Bar */}
       <nav className={`mobile-bottom-tabs ${isMobileChatOpen ? "hidden" : ""}`}>

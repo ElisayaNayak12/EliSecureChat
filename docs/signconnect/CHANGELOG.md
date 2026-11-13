@@ -1,5 +1,46 @@
 # Changelog — SignConnect AI
 
+## 2026-11-13 — Approved app redesign: themes, stickers, home, unique features
+
+### Added
+- **Settings › Appearance** with a live preview, saved to the user's profile:
+  - 5 designs, each with a light and a dark version: Verdant Glass, Indigo Calm, Classic Emerald, Ocean Breeze and Midnight.
+  - Accent colour (Auto, Leaf, Indigo, Clay, Ocean, Rose) and bubble style (Rounded or Compact).
+  - 10 chat wallpapers with no dot patterns: Botanical, Aurora, Marble, Sunset, Midnight glow, Linen, Waves, Indigo mesh, Rose silk and Minimal.
+  - "My photo" still works. The old dotted wallpaper has been removed.
+- **Emoji, sticker and GIF panel:**
+  - Emoji in 13 mood and situation groups, with search.
+  - 25 original "Leafy" stickers, drawn as SVG in the app.
+  - 12 animated mood GIF cards made with CSS. Nothing is loaded from other sites.
+  - Stickers and GIFs are sent as normal end-to-end encrypted messages.
+  - Smart suggestions on the device: typing "thanks" or "happy birthday" suggests matching emoji, stickers and GIFs.
+- **Login page:** approved copy, three feature cards, a safety note ("We will never ask for your code…") and a legal footer.
+- **Home dashboard:**
+  - Greeting and quick actions.
+  - Continue chatting.
+  - A security checkup.
+  - What's new.
+- **Chat list filters:** All, Unread, People and Groups.
+- **Unique features:**
+  - **Tone check:** a private nudge, made on the device, when a message may sound harsh, with a one-tap kinder version. It never blocks sending.
+  - **Time-capsule messages:** sealed until a chosen date. The chat list never shows the sealed text.
+    - Limit: the encrypted text is on the recipient's device, and the app (not cryptography) keeps it hidden until the date.
+  - **Private Vault:** hides chats behind a PIN on this device. An optional decoy PIN opens an empty vault.
+    - PINs are stored as salted SHA-256 hashes, on this device only.
+    - The vault hides chats from view; it is not an extra layer of encryption.
+  - **Accessibility profiles:** one tap for Deaf or hard of hearing, Low vision, Calm and focused, or Standard.
+- **Tests:**
+  - Web: `features.test.ts` (4 tests; web total 31).
+  - Backend: an appearance preferences test (72 in total).
+  - Browser tests:
+    - `scripts/e2e-appearance-test.mjs`
+    - `scripts/e2e-expressions-test.mjs` (7 checks)
+    - `scripts/e2e-unique-features-test.mjs` (13 checks)
+
+### Not built yet (needs on-device AI models)
+- Translating any message into your language.
+- Voice note transcripts with summaries.
+
 ## 2026-11-13 — Real-hand fingerspelling in calls + premium call screen
 
 ### Added

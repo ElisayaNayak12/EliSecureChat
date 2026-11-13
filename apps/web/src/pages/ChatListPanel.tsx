@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Avatar from "../components/Avatar";
-import { SearchIcon, RefreshIcon } from "../components/Icons";
+import { SearchIcon, RefreshIcon, LockIcon } from "../components/Icons";
 import type { ChatSummary, User } from "../types";
 
 interface ChatListPanelProps {
@@ -9,6 +9,7 @@ interface ChatListPanelProps {
   search: string;
   setSearch: (val: string) => void;
   onOpenChat: (summary: ChatSummary) => void;
+  onOpenVault: () => void;
   onStartChat: (peer: User) => void;
   activeChatId: string | null;
   onlineUsers: Set<string>;
@@ -26,6 +27,7 @@ export default function ChatListPanel({
   search,
   setSearch,
   onOpenChat,
+  onOpenVault,
   onStartChat,
   activeChatId,
   onlineUsers,
@@ -54,6 +56,9 @@ export default function ChatListPanel({
             })()}
           </span>
         </div>
+        <button className="btn-icon" onClick={onOpenVault} title="Private Vault" aria-label="Private Vault">
+          <LockIcon size={18} />
+        </button>
         <button
           className="btn-icon"
           onClick={onRefresh}

@@ -1,4 +1,6 @@
 import { useRef, useEffect, useState, useMemo } from "react";
+import { checkTone } from "../features/tone";
+import { capsuleText, formatOpenDate, parseCapsule } from "../features/capsule";
 import ExpressionPanel, { GifCard } from "../components/ExpressionPanel";
 import { LeafySticker } from "../stickers/leafy";
 import { gifText, parseRich, stickerText, suggestFor } from "../stickers/expressions";
@@ -256,6 +258,18 @@ export default function ConversationPanel({
   };
 
   const suggestions = useMemo(() => suggestFor(draft), [draft]);
+  const tone = useMemo(() => checkTone(draft), [draft]);
+  const [toneDismissed, setToneDismissed] = useState("");
+  const [capsuleOpen, setCapsuleOpen] = useState(false);
+  const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+  const [capsuleDate, setCapsuleDate] = useState(tomorrow);
+  const sendCapsule = async () => {
+    const text = draft.trim();
+    if (!text || capsuleDate < tomorrow) return;
+    setCapsuleOpen(false);
+    await onSendRich(capsuleText(capsuleDate, text));
+    setDraft("");
+  };
 
   const changeWallpaper = () => {
     const i = WALLPAPERS.findIndex((w) => w.id === chatWallpaper);
@@ -482,6 +496,7 @@ export default function ConversationPanel({
                   const statusLabel = isMine ? getDeliveryLabel(m, currentUser) : "";
                   const showText = !(m.attachmentUrl && isAutoAttachmentText(m.plainText, m.fileName));
                   const rich = m.attachmentUrl ? null : parseRich(m.plainText);
+                  const capsule = m.attachmentUrl ? null : parseCapsule(m.plainText);
                   const replied = m.replyToMessageId ? messageMap.get(m.replyToMessageId) : undefined;
 
                   // Render date pill if date changed from previous message
@@ -555,7 +570,23 @@ export default function ConversationPanel({
                           {/* Message Text */}
                           {rich?.kind === "sticker" && <div className="message-sticker"><LeafySticker sticker={rich.sticker} size={150} /></div>}
                           {rich?.kind === "gif" && <div className="message-gif"><GifCard gif={rich.gif} /></div>}
-                          {showText && !rich && <div className="message-plain-text">{m.plainText}</div>}
+                          {capsule && !capsule.open && (
+                            <div className="capsule-sealed" role="note">
+                              <span className="capsule-icon" aria-hidden="true">⏳</span>
+                              <span>
+                                <strong>Sealed time capsule</strong>
+                                <small>Opens on {formatOpenDate(capsule.opensOn)}</small>
+                                {isMine && <em>You wrote: “{capsule.text.slice(0, 80)}”</em>}
+                              </span>
+                            </div>
+                          )}
+                          {capsule && capsule.open && (
+                            <>
+                              <span className="capsule-badge">⏳ Time capsule · opened {formatOpenDate(capsule.opensOn)}</span>
+                              <div className="message-plain-text">{capsule.text}</div>
+                            </>
+                          )}
+                          {showText && !rich && !capsule && <div className="message-plain-text">{m.plainText}</div>}
 
                           {/* Reactions */}
                           {m.reactions && m.reactions.length > 0 && (
@@ -686,6 +717,29 @@ export default function ConversationPanel({
                 <button className="btn btn-secondary btn-xs" onClick={() => void onToggleBlock(activePeer.id)}>Unblock</button>
               </div>
             )}
+            {tone.harsh && toneDismissed !== draft && !isPeerBlocked && (
+              <div className="tone-check" role="status">
+                <span className="tone-icon" aria-hidden="true">💬</span>
+                <div className="tone-main">
+                  <strong>This may sound harsh</strong>
+                  <span>{tone.reasons.join(" · ")}. Kinder: “{tone.kinder}”</span>
+                </div>
+                <button type="button" className="btn btn-secondary btn-xs" onClick={() => setDraft(tone.kinder)}>Use kinder</button>
+                <button type="button" className="tone-dismiss" onClick={() => setToneDismissed(draft)} aria-label="Keep my words">Keep mine</button>
+              </div>
+            )}
+            {capsuleOpen && (
+              <div className="capsule-popover" role="dialog" aria-label="Time capsule">
+                <strong>⏳ Time capsule</strong>
+                <span>Seal your typed message until a date you choose: a birthday, an anniversary, a new year.</span>
+                <label>Opens on <input type="date" min={tomorrow} value={capsuleDate} onChange={(e) => setCapsuleDate(e.target.value)} aria-label="Opening date" /></label>
+                <div className="capsule-actions">
+                  <button type="button" className="btn btn-secondary btn-sm" onClick={() => setCapsuleOpen(false)}>Cancel</button>
+                  <button type="button" className="btn btn-primary btn-sm" disabled={!draft.trim() || capsuleDate < tomorrow} onClick={() => void sendCapsule()}>Seal and send</button>
+                </div>
+                {!draft.trim() && <small>Type your message first.</small>}
+              </div>
+            )}
             {suggestions && !isPeerBlocked && (
               <div className="smart-suggest" aria-label="Suggestions for your message">
                 <span className="smart-suggest-label">Suggested</span>
@@ -718,6 +772,15 @@ export default function ConversationPanel({
                 title="Toggle Emojis"
               >
                 <EmojiIcon size={22} />
+              </button>
+              <button
+                className="btn-composer-action capsule-btn"
+                onClick={() => setCapsuleOpen((v) => !v)}
+                title="Time capsule"
+                aria-label="Time capsule"
+                disabled={isPeerBlocked}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8" /><path d="M12 9v4l2.5 2.5M9 2h6" /></svg>
               </button>
 
               {isEmojiPickerOpen && (
