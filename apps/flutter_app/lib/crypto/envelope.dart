@@ -69,7 +69,7 @@ class DeviceKeys {
   factory DeviceKeys.generate(String deviceId) {
     BigInt newScalar() {
       final gen = ECKeyGenerator()..init(ParametersWithRandom(ECKeyGeneratorParameters(_curve), _fortuna()));
-      return (gen.generateKeyPair().privateKey as ECPrivateKey).d!;
+      return gen.generateKeyPair().privateKey.d!;
     }
 
     return DeviceKeys(deviceId: deviceId, agreementD: newScalar(), signingD: newScalar());
