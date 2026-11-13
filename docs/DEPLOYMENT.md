@@ -43,6 +43,44 @@ microphone and the encryption code only work over HTTPS.
    the script from GitHub's web page instead of `raw.githubusercontent.com`.
 6. Open `https://yourname.duckdns.org`. The first visit can take a minute while the HTTPS certificate is issued.
 
+## CI/CD and the fixed public URL
+
+Your public address is **`https://yourname.duckdns.org`**. It never changes, it is free, and HTTPS is automatic.
+DuckDNS keeps it pointed at your server even if the server's IP changes.
+
+The pipeline is `.github/workflows/ci-cd.yml`:
+
+| When | What happens |
+|---|---|
+| Every push and pull request | **CI:** installs, runs the backend and web tests, type-checks, builds the web, admin and backend, starts the built server and checks that it answers. |
+| Push to the deploy branch, after CI passes | **CD:** connects to your server over SSH and runs `scripts/deploy/update.sh` for that exact commit, then checks that the public URL answers. If the new version fails to build or start, the server **rolls back** to the previous version on its own. |
+
+Data, uploads and secrets live outside the code folder and are never touched by a deploy.
+
+### One-time setup (about 5 minutes, after the server above is running)
+
+1. **Create a deploy key on the server** (`ssh ubuntu@<server-ip>`):
+   ```bash
+   ssh-keygen -t ed25519 -f ~/.ssh/github_deploy -N "" -C "github-actions-deploy"
+   cat ~/.ssh/github_deploy.pub >> ~/.ssh/authorized_keys
+   cat ~/.ssh/github_deploy        # copy everything this prints, including the BEGIN/END lines
+   rm ~/.ssh/github_deploy         # the server only needs the public half
+   ```
+2. **On GitHub:** repository → **Settings → Secrets and variables → Actions**.
+   - **Secrets** tab, **New repository secret**:
+     - `DEPLOY_HOST`: the server's public IP address.
+     - `DEPLOY_USER`: `ubuntu`.
+     - `DEPLOY_SSH_KEY`: the private key you copied in step 1.
+   - **Variables** tab, **New repository variable**:
+     - `SERVER_URL`: `https://yourname.duckdns.org`. The Android build also uses this as its default server.
+     - `DEPLOY_BRANCH` (optional): the branch that goes live. The default is `main`. Set it to
+       `feature/secure-signconnect-v2` to deploy that branch without merging.
+3. Push a commit, or open **Actions → CI/CD → Run workflow**. Watch the run: the deploy job ends with
+   `Live at https://yourname.duckdns.org`.
+
+Until the secrets exist, the deploy job is skipped, so CI still runs on every push. Never paste the private key
+anywhere except the GitHub secret.
+
 The rest of this page is the same setup done by hand, for reference.
 
 ---
@@ -193,9 +231,10 @@ All data is in `/home/elichat/data`: users, encrypted messages, uploads, sign da
 This keeps 7 rotating daily backups. Also download one regularly, so a copy lives off the server.
 
 ### Updating
+Automatic with CI/CD (above). By hand, with automatic rollback:
 ```bash
-sudo -iu elichat && cd app && git pull && npm ci && npm run build:hosted && exit
-sudo systemctl restart elisecurechat
+curl -fsSL https://raw.githubusercontent.com/<you>/EliSecureChat/main/scripts/deploy/update.sh -o update.sh
+sudo BRANCH=main bash update.sh
 ```
 
 ---
