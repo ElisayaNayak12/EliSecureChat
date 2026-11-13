@@ -6,6 +6,7 @@ import '../crypto/e2ee_service.dart';
 import '../main.dart';
 import '../models.dart';
 import '../theme.dart';
+import '../rich_text.dart';
 import '../widgets/avatar.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -273,7 +274,7 @@ class _Bubble extends StatelessWidget {
                   style: TextStyle(color: fg.withValues(alpha: 0.8), fontSize: 13, fontStyle: FontStyle.italic),
                 ),
               ),
-            Text(text.text, style: TextStyle(color: dim ? fg.withValues(alpha: 0.7) : fg, fontSize: 15.5, fontStyle: dim ? FontStyle.italic : null)),
+            Text(displayText(text.text), style: TextStyle(color: dim ? fg.withValues(alpha: 0.7) : fg, fontSize: 15.5, fontStyle: dim ? FontStyle.italic : null)),
             const SizedBox(height: 2),
             Row(mainAxisSize: MainAxisSize.min, children: [
               if (text.state == TextState.unverified) Icon(Icons.gpp_maybe_outlined, size: 13, color: fg.withValues(alpha: 0.7)),

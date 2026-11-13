@@ -7,6 +7,7 @@ import '../models.dart';
 import '../theme.dart';
 import '../widgets/avatar.dart';
 import 'chat_screen.dart';
+import '../rich_text.dart';
 import 'settings_screen.dart';
 
 class ChatsScreen extends StatefulWidget {
@@ -154,7 +155,7 @@ class _ChatsScreenState extends State<ChatsScreen> {
                         itemBuilder: (context, i) {
                           final c = _chats[i];
                           final last = c.lastMessage;
-                          final preview = last == null ? 'No messages yet' : s.e2ee.view(last.encryptedContent).text;
+                          final preview = last == null ? 'No messages yet' : displayText(s.e2ee.view(last.encryptedContent).text);
                           return ListTile(
                             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                             leading: UserAvatar(api: s.api, user: c.peer),
