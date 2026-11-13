@@ -1,5 +1,8 @@
 import { useState } from "react";
 import { LockIcon, InfoIcon, TrashIcon } from "../components/Icons";
+import type { PreferencesPatch, UserPreferences } from "../types";
+import LanguageAccessibilitySettings from "./LanguageAccessibilitySettings";
+import SecuritySettings from "./SecuritySettings";
 
 interface SettingsPanelProps {
   theme: "light" | "dark";
@@ -10,6 +13,9 @@ interface SettingsPanelProps {
   customWallpaper: string | null;
   onCustomWallpaperChange: (url: string | null) => void;
   onDeleteAccount: () => Promise<void>;
+  preferences: UserPreferences | null;
+  onUpdatePreferences: (patch: PreferencesPatch) => Promise<void>;
+  backendReady: boolean;
 }
 
 export default function SettingsPanel({
@@ -21,6 +27,9 @@ export default function SettingsPanel({
   customWallpaper,
   onCustomWallpaperChange,
   onDeleteAccount,
+  preferences,
+  onUpdatePreferences,
+  backendReady,
 }: SettingsPanelProps) {
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -63,6 +72,12 @@ export default function SettingsPanel({
             <span className="arrow-right-indicator">→</span>
           </div>
         </div>
+
+        <LanguageAccessibilitySettings
+          preferences={preferences}
+          onUpdatePreferences={onUpdatePreferences}
+          backendReady={backendReady}
+        />
 
         {/* Customization Settings */}
         <div className="settings-section">
@@ -129,6 +144,8 @@ export default function SettingsPanel({
           </div>
         </div>
 
+        <SecuritySettings backendReady={backendReady} />
+
         {/* Security Settings */}
         <div className="settings-section">
           <h3>Security &amp; Privacy</h3>
@@ -136,8 +153,8 @@ export default function SettingsPanel({
             <div className="security-status-indicator">
               <LockIcon size={24} className="text-accent" />
               <div>
-                <strong>End-to-End Cryptography Active</strong>
-                <span>All chat histories are obfuscated using unique base-64 keys.</span>
+                <strong>Messages are end-to-end encrypted</strong>
+                <span>New messages are encrypted on your device for each recipient device and signed, so the server cannot read or alter them. Verify a contact's security code in their chat info. Photos and files are not end-to-end encrypted yet. Messages from before encryption was turned on remain readable by the server.</span>
               </div>
             </div>
 

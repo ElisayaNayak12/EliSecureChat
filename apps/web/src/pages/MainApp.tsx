@@ -17,12 +17,17 @@ import CommunitiesPanel from "./CommunitiesPanel";
 import SettingsPanel from "./SettingsPanel";
 import ProfilePanel from "./ProfilePanel";
 import ConversationPanel from "./ConversationPanel";
-import type { ChatSummary, Community, DeleteRequest, Message, User } from "../types";
+import TranslatorPanel from "./TranslatorPanel";
+import { e2ee } from "../e2ee/e2ee";
+import { HandIcon } from "../components/Icons";
+import type { ChatSummary, Community, DeleteRequest, Message, User, PreferencesPatch, UserPreferences } from "../types";
 
-type UserTab = "chats" | "contacts" | "communities" | "settings" | "profile";
+type UserTab = "chats" | "contacts" | "communities" | "translator" | "settings" | "profile";
 
 interface MainAppProps {
   currentUser: User;
+  preferences: UserPreferences | null;
+  onUpdatePreferences: (patch: PreferencesPatch) => Promise<void>;
   activeChatId: string | null;
   setActiveChatId: (id: string | null) => void;
   userTab: UserTab;
@@ -58,6 +63,8 @@ interface MainAppProps {
   approveDeleteFromPopup: (id: string) => Promise<void>;
   rejectDeleteFromPopup: (req: DeleteRequest) => Promise<void>;
   onSendMessage: () => Promise<void>;
+  onSendVoice: (file: File) => Promise<void>;
+  onToggleBlock: (peerId: string) => Promise<void>;
   onToggleReaction: (msgId: string, emoji: string) => Promise<void>;
   onPinMessage: (msgId: string) => Promise<void>;
   onUnpinMessage: () => Promise<void>;
@@ -97,6 +104,8 @@ interface MainAppProps {
 export default function MainApp(props: MainAppProps) {
   const {
     currentUser,
+  preferences,
+  onUpdatePreferences,
     activeChatId,
     setActiveChatId,
     userTab,
@@ -134,6 +143,8 @@ export default function MainApp(props: MainAppProps) {
     approveDeleteFromPopup,
     rejectDeleteFromPopup,
     onSendMessage,
+    onSendVoice,
+    onToggleBlock,
     onToggleReaction,
     onPinMessage,
     onUnpinMessage,
@@ -175,7 +186,7 @@ export default function MainApp(props: MainAppProps) {
     if (!needle) return true;
     const title = (s.peer?.name ?? s.chat.title ?? "").toLowerCase();
     const plainPreview = s.lastMessage
-      ? messageSnippet(s.lastMessage.encryptedContent, s.lastMessage.fileName).toLowerCase()
+      ? messageSnippet(e2ee.view(s.lastMessage.encryptedContent).text, s.lastMessage.fileName).toLowerCase()
       : "";
     return title.includes(needle) || plainPreview.includes(needle);
   });
@@ -203,13 +214,7 @@ export default function MainApp(props: MainAppProps) {
             resolveUrl={resolveUrl}
             formatChatTime={formatChatTime}
             messageSnippet={messageSnippet}
-            decryptMessage={(content) => {
-              try {
-                return decodeURIComponent(escape(atob(content)));
-              } catch {
-                return "[Encrypted Message]";
-              }
-            }}
+            decryptMessage={(content) => e2ee.view(content).text}
           />
         );
       case "contacts":
@@ -242,6 +247,9 @@ export default function MainApp(props: MainAppProps) {
             customWallpaper={customWallpaper}
             onCustomWallpaperChange={onCustomWallpaperChange}
             onDeleteAccount={onDeleteAccount}
+            preferences={preferences}
+            onUpdatePreferences={onUpdatePreferences}
+            backendReady={backendReady}
           />
         );
       case "profile":
@@ -326,26 +334,22 @@ export default function MainApp(props: MainAppProps) {
         </div>
       ) : null}
 
-      {/* Desktop sidebar navigation */}
-      <nav className="desktop-app-sidebar">
-        <div className="sidebar-avatar-section">
-          <Avatar
-            name={currentUser.name}
-            avatarUrl={currentUser.avatarUrl}
-            size="md"
-            resolveUrl={resolveUrl}
-          />
-          <span className="sidebar-username">{currentUser.name}</span>
+      {/* Desktop sidebar navigation - AURA brand rail */}
+      <nav className="desktop-app-sidebar" aria-label="Primary">
+        <div className="rail-brand" title="ELiSecureChat">
+          <span className="aura-tile aura-tile-sm">
+            <ChatIcon size={22} />
+          </span>
         </div>
 
         <ul className="sidebar-nav-links">
           {(
             [
-              { id: "chats", icon: <ChatIcon size={20} />, label: "Chats" },
-              { id: "contacts", icon: <ContactsIcon size={20} />, label: "Contacts" },
-              { id: "communities", icon: <GroupIcon size={20} />, label: "Communities" },
-              { id: "settings", icon: <SettingsIcon size={20} />, label: "Settings" },
-              { id: "profile", icon: <ProfileIcon size={20} />, label: "Profile" },
+              { id: "chats", icon: <ChatIcon size={22} />, label: "Chats" },
+              { id: "contacts", icon: <ContactsIcon size={22} />, label: "Contacts" },
+              { id: "communities", icon: <GroupIcon size={22} />, label: "Groups" },
+              { id: "translator", icon: <HandIcon size={22} />, label: "Translator" },
+              { id: "settings", icon: <SettingsIcon size={22} />, label: "Settings" },
             ] as const
           ).map((tab) => (
             <li key={tab.id}>
@@ -356,6 +360,7 @@ export default function MainApp(props: MainAppProps) {
                   setIsMobileChatOpen(false);
                 }}
                 title={tab.label}
+                aria-current={userTab === tab.id ? "page" : undefined}
               >
                 {tab.icon}
                 <span className="sidebar-btn-label">{tab.label}</span>
@@ -366,14 +371,33 @@ export default function MainApp(props: MainAppProps) {
 
         <div className="sidebar-footer-links">
           <button className="sidebar-nav-btn text-danger" onClick={onSignOut} title="Sign Out">
-            <LogOutIcon size={20} />
-            <span className="sidebar-btn-label">Sign Out</span>
+            <LogOutIcon size={22} />
+            <span className="sidebar-btn-label">Sign out</span>
+          </button>
+          <button
+            className={`sidebar-avatar-section ${userTab === "profile" ? "active" : ""}`}
+            onClick={() => {
+              setUserTab("profile");
+              setIsMobileChatOpen(false);
+            }}
+            title={`${currentUser.name} - Profile`}
+          >
+            <Avatar
+              name={currentUser.name}
+              avatarUrl={currentUser.avatarUrl}
+              size="md"
+              resolveUrl={resolveUrl}
+            />
+            <span className="sidebar-username">{currentUser.name}</span>
           </button>
         </div>
       </nav>
 
       {/* Main layout container (splits left sidebar vs right conversation) */}
-      <div className={`app-workspace-split ${isMobileChatOpen ? "mobile-chat-active" : ""}`}>
+      <div className={`app-workspace-split ${isMobileChatOpen ? "mobile-chat-active" : ""} ${userTab === "translator" ? "translator-mode" : ""}`}>
+        {userTab === "translator" && (
+          <TranslatorPanel currentUser={currentUser} preferences={preferences} resolveUrl={resolveUrl} />
+        )}
         {/* Left Side Sub Panel */}
         <div className="app-sub-sidebar">{renderLeftPanelContent()}</div>
 
@@ -381,6 +405,10 @@ export default function MainApp(props: MainAppProps) {
         <div className="app-conversation-view">
           {activeChatId && activeSummary ? (
             <ConversationPanel
+              onSendVoice={onSendVoice}
+              onToggleBlock={onToggleBlock}
+              isPeerBlocked={!!activePeer && !!currentUser.blockedUserIds?.includes(activePeer.id)}
+              chatId={activeChatId}
               activeSummary={activeSummary}
               currentUser={currentUser}
               messages={props.messages}
@@ -430,20 +458,43 @@ export default function MainApp(props: MainAppProps) {
               onSendTypingStop={onSendTypingStop}
             />
           ) : (
-            <div className="conversation-empty-view animate-fade-in">
-              <div className="empty-logo-wrapper">
-                <LockIcon size={44} className="empty-logo-icon" />
+            <div className="conversation-empty-view">
+              <div className="empty-hero-mark aura-rise">
+                <span className="empty-hero-glow" />
+                <span className="aura-tile aura-tile-xl">
+                  <LockIcon size={44} />
+                </span>
+                <span className="empty-hero-spark s1" />
+                <span className="empty-hero-spark s2" />
+                <span className="empty-hero-spark s3" />
               </div>
-              <h2>ELiSecureChat Redesign</h2>
-              <p>Select a contact or active thread from the left menu to start sending encrypted messages.</p>
-              <div className="empty-metrics-row">
+              <span className="empty-overline aura-rise" data-i="1">Hello, {currentUser.name.split(" ")[0]}</span>
+              <h2 className="aura-rise" data-i="2">Your conversations, sealed.</h2>
+              <p className="aura-rise" data-i="3">
+                Pick a conversation on the left, or start a new one from your contacts. Everything you send stays between you.
+              </p>
+
+              <div className="empty-feature-row">
+                {[
+                  { icon: <ShieldIcon size={22} />, label: "Screen shield" },
+                  { icon: <ChatIcon size={22} />, label: "Realtime sync" },
+                  { icon: <LockIcon size={22} />, label: "Mutual erasure" },
+                ].map((f, i) => (
+                  <div key={f.label} className="empty-feature aura-rise" data-i={String(4 + i)}>
+                    <span className="aura-tile">{f.icon}</span>
+                    <span className="empty-feature-label">{f.label}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="empty-metrics-row aura-rise" data-i="7">
                 <div className="metric-pill">
                   <span className={`pill-dot ${backendReady ? "online" : "offline"}`} />
-                  <span>API Services: {backendReady ? "Live" : "Offline"}</span>
+                  <span>API {backendReady ? "live" : "offline"}</span>
                 </div>
                 <div className="metric-pill">
                   <span className={`pill-dot ${socketConnected ? "online" : "offline"}`} />
-                  <span>WebSocket Gateway: {socketConnected ? "Connected" : "Disengaged"}</span>
+                  <span>Realtime {socketConnected ? "connected" : "connecting"}</span>
                 </div>
               </div>
             </div>
@@ -458,6 +509,7 @@ export default function MainApp(props: MainAppProps) {
             { id: "chats", icon: <ChatIcon size={20} />, label: "Chats" },
             { id: "contacts", icon: <ContactsIcon size={20} />, label: "Contacts" },
             { id: "communities", icon: <GroupIcon size={20} />, label: "Groups" },
+            { id: "translator", icon: <HandIcon size={20} />, label: "Translate" },
             { id: "settings", icon: <SettingsIcon size={20} />, label: "Settings" },
             { id: "profile", icon: <ProfileIcon size={20} />, label: "Profile" },
           ] as const

@@ -1,0 +1,440 @@
+/* ==========================================================================
+   ELiSecureChat - "Verdant Glass" theme
+   Loaded after aura.css. Swaps the Midnight preset for a botanical palette:
+   deep forest canvas, frosted glass panels with hairline light borders,
+   pale-sage pill CTAs, quiet serif display. Remove this import in main.tsx
+   to fall back to the Midnight look.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. TOKENS
+   -------------------------------------------------------------------------- */
+:root,
+[data-theme="light"] {
+  /* soft-focus foliage used behind the app */
+  --verdant-leaves: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 900' preserveAspectRatio='xMidYMid slice'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%234E6E4C'/%3E%3Cstop offset='1' stop-color='%231A2B1E'/%3E%3C/linearGradient%3E%3Cfilter id='b' x='-50%25' y='-50%25' width='200%25' height='200%25'%3E%3CfeGaussianBlur stdDeviation='14'/%3E%3C/filter%3E%3Cfilter id='s' x='-50%25' y='-50%25' width='200%25' height='200%25'%3E%3CfeGaussianBlur stdDeviation='4'/%3E%3C/filter%3E%3Cg id='l'%3E%3Cpath d='M0 0C80-78 250-86 360 0C250 86 80 78 0 0Z' fill='url(%23g)'/%3E%3Cpath d='M8 0H350' stroke='%23C9DDB4' stroke-opacity='.18' stroke-width='3' fill='none'/%3E%3C/g%3E%3C/defs%3E%3Cg filter='url(%23b)' opacity='.7'%3E%3Cuse href='%23l' transform='translate(760 80) rotate(-28) scale(1.7)'/%3E%3Cuse href='%23l' transform='translate(860 760) rotate(-64) scale(2.1)'/%3E%3Cuse href='%23l' transform='translate(-120 760) rotate(-18) scale(1.5)'/%3E%3Cuse href='%23l' transform='translate(1260 420) rotate(200) scale(1.6)'/%3E%3C/g%3E%3Cg filter='url(%23s)' opacity='.55'%3E%3Cuse href='%23l' transform='translate(1010 260) rotate(-112) scale(1.2)'/%3E%3Cuse href='%23l' transform='translate(40 160) rotate(24) scale(.85)'/%3E%3Cuse href='%23l' transform='translate(560 920) rotate(-80) scale(1.1)'/%3E%3C/g%3E%3C/svg%3E");
+  --verdant-leaves-pale: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 900' preserveAspectRatio='xMidYMid slice'%3E%3Cdefs%3E%3Cfilter id='b' x='-50%25' y='-50%25' width='200%25' height='200%25'%3E%3CfeGaussianBlur stdDeviation='18'/%3E%3C/filter%3E%3Cpath id='l' d='M0 0C80-78 250-86 360 0C250 86 80 78 0 0Z'/%3E%3C/defs%3E%3Cg filter='url(%23b)' fill='%23A9C496' opacity='.28'%3E%3Cuse href='%23l' transform='translate(780 60) rotate(-28) scale(1.7)'/%3E%3Cuse href='%23l' transform='translate(900 780) rotate(-64) scale(2)'/%3E%3Cuse href='%23l' transform='translate(-120 780) rotate(-18) scale(1.5)'/%3E%3Cuse href='%23l' transform='translate(40 160) rotate(24) scale(.9)'/%3E%3C/g%3E%3C/svg%3E");
+
+  /* brand: forest */
+  --aura-brand-900: #0E1912;
+  --aura-brand-700: #1A2B1F;
+  --aura-brand-600: #2A4030;
+  --aura-brand-400: #557558;
+  --aura-brand-100: #E6EEE0;
+
+  /* CTA: deep forest pill on light canvas */
+  --aura-cta-400: #4F7151;
+  --aura-cta-500: #2F4A34;
+  --aura-cta-600: #22382A;
+  --aura-cta-rgb: 47, 74, 52;
+  --aura-on-cta: #F2F7EA;
+
+  /* tiles + accent text: sage */
+  --aura-tile-300: #A8C596;
+  --aura-tile-500: #5E8A5C;
+  --aura-tile-700: #31553A;
+  --aura-tile-100: #E5EEDD;
+  --aura-tile-rgb: 94, 138, 92;
+
+  --aura-success: #3F8A55;
+  --aura-info: #5E8A5C;
+  --aura-mint: #E1EED6;
+  --aura-mint-ink: #3F7A44;
+  --aura-sky: #E8F0E0;
+  --aura-lilac: #EFEADB;
+  --aura-lilac-ink: #7A6430;
+
+  /* canvas & ink: warm sage paper */
+  --aura-canvas: #ECEFE7;
+  --aura-surface: #FAFBF7;
+  --aura-surface-2: #F0F3EB;
+  --aura-ink-900: #16241A;
+  --aura-ink-700: #33443A;
+  --aura-ink-500: #6B796D;
+  --aura-ink-300: #B4BEB2;
+  --aura-line: rgba(22, 36, 26, 0.09);
+  --aura-on-brand: #EEF3E6;
+  --aura-active-fill: rgba(94, 138, 92, 0.12);
+
+  --aura-glass: rgba(250, 251, 247, 0.62);
+  --aura-glass-strong: rgba(250, 251, 247, 0.82);
+  --aura-glass-border: rgba(255, 255, 255, 0.72);
+  --aura-glass-on-brand: rgba(226, 240, 214, 0.10);
+  --aura-glass-on-brand-border: rgba(226, 240, 214, 0.22);
+
+  --aura-gradient-header: linear-gradient(160deg, #2E4634 0%, #1A2B1F 52%, #0E1912 100%);
+  --aura-gradient-header-vignette: radial-gradient(120% 80% at 50% -20%, rgba(214, 232, 196, 0.16), transparent 60%);
+  --aura-gradient-cta: linear-gradient(180deg, var(--aura-cta-400) 0%, var(--aura-cta-500) 100%);
+  --aura-gradient-tile: radial-gradient(120% 100% at 30% 15%, #A8C596 0%, #5E8A5C 48%, #31553A 100%);
+  --aura-gradient-bubble: linear-gradient(160deg, #6A9467 -20%, #3F6345 58%, #2C4732 130%);
+  --aura-gradient-sky: linear-gradient(180deg, #DDE8D3 0%, #ECF1E6 60%, var(--aura-canvas) 100%);
+
+  --aura-shadow-sm: 0 2px 8px -2px rgba(22, 36, 26, 0.08);
+  --aura-shadow-md: 0 10px 30px -12px rgba(22, 36, 26, 0.16);
+  --aura-shadow-lg: 0 24px 60px -20px rgba(22, 36, 26, 0.24);
+  --aura-shadow-tile: 0 12px 30px -10px rgba(49, 85, 58, 0.45);
+  --aura-shadow-bubble: 0 8px 22px -10px rgba(42, 70, 48, 0.5);
+  --aura-shadow-cta: 0 14px 30px -12px rgba(34, 56, 42, 0.55);
+  --aura-halo-tile: 0 0 0 8px rgba(229, 238, 221, 0.7);
+  --aura-focus-ring: 0 0 0 3px rgba(94, 138, 92, 0.38);
+
+  --verdant-backdrop:
+    var(--verdant-leaves-pale) center / cover no-repeat,
+    radial-gradient(60% 50% at 85% 0%, rgba(169, 196, 150, 0.30), transparent 70%),
+    linear-gradient(170deg, #F1F4EC 0%, #E7ECE1 100%);
+
+  --bubble-text-out: #F4F8EE;
+}
+
+/* Dark = the hero look: forest at night, frosted glass, pale sage pills */
+:root:not([data-theme="light"]),
+[data-theme="dark"] {
+  --aura-cta-400: #E6EED6;
+  --aura-cta-500: #BFD4A7;
+  --aura-cta-600: #98B27F;
+  --aura-cta-rgb: 191, 212, 167;
+  --aura-on-cta: #15231A;
+
+  --aura-tile-300: #D3E4C1;
+  --aura-tile-500: #AFCB98;
+  --aura-tile-700: #6E8F62;
+  --aura-tile-100: rgba(175, 203, 152, 0.14);
+  --aura-tile-rgb: 175, 203, 152;
+
+  --aura-canvas: #0F1813;
+  --aura-surface: #17231B;
+  --aura-surface-2: #1F2D23;
+  --aura-ink-900: #EEF3EA;
+  --aura-ink-700: #C8D3C3;
+  --aura-ink-500: #94A492;
+  --aura-ink-300: #56665A;
+  --aura-line: rgba(214, 232, 200, 0.10);
+  --aura-active-fill: rgba(191, 212, 167, 0.12);
+
+  --aura-glass: rgba(30, 44, 34, 0.50);
+  --aura-glass-strong: rgba(22, 34, 26, 0.74);
+  --aura-glass-border: rgba(226, 240, 214, 0.14);
+  --aura-glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  --aura-glass-blur: blur(28px) saturate(140%);
+
+  --aura-mint: rgba(175, 203, 152, 0.16);
+  --aura-mint-ink: #C3DCAC;
+  --aura-sky: rgba(175, 203, 152, 0.12);
+  --aura-lilac: rgba(214, 196, 140, 0.16);
+  --aura-lilac-ink: #E3D3A0;
+  --aura-success: #8DC97A;
+  --aura-danger-soft: rgba(220, 38, 38, 0.16);
+
+  --aura-gradient-tile: radial-gradient(120% 100% at 30% 15%, rgba(214, 232, 196, 0.34) 0%, rgba(140, 172, 120, 0.20) 52%, rgba(60, 88, 58, 0.34) 100%);
+  --aura-gradient-tile-gloss: radial-gradient(60% 45% at 30% 18%, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0) 100%);
+  --aura-gradient-bubble: linear-gradient(160deg, #6F9064 -20%, #4A6845 56%, #36503A 130%);
+  --aura-gradient-sky: linear-gradient(180deg, #1C2C21 0%, #131E17 60%, var(--aura-canvas) 100%);
+
+  --aura-shadow-sm: 0 2px 8px -2px rgba(0, 0, 0, 0.45);
+  --aura-shadow-md: 0 12px 30px -12px rgba(0, 0, 0, 0.55);
+  --aura-shadow-lg: 0 28px 60px -22px rgba(0, 0, 0, 0.7);
+  --aura-shadow-tile: 0 12px 30px -12px rgba(0, 0, 0, 0.6);
+  --aura-shadow-bubble: 0 10px 24px -12px rgba(0, 0, 0, 0.55);
+  --aura-shadow-cta: 0 14px 32px -12px rgba(191, 212, 167, 0.32);
+  --aura-halo-tile: 0 0 0 1px rgba(226, 240, 214, 0.16);
+  --aura-focus-ring: 0 0 0 3px rgba(191, 212, 167, 0.32);
+
+  --verdant-backdrop:
+    radial-gradient(55% 45% at 82% 6%, rgba(132, 170, 112, 0.20), transparent 70%),
+    radial-gradient(50% 50% at 0% 100%, rgba(84, 122, 74, 0.22), transparent 70%),
+    var(--verdant-leaves) center / cover no-repeat,
+    linear-gradient(160deg, #1D2D22 0%, #111B15 55%, #0B130E 100%);
+
+  --input-bg: rgba(255, 255, 255, 0.05);
+  --accent-light: var(--aura-tile-300);
+}
+
+/* --------------------------------------------------------------------------
+   2. TYPE - quieter, editorial serif like the reference
+   -------------------------------------------------------------------------- */
+.auth-card h1,
+.panel-header h2,
+.auth-hero-title,
+.conversation-empty-view h2,
+.call-modal-card h2,
+.settings-section h2,
+.peer-profile-name {
+  font-weight: 500;
+  letter-spacing: -0.015em;
+}
+.auth-hero-title { color: #EEF3E6; }
+.auth-hero-overline,
+.empty-overline { color: var(--aura-tile-500); }
+[data-theme="light"] .auth-hero-overline { color: #C9DDB4; }
+
+/* --------------------------------------------------------------------------
+   3. BACKDROP - the foliage world every panel floats on
+   -------------------------------------------------------------------------- */
+body,
+.app-shell,
+.main-app-layout-shell,
+.auth-container,
+.aura-splash {
+  background: var(--verdant-backdrop);
+  background-attachment: fixed;
+}
+.ambient-background { background-image: none; }
+
+/* --------------------------------------------------------------------------
+   4. GLASS PANELS
+   -------------------------------------------------------------------------- */
+.desktop-app-sidebar {
+  background:
+    var(--verdant-leaves) center / 900px auto no-repeat,
+    var(--aura-gradient-header);
+  border-right: 1px solid rgba(226, 240, 214, 0.08);
+}
+:root:not([data-theme="light"]) .desktop-app-sidebar {
+  background: rgba(10, 18, 13, 0.46);
+  -webkit-backdrop-filter: blur(24px) saturate(140%);
+  backdrop-filter: blur(24px) saturate(140%);
+}
+
+.app-sub-sidebar {
+  background: var(--aura-glass);
+  -webkit-backdrop-filter: var(--aura-glass-blur);
+  backdrop-filter: var(--aura-glass-blur);
+  border-right: 1px solid var(--aura-glass-border);
+}
+[data-theme="light"] .app-sub-sidebar { background: rgba(250, 251, 247, 0.74); border-right-color: var(--aura-line); }
+
+.app-conversation-view { background: transparent; }
+
+.auth-card {
+  background: var(--aura-glass-strong);
+  -webkit-backdrop-filter: var(--aura-glass-blur);
+  backdrop-filter: var(--aura-glass-blur);
+  border: 1px solid var(--aura-glass-border);
+  box-shadow: var(--aura-shadow-lg), var(--aura-glass-highlight);
+}
+
+/* the hero becomes a framed glass pane over foliage */
+.auth-hero {
+  background:
+    var(--verdant-leaves) center / cover no-repeat,
+    var(--aura-gradient-header);
+  border: 1px solid rgba(226, 240, 214, 0.14);
+}
+.auth-hero::before {
+  background:
+    var(--aura-gradient-header-vignette),
+    radial-gradient(50% 40% at 85% 85%, rgba(169, 199, 147, 0.18), transparent 70%),
+    linear-gradient(180deg, rgba(14, 25, 18, 0) 40%, rgba(14, 25, 18, 0.45) 100%);
+}
+:root:not([data-theme="light"]) .auth-hero {
+  background: linear-gradient(160deg, rgba(48, 70, 52, 0.42), rgba(14, 25, 18, 0.30));
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  box-shadow: var(--aura-shadow-lg), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* --------------------------------------------------------------------------
+   5. TILES - glass squares with hairline borders (reference category chips)
+   -------------------------------------------------------------------------- */
+:root:not([data-theme="light"]) .aura-tile,
+:root:not([data-theme="light"]) .auth-logo-wrapper {
+  border: 1px solid rgba(226, 240, 214, 0.22);
+  color: var(--aura-tile-300);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+.aura-tile-xl { border-radius: 34px; }
+
+/* --------------------------------------------------------------------------
+   6. BUTTONS - pale sage pills with a trailing arrow
+   -------------------------------------------------------------------------- */
+.btn-primary,
+.btn-composer-send {
+  color: var(--aura-on-cta);
+}
+.btn-primary {
+  border-radius: var(--aura-r-pill);
+  box-shadow: var(--aura-shadow-cta), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+.btn-primary:hover:not(:disabled) {
+  box-shadow: 0 18px 38px -12px rgba(var(--aura-cta-rgb), 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+.btn-cta { justify-content: space-between; padding: 0 22px 0 28px; font-weight: 500; }
+.btn-cta .btn-arrow {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(21, 35, 26, 0.10);
+}
+[data-theme="light"] .btn-cta .btn-arrow { background: rgba(255, 255, 255, 0.14); }
+
+.btn-secondary {
+  border-radius: var(--aura-r-pill);
+}
+:root:not([data-theme="light"]) .btn-secondary {
+  background: rgba(226, 240, 214, 0.06);
+  border-color: var(--aura-glass-border);
+}
+
+:root:not([data-theme="light"]) .btn-icon {
+  background: rgba(226, 240, 214, 0.06);
+  box-shadow: inset 0 0 0 1px rgba(226, 240, 214, 0.13);
+  color: var(--aura-ink-700);
+}
+:root:not([data-theme="light"]) .btn-icon:hover:not(:disabled) {
+  background: rgba(191, 212, 167, 0.16);
+  color: var(--aura-tile-300);
+}
+.header-actions > .btn-icon { box-shadow: inset 0 0 0 1px var(--aura-glass-border); }
+.header-actions > .btn-icon:hover:not(:disabled) {
+  background: var(--aura-gradient-cta);
+  color: var(--aura-on-cta);
+  box-shadow: var(--aura-shadow-cta);
+}
+
+/* rail nav: glass squares, active one lit sage */
+.sidebar-nav-btn { color: rgba(226, 240, 214, 0.58); }
+.sidebar-nav-btn:hover { background: rgba(226, 240, 214, 0.06); color: #EEF3E6; }
+.sidebar-nav-btn.active {
+  background: rgba(191, 212, 167, 0.14);
+  border-color: rgba(214, 232, 196, 0.30);
+  color: #E6EED6;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 0 24px -6px rgba(191, 212, 167, 0.35);
+}
+
+/* --------------------------------------------------------------------------
+   7. INPUTS - frosted pills
+   -------------------------------------------------------------------------- */
+:root:not([data-theme="light"]) .search-bar-container input,
+:root:not([data-theme="light"]) .auth-card input,
+:root:not([data-theme="light"]) .settings-section input,
+:root:not([data-theme="light"]) .modal-content input {
+  background: rgba(226, 240, 214, 0.05);
+  box-shadow: inset 0 0 0 1px rgba(226, 240, 214, 0.12);
+  color: var(--aura-ink-900);
+}
+.search-bar-container input { border-radius: var(--aura-r-pill); }
+
+/* segmented auth tabs */
+:root:not([data-theme="light"]) .auth-tabs,
+:root:not([data-theme="light"]) .auth-mode-tabs {
+  background: rgba(226, 240, 214, 0.06);
+  box-shadow: inset 0 0 0 1px rgba(226, 240, 214, 0.10);
+}
+
+/* --------------------------------------------------------------------------
+   8. CHAT LIST
+   -------------------------------------------------------------------------- */
+:root:not([data-theme="light"]) .chat-summary-item:hover { background: rgba(226, 240, 214, 0.04); }
+.chat-summary-item-wrapper.selected .chat-summary-item {
+  background: var(--aura-active-fill);
+  box-shadow: inset 0 0 0 1px rgba(var(--aura-tile-rgb), 0.24);
+}
+:root:not([data-theme="light"]) .chat-summary-item-wrapper.selected .chat-summary-item {
+  background: rgba(226, 240, 214, 0.07);
+  box-shadow: inset 0 0 0 1px rgba(226, 240, 214, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+.unread-badge {
+  background: var(--aura-gradient-cta);
+  color: var(--aura-on-cta);
+  box-shadow: 0 6px 14px -6px rgba(var(--aura-cta-rgb), 0.7);
+}
+
+/* --------------------------------------------------------------------------
+   9. CONVERSATION
+   -------------------------------------------------------------------------- */
+.bubble-mine {
+  color: #F4F8EE;
+  box-shadow: var(--aura-shadow-bubble), inset 0 1px 0 rgba(255, 255, 255, 0.16), inset 0 0 0 1px rgba(226, 240, 214, 0.10);
+}
+:root:not([data-theme="light"]) .bubble-incoming {
+  background: rgba(226, 240, 214, 0.07);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+  box-shadow: var(--aura-shadow-sm), inset 0 0 0 1px rgba(226, 240, 214, 0.12);
+}
+.bubble-mine .receipt-read { color: #DDEBCB; }
+
+.composer-input-row:focus-within {
+  box-shadow: var(--aura-shadow-lg), inset 0 0 0 1.5px rgba(var(--aura-tile-rgb), 0.45);
+}
+.btn-composer-send:hover:not(:disabled) { transform: translateY(var(--aura-hover-lift)) scale(1.04); }
+
+/* wallpapers: 0 Grove (foliage shows through), 1 Sage mist, 2 Forest, 3 Moss dawn */
+.chat-scroll-area.wallpaper-0 {
+  background-color: transparent;
+  background-image: radial-gradient(rgba(var(--aura-tile-rgb), 0.08) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+.chat-scroll-area.wallpaper-2 {
+  background:
+    radial-gradient(60% 40% at 80% 10%, rgba(132, 170, 112, 0.22), transparent 70%),
+    linear-gradient(180deg, #1D2D22 0%, #111B15 55%, #0B130E 100%);
+}
+.chat-scroll-area.wallpaper-3 {
+  background:
+    radial-gradient(70% 50% at 10% 0%, rgba(230, 214, 160, 0.20), transparent 70%),
+    radial-gradient(70% 50% at 100% 100%, rgba(132, 170, 112, 0.24), transparent 70%),
+    var(--aura-canvas);
+}
+.wallpaper-preview-btn-0 { background: var(--verdant-backdrop); }
+.wallpaper-preview-btn-1 { background: linear-gradient(180deg, #DDE8D3 0%, #F1F4EC 100%); }
+.wallpaper-preview-btn-2 { background: linear-gradient(180deg, #1D2D22 0%, #0B130E 100%); }
+.wallpaper-preview-btn-3 { background: linear-gradient(135deg, #EFE3BE 0%, #ECEFE7 50%, #B9D0A6 100%); }
+
+/* empty state: glass feature chips like the reference category row */
+.conversation-empty-view { background: transparent; }
+:root:not([data-theme="light"]) .empty-metrics-row > *,
+:root:not([data-theme="light"]) .metric-pill {
+  background: rgba(226, 240, 214, 0.06);
+  box-shadow: inset 0 0 0 1px rgba(226, 240, 214, 0.12);
+}
+
+/* --------------------------------------------------------------------------
+   10. SPLASH
+   -------------------------------------------------------------------------- */
+.aura-splash-word { color: var(--aura-ink-900); }
+:root:not([data-theme="light"]) .aura-splash-puck {
+  border: 1px solid rgba(226, 240, 214, 0.22);
+}
+
+/* --------------------------------------------------------------------------
+   11. MOBILE
+   -------------------------------------------------------------------------- */
+@media (max-width: 950px) {
+  .app-sub-sidebar {
+    background:
+      var(--verdant-leaves) top / 100% 300px no-repeat,
+      var(--aura-gradient-header) top / 100% 300px no-repeat,
+      var(--aura-canvas);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .app-sub-sidebar .panel-header h2 { color: #EEF3E6; }
+
+  :root:not([data-theme="light"]) .app-sub-sidebar { background: transparent; }
+  :root:not([data-theme="light"]) .app-sub-sidebar .scroll-container {
+    background: rgba(22, 34, 26, 0.62);
+    -webkit-backdrop-filter: var(--aura-glass-blur);
+    backdrop-filter: var(--aura-glass-blur);
+    box-shadow: inset 0 1px 0 rgba(226, 240, 214, 0.14), 0 -10px 30px -12px rgba(0, 0, 0, 0.4);
+  }
+
+  .mobile-tab-btn.active {
+    background: var(--aura-active-fill);
+    color: var(--aura-tile-500);
+    box-shadow: inset 0 0 0 1px rgba(var(--aura-tile-rgb), 0.28);
+  }
+  [data-theme="light"] .mobile-tab-btn.active { color: var(--aura-tile-700); }
+
+  :root:not([data-theme="light"]) .auth-hero {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .auth-hero { border-width: 0; }
+}

@@ -6,7 +6,14 @@ import type {
   DeleteRequest,
   Message,
   RecoveryRequest,
+  SignVideo,
   User,
+  DatasetExport,
+  DatasetSample,
+  DatasetStats,
+  RawFrame,
+  SignModel,
+  VocabularyEntry,
 } from "./types";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "/api";
@@ -101,6 +108,45 @@ export const api = {
       headers: adminHeaders(adminToken),
       body: JSON.stringify({ adminNote }),
     }),
+  adminSignOut: (adminToken: string) => request<{ ok: boolean }>("/auth/admin/sign-out", { method: "POST", headers: adminHeaders(adminToken) }),
+  adminListSignVideos: (adminToken: string) =>
+    request<SignVideo[]>("/admin/sign-videos", { headers: adminHeaders(adminToken) }),
+  adminReviewSignVideo: (adminToken: string, id: string, status: SignVideo["verificationStatus"], note?: string) =>
+    request<SignVideo>(`/admin/sign-videos/${id}`, {
+      method: "PATCH",
+      headers: adminHeaders(adminToken),
+      body: JSON.stringify({ status, note }),
+    }),
+  adminDeleteSignVideo: (adminToken: string, id: string) =>
+    request<{ ok: boolean }>(`/admin/sign-videos/${id}`, { method: "DELETE", headers: adminHeaders(adminToken) }),
+  datasetStats: (language: string) => request<DatasetStats>(`/dataset/stats?language=${language}`),
+  datasetVocabulary: (language: string) => request<VocabularyEntry[]>(`/dataset/vocabulary?language=${language}`),
+  adminDatasetSamples: (adminToken: string) => request<DatasetSample[]>("/admin/dataset/samples", { headers: adminHeaders(adminToken) }),
+  adminDatasetFrames: (adminToken: string, id: string) => request<RawFrame[]>(`/admin/dataset/samples/${id}/frames`, { headers: adminHeaders(adminToken) }),
+  adminReviewDatasetSample: (adminToken: string, id: string, status: DatasetSample["status"]) =>
+    request<DatasetSample>(`/admin/dataset/samples/${id}`, { method: "PATCH", headers: adminHeaders(adminToken), body: JSON.stringify({ status }) }),
+  adminDeleteDatasetSample: (adminToken: string, id: string) =>
+    request<{ ok: boolean }>(`/admin/dataset/samples/${id}`, { method: "DELETE", headers: adminHeaders(adminToken) }),
+  adminAddVocabulary: (adminToken: string, body: { language: string; gloss: string; meaning: string }) =>
+    request<VocabularyEntry>("/admin/dataset/vocabulary", { method: "POST", headers: adminHeaders(adminToken), body: JSON.stringify(body) }),
+  adminRemoveVocabulary: (adminToken: string, id: string) =>
+    request<{ ok: boolean }>(`/admin/dataset/vocabulary/${id}`, { method: "DELETE", headers: adminHeaders(adminToken) }),
+  adminExportDataset: (adminToken: string, language: string) =>
+    request<DatasetExport>(`/admin/dataset/export?language=${language}`, { headers: adminHeaders(adminToken) }),
+  adminModels: (adminToken: string) => request<SignModel[]>("/admin/models", { headers: adminHeaders(adminToken) }),
+  adminUploadModel: async (adminToken: string, model: File, manifest: File, note?: string) => {
+    const form = new FormData();
+    form.append("model", model);
+    form.append("manifest", manifest);
+    if (note) form.append("note", note);
+    const res = await fetch(`${API_URL}/admin/models`, { method: "POST", headers: adminHeaders(adminToken), body: form });
+    if (!res.ok) throw new Error(await res.text());
+    return (await res.json()) as SignModel;
+  },
+  adminSetModelStatus: (adminToken: string, id: string, status: SignModel["status"]) =>
+    request<SignModel>(`/admin/models/${id}`, { method: "PATCH", headers: adminHeaders(adminToken), body: JSON.stringify({ status }) }),
+  adminDeleteModel: (adminToken: string, id: string) =>
+    request<{ ok: boolean }>(`/admin/models/${id}`, { method: "DELETE", headers: adminHeaders(adminToken) }),
   approveDeleteRequest: (requestId: string, userId: string) =>
     request<DeleteRequest>(`/messages/delete-requests/${requestId}/approve`, {
       method: "POST",

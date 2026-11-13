@@ -1,0 +1,290 @@
+/* ==========================================================================
+   AURA Premium UI - Design Tokens (CSS)
+   Paste this file into your project and reference ONLY these variables.
+   Light theme is default. Dark theme applies via prefers-color-scheme or
+   <html data-theme="dark">. Force light with <html data-theme="light">.
+   ========================================================================== */
+
+:root {
+  /* ---------- Fonts ---------- */
+  --aura-font-display: "Fraunces", "New York", "Playfair Display", Georgia, serif;
+  --aura-font-sans: "Inter", -apple-system, "SF Pro Text", "Roboto", system-ui, sans-serif;
+  --aura-font-mono: "JetBrains Mono", "SF Mono", ui-monospace, monospace;
+
+  /* ---------- Type scale (size / line-height) ---------- */
+  --aura-text-display-xl: 700 40px/44px var(--aura-font-display);
+  --aura-text-display-lg: 700 32px/36px var(--aura-font-display);
+  --aura-text-display-md: 600 26px/30px var(--aura-font-display);
+  --aura-text-title-lg: 600 22px/28px var(--aura-font-sans);
+  --aura-text-title-md: 600 18px/24px var(--aura-font-sans);
+  --aura-text-body-lg: 500 17px/24px var(--aura-font-sans);
+  --aura-text-body-md: 400 15px/22px var(--aura-font-sans);
+  --aura-text-label-md: 500 14px/18px var(--aura-font-sans);
+  --aura-text-label-sm: 500 13px/16px var(--aura-font-sans);
+  --aura-text-overline: 600 12px/16px var(--aura-font-sans);
+  --aura-tracking-display: -0.02em;
+  --aura-tracking-overline: 0.06em;
+
+  /* ---------- Brand hue (swap these 4 to re-brand) ---------- */
+  --aura-brand-900: #6E0A12;
+  --aura-brand-600: #B3121F;
+  --aura-cta-500: #F26A1B;
+  --aura-tile-500: #1E6BFF;
+
+  /* derived brand ramps */
+  --aura-brand-700: #8F0E19;
+  --aura-brand-400: #D93A47;
+  --aura-brand-100: #FDE8EA;
+  --aura-cta-600: #E85D12;
+  --aura-cta-400: #F7931E;
+  --aura-tile-700: #0A3FCC;
+  --aura-tile-300: #6FA3FF;
+  --aura-tile-100: #E3EDFF;
+
+  /* ---------- Semantic ---------- */
+  --aura-success: #0E8A4E;
+  --aura-warning: #D97706;
+  --aura-danger: #DC2626;
+  --aura-info: #1E6BFF;
+  --aura-mint: #D8F5E6;
+  --aura-mint-ink: #0E8A4E;
+  --aura-lilac: #EBDDFB;
+  --aura-lilac-ink: #6A1FB8;
+  --aura-sky: #E6F3FF;
+  --aura-gold: #F2B134;
+
+  /* ---------- Canvas & ink (light) ---------- */
+  --aura-canvas: #F5F6FA;
+  --aura-surface: #FFFFFF;
+  --aura-surface-2: #F0F2F7;
+  --aura-ink-900: #0B1220;
+  --aura-ink-700: #2A3242;
+  --aura-ink-500: #6B7385;
+  --aura-ink-300: #B9BFCC;
+  --aura-line: rgba(11, 18, 32, 0.08);
+  --aura-on-brand: #FFFFFF;
+
+  /* ---------- Glass ---------- */
+  --aura-glass: rgba(255, 255, 255, 0.62);
+  --aura-glass-strong: rgba(255, 255, 255, 0.82);
+  --aura-glass-border: rgba(255, 255, 255, 0.75);
+  --aura-glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  --aura-glass-blur: blur(24px) saturate(160%);
+
+  /* ---------- Gradients ---------- */
+  --aura-gradient-header: linear-gradient(180deg, var(--aura-brand-600) 0%, var(--aura-brand-700) 55%, var(--aura-brand-900) 100%);
+  --aura-gradient-header-vignette: radial-gradient(120% 80% at 50% -20%, rgba(255,255,255,0.18), transparent 60%);
+  --aura-gradient-cta: linear-gradient(180deg, var(--aura-cta-400) 0%, var(--aura-cta-500) 100%);
+  --aura-gradient-tile: radial-gradient(120% 100% at 30% 15%, var(--aura-tile-300) 0%, var(--aura-tile-500) 45%, var(--aura-tile-700) 100%);
+  --aura-gradient-tile-gloss: radial-gradient(60% 45% at 30% 18%, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 100%);
+  --aura-gradient-sky: linear-gradient(180deg, #CFE6FF 0%, #EAF4FF 60%, var(--aura-canvas) 100%);
+  --aura-gradient-aurora: linear-gradient(135deg, #FF8A3D 0%, #FFB347 30%, #2F80ED 70%, #0A3FCC 100%);
+  --aura-gradient-gold: linear-gradient(135deg, #F9D976 0%, #F39F2C 100%);
+  --aura-gradient-festive: linear-gradient(180deg, var(--aura-brand-600) 0%, #5C0810 100%);
+  --aura-gradient-shimmer: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.55) 50%, transparent 100%);
+
+  /* ---------- Spacing (4pt) ---------- */
+  --aura-space-1: 4px;
+  --aura-space-2: 8px;
+  --aura-space-3: 12px;
+  --aura-space-4: 16px;
+  --aura-space-5: 20px;
+  --aura-space-6: 24px;
+  --aura-space-8: 32px;
+  --aura-space-10: 40px;
+  --aura-space-12: 48px;
+  --aura-space-16: 64px;
+  --aura-gutter: 20px;
+  --aura-touch: 56px;
+
+  /* ---------- Radius ---------- */
+  --aura-r-sm: 10px;
+  --aura-r-md: 14px;
+  --aura-r-lg: 16px;
+  --aura-r-xl: 20px;
+  --aura-r-2xl: 22px;
+  --aura-r-3xl: 28px;
+  --aura-r-pill: 999px;
+
+  /* ---------- Elevation ---------- */
+  --aura-shadow-sm: 0 2px 8px -2px rgba(11, 18, 32, 0.08);
+  --aura-shadow-md: 0 10px 30px -12px rgba(11, 18, 32, 0.14);
+  --aura-shadow-lg: 0 24px 60px -20px rgba(11, 18, 32, 0.22);
+  --aura-shadow-tile: 0 12px 32px -8px rgba(30, 107, 255, 0.45);
+  --aura-shadow-cta: 0 14px 32px -10px rgba(242, 106, 27, 0.55);
+  --aura-halo-tile: 0 0 0 8px rgba(227, 237, 255, 0.6);
+  --aura-focus-ring: 0 0 0 3px rgba(30, 107, 255, 0.4);
+
+  /* ---------- Motion ---------- */
+  --aura-dur-instant: 80ms;
+  --aura-dur-fast: 160ms;
+  --aura-dur-base: 260ms;
+  --aura-dur-slow: 420ms;
+  --aura-dur-cinematic: 700ms;
+  --aura-ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --aura-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --aura-ease-spring: linear(0, 0.009, 0.035 2.1%, 0.141, 0.281 6.7%, 0.723 12.9%, 0.938 16.7%, 1.017, 1.077, 1.121, 1.149 24.3%, 1.159, 1.163, 1.161, 1.154 29.9%, 1.129 32.8%, 1.051 39.6%, 1.017 43.1%, 0.991, 0.977 51%, 0.974 53.8%, 0.975 57.1%, 0.997 69.8%, 1.003 76.9%, 1);
+  --aura-ease-spring-soft: linear(0, 0.006, 0.025 2.8%, 0.101 6.1%, 0.539 18.9%, 0.721 25.3%, 0.849 31.5%, 0.937 38.1%, 0.968 41.8%, 0.991 45.7%, 1.006 50.1%, 1.015 55%, 1.017 63.9%, 1.001);
+  --aura-stagger: 40ms;
+  --aura-press-scale: 0.97;
+  --aura-hover-lift: -2px;
+}
+
+/* ---------- Dark theme ---------- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --aura-canvas: #0B0C10;
+    --aura-surface: #15171E;
+    --aura-surface-2: #1C1F28;
+    --aura-ink-900: #F4F6FB;
+    --aura-ink-700: #C9CFDB;
+    --aura-ink-500: #8A91A3;
+    --aura-ink-300: #4A5062;
+    --aura-line: rgba(255, 255, 255, 0.08);
+    --aura-glass: rgba(21, 23, 30, 0.58);
+    --aura-glass-strong: rgba(21, 23, 30, 0.82);
+    --aura-glass-border: rgba(255, 255, 255, 0.10);
+    --aura-glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    --aura-mint: rgba(14, 138, 78, 0.22);
+    --aura-mint-ink: #5FE0A3;
+    --aura-lilac: rgba(106, 31, 184, 0.28);
+    --aura-lilac-ink: #D3B4FF;
+    --aura-sky: rgba(30, 107, 255, 0.14);
+    --aura-success: #34C77B;
+    --aura-shadow-sm: 0 2px 8px -2px rgba(0, 0, 0, 0.5);
+    --aura-shadow-md: 0 10px 30px -12px rgba(0, 0, 0, 0.6);
+    --aura-shadow-lg: 0 24px 60px -20px rgba(0, 0, 0, 0.7);
+    --aura-halo-tile: 0 0 0 8px rgba(30, 107, 255, 0.14);
+    --aura-gradient-sky: linear-gradient(180deg, #121A2E 0%, #0E1320 60%, var(--aura-canvas) 100%);
+  }
+}
+:root[data-theme="dark"] {
+  --aura-canvas: #0B0C10;
+  --aura-surface: #15171E;
+  --aura-surface-2: #1C1F28;
+  --aura-ink-900: #F4F6FB;
+  --aura-ink-700: #C9CFDB;
+  --aura-ink-500: #8A91A3;
+  --aura-ink-300: #4A5062;
+  --aura-line: rgba(255, 255, 255, 0.08);
+  --aura-glass: rgba(21, 23, 30, 0.58);
+  --aura-glass-strong: rgba(21, 23, 30, 0.82);
+  --aura-glass-border: rgba(255, 255, 255, 0.10);
+  --aura-glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  --aura-mint: rgba(14, 138, 78, 0.22);
+  --aura-mint-ink: #5FE0A3;
+  --aura-lilac: rgba(106, 31, 184, 0.28);
+  --aura-lilac-ink: #D3B4FF;
+  --aura-sky: rgba(30, 107, 255, 0.14);
+  --aura-success: #34C77B;
+  --aura-shadow-sm: 0 2px 8px -2px rgba(0, 0, 0, 0.5);
+  --aura-shadow-md: 0 10px 30px -12px rgba(0, 0, 0, 0.6);
+  --aura-shadow-lg: 0 24px 60px -20px rgba(0, 0, 0, 0.7);
+  --aura-halo-tile: 0 0 0 8px rgba(30, 107, 255, 0.14);
+  --aura-gradient-sky: linear-gradient(180deg, #121A2E 0%, #0E1320 60%, var(--aura-canvas) 100%);
+}
+
+/* ---------- Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --aura-dur-fast: 1ms;
+    --aura-dur-base: 120ms;
+    --aura-dur-slow: 150ms;
+    --aura-dur-cinematic: 150ms;
+    --aura-stagger: 0ms;
+    --aura-press-scale: 1;
+    --aura-hover-lift: 0px;
+    --aura-ease-spring: ease-out;
+    --aura-ease-spring-soft: ease-out;
+  }
+}
+
+/* ---------- Base resets that AURA assumes ---------- */
+.aura, .aura * { box-sizing: border-box; }
+.aura {
+  background: var(--aura-canvas);
+  color: var(--aura-ink-900);
+  font: var(--aura-text-body-md);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Utility classes (optional, framework-free) ---------- */
+.aura-display-lg { font: var(--aura-text-display-lg); letter-spacing: var(--aura-tracking-display); }
+.aura-display-md { font: var(--aura-text-display-md); letter-spacing: var(--aura-tracking-display); }
+.aura-title-lg { font: var(--aura-text-title-lg); }
+.aura-title-md { font: var(--aura-text-title-md); }
+.aura-body-lg { font: var(--aura-text-body-lg); }
+.aura-label-md { font: var(--aura-text-label-md); color: var(--aura-ink-500); }
+.aura-label-sm { font: var(--aura-text-label-sm); color: var(--aura-ink-500); }
+.aura-overline { font: var(--aura-text-overline); letter-spacing: var(--aura-tracking-overline); text-transform: uppercase; color: var(--aura-ink-500); }
+
+.aura-glass {
+  background: var(--aura-glass);
+  border: 1px solid var(--aura-glass-border);
+  box-shadow: var(--aura-shadow-lg), var(--aura-glass-highlight);
+  -webkit-backdrop-filter: var(--aura-glass-blur);
+  backdrop-filter: var(--aura-glass-blur);
+}
+
+.aura-card {
+  background: var(--aura-surface);
+  border-radius: var(--aura-r-3xl);
+  box-shadow: var(--aura-shadow-md);
+  padding: var(--aura-space-5);
+  position: relative;
+  overflow: hidden;
+}
+
+.aura-tile {
+  width: 64px; height: 64px;
+  border-radius: var(--aura-r-2xl);
+  background: var(--aura-gradient-tile);
+  box-shadow: var(--aura-shadow-tile), var(--aura-halo-tile);
+  display: grid; place-items: center;
+  color: #fff; position: relative;
+}
+.aura-tile::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit;
+  background: var(--aura-gradient-tile-gloss); pointer-events: none;
+}
+
+.aura-btn-primary {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  width: 100%; min-height: var(--aura-touch);
+  border: 0; border-radius: var(--aura-r-xl);
+  background: var(--aura-gradient-cta);
+  color: #fff; font: 600 18px/24px var(--aura-font-sans);
+  box-shadow: var(--aura-shadow-cta), inset 0 1px 0 rgba(255,255,255,0.35);
+  cursor: pointer;
+  transition: transform var(--aura-dur-fast) var(--aura-ease-out-expo), box-shadow var(--aura-dur-fast);
+}
+.aura-btn-primary:hover { transform: translateY(var(--aura-hover-lift)); }
+.aura-btn-primary:active { transform: scale(var(--aura-press-scale)); }
+.aura-btn-primary:focus-visible { outline: none; box-shadow: var(--aura-shadow-cta), var(--aura-focus-ring); }
+
+.aura-press { transition: transform var(--aura-dur-fast) var(--aura-ease-out-expo); }
+.aura-press:active { transform: scale(var(--aura-press-scale)); }
+
+@keyframes aura-rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+.aura-rise { animation: aura-rise var(--aura-dur-slow) var(--aura-ease-out-expo) both; }
+.aura-rise[data-i="1"] { animation-delay: calc(1 * var(--aura-stagger)); }
+.aura-rise[data-i="2"] { animation-delay: calc(2 * var(--aura-stagger)); }
+.aura-rise[data-i="3"] { animation-delay: calc(3 * var(--aura-stagger)); }
+.aura-rise[data-i="4"] { animation-delay: calc(4 * var(--aura-stagger)); }
+.aura-rise[data-i="5"] { animation-delay: calc(5 * var(--aura-stagger)); }
+.aura-rise[data-i="6"] { animation-delay: calc(6 * var(--aura-stagger)); }
+.aura-rise[data-i="7"] { animation-delay: calc(7 * var(--aura-stagger)); }
+.aura-rise[data-i="8"] { animation-delay: calc(8 * var(--aura-stagger)); }
+
+@keyframes aura-shimmer { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+.aura-skeleton {
+  position: relative; overflow: hidden;
+  background: var(--aura-surface-2); border-radius: var(--aura-r-md);
+}
+.aura-skeleton::after {
+  content: ""; position: absolute; inset: 0;
+  background: var(--aura-gradient-shimmer);
+  animation: aura-shimmer 1.4s var(--aura-ease-in-out) infinite;
+}

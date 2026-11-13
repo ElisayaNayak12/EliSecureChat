@@ -8,3 +8,31 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
+
+# SignConnect: never commit models, training environments, or recorded data (spec section 4 / 10)
+ai/.venv/
+ai/runs/
+**/__pycache__/
+.pytest_cache/
+*.onnx
+apps/backend/data/dataset/
+apps/backend/data/sign-videos/
+apps/web/tsconfig.tsbuildinfo
+
+.dev-servers.pid
+
+# Runtime data and secrets: NEVER commit (user accounts, encrypted messages, uploads, signing secrets)
+apps/backend/data/
+apps/backend/uploads/
+apps/backend/apps/
+**/uploads/*
+!apps/backend/src/uploads/
+*.jwt-secret
+.jwt-secret
+.env.*
+!.env.example
+
+# Phone test mode: downloaded tunnel tool and runtime state
+tools/
+.phone-test.*
+.phone-test-tunnel.log

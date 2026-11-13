@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   ConflictException,
   Controller,
@@ -14,13 +15,21 @@ import {
 } from "@nestjs/common";
 import { InMemoryStore } from "../store/in-memory.store";
 import { UpdateProfileDto } from "./dto/update-profile.dto";
+import { PreferencesValidationError, applyPreferencesPatch, resolvePreferences } from "./preferences";
+import { AllowOtherUser, CurrentUser, Public, type AuthUser } from "../auth/decorators";
+import type { User } from "../store/models";
+
+/** What other people may see about a user. Email, preferences and moderation details stay private. */
+export function publicProfile(u: User) {
+  return { id: u.id, name: u.name, phone: u.phone, avatarUrl: u.avatarUrl, lastSeenAt: u.lastSeenAt, createdAt: u.createdAt, status: u.status ?? "ACTIVE" };
+}
 
 @Controller("users")
 export class UsersController {
   constructor(@Inject(InMemoryStore) private readonly store: InMemoryStore) {}
 
   @Get("search")
-  search(@Query("q") q = "") {
+  search(@Query("q") q = "", @CurrentUser() me: AuthUser) {
     const needle = q.toLowerCase().trim();
     const users = (!needle ? this.store.users : this.store.users
       .filter((u) => {
@@ -36,17 +45,46 @@ export class UsersController {
     )
       .slice(0, 20);
 
-    return users.map(({ passwordHash: _passwordHash, ...safeUser }) => safeUser);
+    return users.map((u) => (u.id === me.userId ? this.selfProfile(u) : publicProfile(u)));
   }
 
+  private selfProfile(user: User) {
+    const { passwordHash: _passwordHash, ...rest } = user;
+    return rest;
+  }
+
+  @AllowOtherUser()
   @Get(":userId")
-  getUser(@Param("userId") userId: string) {
+  getUser(@Param("userId") userId: string, @CurrentUser() me: AuthUser) {
     const user = this.store.users.find((u) => u.id === userId);
     if (!user) {
       throw new NotFoundException("USER_NOT_FOUND");
     }
-    const { passwordHash: _passwordHash, ...safeUser } = user;
-    return safeUser;
+    return user.id === me.userId ? this.selfProfile(user) : publicProfile(user);
+  }
+
+  /** Language, accessibility and voice preferences (SignConnect Phase 1a). */
+  @Get(":userId/preferences")
+  getPreferences(@Param("userId") userId: string) {
+    const user = this.store.users.find((u) => u.id === userId);
+    if (!user) throw new NotFoundException("USER_NOT_FOUND");
+    return resolvePreferences(user.preferences);
+  }
+
+  @Patch(":userId/preferences")
+  updatePreferences(@Param("userId") userId: string, @Body() body: unknown) {
+    const user = this.store.users.find((u) => u.id === userId);
+    if (!user) throw new NotFoundException("USER_NOT_FOUND");
+    try {
+      user.preferences = applyPreferencesPatch(resolvePreferences(user.preferences), body);
+    } catch (err) {
+      if (err instanceof PreferencesValidationError) {
+        throw new BadRequestException({ error: "INVALID_PREFERENCES", issues: err.issues });
+      }
+      throw err;
+    }
+    this.store.persist();
+    return user.preferences;
   }
 
   @Patch(":userId")
@@ -72,6 +110,36 @@ export class UsersController {
     return safeUser;
   }
 
+  /* ---------------- blocking ---------------- */
+
+  @Get(":userId/blocks")
+  listBlocks(@Param("userId") userId: string) {
+    const me = this.store.users.find((u) => u.id === userId);
+    if (!me) throw new NotFoundException("USER_NOT_FOUND");
+    return (me.blockedUserIds ?? []).map((id) => this.store.users.find((u) => u.id === id)).filter((u): u is User => !!u).map(publicProfile);
+  }
+
+  @Post(":userId/blocks")
+  @HttpCode(200)
+  block(@Param("userId") userId: string, @Body() body: { targetId?: string }) {
+    const me = this.store.users.find((u) => u.id === userId);
+    if (!me) throw new NotFoundException("USER_NOT_FOUND");
+    const target = typeof body?.targetId === "string" ? this.store.users.find((u) => u.id === body.targetId) : undefined;
+    if (!target || target.id === me.id) throw new BadRequestException("INVALID_TARGET");
+    me.blockedUserIds = [...new Set([...(me.blockedUserIds ?? []), target.id])];
+    this.store.persist();
+    return { ok: true, blocked: me.blockedUserIds };
+  }
+
+  @Delete(":userId/blocks/:targetId")
+  unblock(@Param("userId") userId: string, @Param("targetId") targetId: string) {
+    const me = this.store.users.find((u) => u.id === userId);
+    if (!me) throw new NotFoundException("USER_NOT_FOUND");
+    me.blockedUserIds = (me.blockedUserIds ?? []).filter((id) => id !== targetId);
+    this.store.persist();
+    return { ok: true, blocked: me.blockedUserIds };
+  }
+
   /** Self-delete: suspends account (preserves data for recovery) */
   @Delete(":userId")
   @HttpCode(200)
@@ -89,6 +157,7 @@ export class UsersController {
   }
 
   /** Submit an account recovery request */
+  @Public()
   @Post("recovery-request")
   @HttpCode(201)
   submitRecoveryRequest(
@@ -125,6 +194,7 @@ export class UsersController {
   }
 
   /** Get recovery request status for a user */
+  @Public()
   @Get(":userId/recovery-status")
   getRecoveryStatus(@Param("userId") userId: string) {
     const requests = this.store.recoveryRequests

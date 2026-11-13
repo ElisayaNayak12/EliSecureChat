@@ -1,0 +1,84 @@
+# Builds and tests the Flutter Android app in the cloud (nothing needs to be installed on your PC).
+# Download the APKs from the run's "Artifacts" section on GitHub (Actions tab).
+name: Flutter Android
+
+on:
+  push:
+    paths:
+      - "apps/flutter_app/**"
+      - "apps/web/src/e2ee/**"
+      - ".github/workflows/flutter-android.yml"
+  pull_request:
+    paths:
+      - "apps/flutter_app/**"
+      - "apps/web/src/e2ee/**"
+  workflow_dispatch:
+    inputs:
+      server_url:
+        description: "Server the app connects to by default (e.g. https://chat.example.com). Users can change it on the sign-in screen."
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: apps/flutter_app
+    env:
+      SERVER_URL: ${{ github.event.inputs.server_url || vars.SERVER_URL || 'http://10.0.2.2:3000' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: "3.47.8"
+          cache: true
+
+      - name: Generate the Android project
+        run: |
+          flutter create --platforms=android --org com.elisecurechat --project-name elisecurechat .
+          python3 tool/patch_android.py
+
+      - name: Get packages
+        run: flutter pub get
+
+      - name: Static analysis
+        run: flutter analyze --no-fatal-infos
+
+      - name: Regenerate crypto test vectors from the web app's current code
+        run: node tool/gen_vectors.mjs
+
+      - name: Unit tests (includes web -> Dart crypto interop)
+        run: flutter test
+
+      - name: Dart -> web crypto interop check
+        run: node tool/verify_dart_envelope.mjs
+
+      - name: Build APKs
+        run: |
+          flutter build apk --debug --dart-define=SERVER_URL="$SERVER_URL"
+          flutter build apk --release --dart-define=SERVER_URL="$SERVER_URL"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: elisecurechat-android
+          path: |
+            apps/flutter_app/build/app/outputs/flutter-apk/app-debug.apk
+            apps/flutter_app/build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+          retention-days: 30

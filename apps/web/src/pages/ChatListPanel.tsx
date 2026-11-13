@@ -38,7 +38,16 @@ export default function ChatListPanel({
   return (
     <div className="chats-list-panel animate-fade-in">
       <div className="panel-header">
-        <h2>Chats</h2>
+        <div className="panel-header-titles">
+          <h2>Chats</h2>
+          <span className="panel-header-sub">
+            {summaries.length} conversation{summaries.length === 1 ? "" : "s"}
+            {(() => {
+              const unread = summaries.reduce((n, s) => n + (s.unreadCount > 0 ? 1 : 0), 0);
+              return unread > 0 ? ` · ${unread} unread` : "";
+            })()}
+          </span>
+        </div>
         <button
           className="btn-icon"
           onClick={onRefresh}
@@ -56,19 +65,45 @@ export default function ChatListPanel({
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search chats or contacts..."
+          placeholder="Search"
           className="search-input"
         />
       </div>
 
       <div className="scroll-container chat-sidebar-scroll">
+        <div className="sidebar-section quick-contacts-section">
+          <h3>Quick start</h3>
+          {contacts.length === 0 ? (
+            <div className="empty-sidebar-state">No matching contacts</div>
+          ) : (
+            <ul className="chat-contacts-list">
+              {contacts.map((u) => {
+                const isUserOnline = onlineUsers.has(u.id);
+                return (
+                  <li key={u.id} className="chat-contact-item-wrapper">
+                    <button className="chat-contact-item" onClick={() => onStartChat(u)}>
+                      <Avatar
+                        name={u.name}
+                        avatarUrl={u.avatarUrl}
+                        size="lg"
+                        isOnline={isUserOnline}
+                        resolveUrl={resolveUrl}
+                      />
+                      <span className="chat-contact-name">{u.name.split(" ")[0]}</span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
         <div className="sidebar-section">
-          <h3>Recent Conversations</h3>
+          <h3>Recent</h3>
           {summaries.length === 0 ? (
             <div className="empty-sidebar-state">No conversations yet</div>
           ) : (
             <ul className="chat-summary-list">
-              {summaries.map((s) => {
+              {summaries.map((s, idx) => {
                 const title = s.peer?.name ?? s.chat.title ?? "Chat";
                 const isSelected = s.chat.id === activeChatId;
                 const isPeerOnline = s.peer ? onlineUsers.has(s.peer.id) : false;
@@ -78,7 +113,11 @@ export default function ChatListPanel({
                   : "No messages yet";
 
                 return (
-                  <li key={s.chat.id} className={`chat-summary-item-wrapper ${isSelected ? "selected" : ""}`}>
+                  <li
+                    key={s.chat.id}
+                    className={`chat-summary-item-wrapper ${isSelected ? "selected" : ""} ${s.unreadCount > 0 ? "has-unread" : ""}`}
+                    style={{ ["--i" as string]: Math.min(idx, 8) }}
+                  >
                     <button className="chat-summary-item" onClick={() => onOpenChat(s)}>
                       <Avatar
                         name={title}
@@ -107,32 +146,6 @@ export default function ChatListPanel({
           )}
         </div>
 
-        <div className="sidebar-section">
-          <h3>Quick Contacts</h3>
-          {contacts.length === 0 ? (
-            <div className="empty-sidebar-state">No matching contacts</div>
-          ) : (
-            <ul className="chat-contacts-list">
-              {contacts.map((u) => {
-                const isUserOnline = onlineUsers.has(u.id);
-                return (
-                  <li key={u.id} className="chat-contact-item-wrapper">
-                    <button className="chat-contact-item" onClick={() => onStartChat(u)}>
-                      <Avatar
-                        name={u.name}
-                        avatarUrl={u.avatarUrl}
-                        size="sm"
-                        isOnline={isUserOnline}
-                        resolveUrl={resolveUrl}
-                      />
-                      <span className="chat-contact-name">{u.name}</span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </div>
       </div>
     </div>
   );

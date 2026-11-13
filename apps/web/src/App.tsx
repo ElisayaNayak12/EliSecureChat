@@ -1,14 +1,20 @@
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState, type ComponentProps } from "react";
+import { applyAccessibility, flashVisualAlert } from "./preferences";
 import { api } from "./api";
-import { decryptMessage, encryptMessage } from "./crypto";
+import { absoluteUrl } from "./config";
+import { getAccessToken, logoutSession, onSessionChange, refreshSession, setSession, withMediaToken } from "./session";
+import { e2ee, MissingKeysError } from "./e2ee/e2ee";
 import { socket } from "./socket";
-import type { AdminOverview, ChatSummary, Community, DeleteRequest, Message, User } from "./types";
+import type { AdminOverview, ChatSummary, Community, DeleteRequest, LoginResponse, Message, User, PreferencesPatch, UserPreferences } from "./types";
 import AuthPage from "./pages/AuthPage";
 import MainApp from "./pages/MainApp";
 import Avatar from "./components/Avatar";
 import { LockIcon } from "./components/Icons";
+import BrandSplash from "./components/BrandSplash";
+import { CallManager, type CallSnapshot } from "./call/CallManager";
+import CallScreen from "./call/CallScreen";
 
-type UserTab = "chats" | "contacts" | "communities" | "settings" | "profile";
+type UserTab = "chats" | "contacts" | "communities" | "translator" | "settings" | "profile";
 
 function normalizeMessageShape(message: Message): Message {
   const safeReadBy = Array.isArray(message.readBy) ? [...new Set(message.readBy)] : [];
@@ -33,25 +39,45 @@ function normalizeMessageShape(message: Message): Message {
   };
 }
 
+/**
+ * Cheap fingerprint of polled data. Polling runs every couple of seconds; when nothing changed we skip the state
+ * update so React does not re-render (and re-decrypt) every message. Large envelopes are reduced to length + tail.
+ */
+function fingerprint(value: unknown): string {
+  return JSON.stringify(value, (k, v) => (k === "encryptedContent" && typeof v === "string" ? `${v.length}:${v.slice(-24)}` : v));
+}
+
 export function App() {
   const [userTab, setUserTab] = useState<UserTab>("chats");
   const [status, setStatus] = useState("Ready");
   const [backendReady, setBackendReady] = useState(false);
   const [theme, setTheme] = useState<"light" | "dark">("dark");
+  const [preferences, setPreferences] = useState<UserPreferences | null>(null);
 
   // Call states
-  const [callState, setCallState] = useState<"idle" | "outgoing" | "incoming" | "active">("idle");
-  const [callType, setCallType] = useState<"voice" | "video">("voice");
-  const [callChatId, setCallChatId] = useState<string | null>(null);
-  const [callPartner, setCallPartner] = useState<User | null>(null);
-  const [callDuration, setCallDuration] = useState(0);
-  const [localStream, setLocalStream] = useState<MediaStream | null>(null);
+  // Real WebRTC calls (SignConnect Phase 3/8)
+  const callManager = useMemo(() => new CallManager(socket), []);
 
   const [name, setName] = useState("User One");
   const [phone, setPhone] = useState("9000000001");
   const [email, setEmail] = useState("user1@example.com");
   const [password, setPassword] = useState("secret123");
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  // false until we've tried to restore a session from the httpOnly refresh cookie
+  const [sessionChecked, setSessionChecked] = useState(false);
+  // bumps when the access token changes, so media URLs (which carry it) re-render
+  const [, setTokenVersion] = useState(0);
+  // bumps when background decryption finishes, so message text re-renders
+  const [e2eeVersion, setE2eeVersion] = useState(0);
+  const [e2eeError, setE2eeError] = useState<string | null>(null);
+  const [showSplash, setShowSplash] = useState(false);
+  const hadUserRef = useRef(false);
+
+  // AURA brand splash: play whenever a session starts (sign-in or restored session)
+  useEffect(() => {
+    if (currentUser && !hadUserRef.current) setShowSplash(true);
+    hadUserRef.current = Boolean(currentUser);
+  }, [currentUser]);
 
   const [search, setSearch] = useState("");
   const [summaries, setSummaries] = useState<ChatSummary[]>([]);
@@ -86,8 +112,10 @@ export function App() {
     [summaries, activeChatId],
   );
   const decryptedMessages = useMemo(
-    () => messages.map((m) => ({ ...m, plainText: decryptMessage(m.encryptedContent) })),
-    [messages],
+    () => messages.map((m) => ({ ...m, plainText: e2ee.view(m.encryptedContent).text })),
+    // e2eeVersion: recompute when background decryption finishes, not only when the message list changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [messages, e2eeVersion],
   );
   const messageMap = useMemo(
     () => new Map(decryptedMessages.map((m) => [m.id, m])),
@@ -130,10 +158,130 @@ export function App() {
     );
   }, [currentUser, deleteRequests, dismissedDeleteNoticeIds]);
 
-  const apiBaseOrigin = useMemo(() => {
-    if (typeof window === "undefined") return "";
-    return window.location.origin;
+
+  // Stay signed in across reloads: exchange the httpOnly refresh cookie for a fresh access token.
+  useEffect(() => {
+    if (!backendReady || sessionChecked) return;
+    let alive = true;
+    void refreshSession().then((s) => {
+      if (!alive) return;
+      if (s) setCurrentUser(s.user);
+      setSessionChecked(true);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [backendReady, sessionChecked]);
+
+  useEffect(() => {
+    if (e2ee.ready) void e2ee.decryptAll(messages);
+  }, [messages, e2eeVersion]);
+  useEffect(() => {
+    if (e2ee.ready) void e2ee.decryptAll(summaries.flatMap((s) => (s.lastMessage ? [s.lastMessage] : [])));
+  }, [summaries, e2eeVersion]);
+
+  // End-to-end encryption: load/create this device's keys once signed in.
+  useEffect(() => e2ee.subscribe(() => setE2eeVersion(e2ee.version)), []);
+  useEffect(() => {
+    if (!currentUser) {
+      e2ee.reset();
+      return;
+    }
+    setE2eeError(null);
+    e2ee.init(currentUser.id).catch((err: Error) => setE2eeError(`End-to-end encryption is unavailable on this device: ${err.message}`));
+  }, [currentUser?.id]);
+
+  // If the session ends (expired, revoked from another device, password changed), sign out locally.
+  useEffect(
+    () =>
+      onSessionChange(({ token }) => {
+        setTokenVersion((v) => v + 1);
+        if (!token) {
+          setCurrentUser((cur) => {
+            if (cur) setStatus("Your session ended. Please sign in again.");
+            return null;
+          });
+        }
+      }),
+    [],
+  );
+
+  // The server rejects sockets with an expired token: refresh once, then reconnect.
+  useEffect(() => {
+    const onAuthError = () => {
+      void refreshSession().then((s) => {
+        if (s) socket.connect();
+      });
+    };
+    socket.on("auth_error", onAuthError);
+    return () => {
+      socket.off("auth_error", onAuthError);
+    };
   }, []);
+
+  // SignConnect Phase 1a: load language/accessibility preferences for the signed-in user
+  useEffect(() => {
+    if (!currentUser) {
+      setPreferences(null);
+      applyAccessibility(null);
+      return;
+    }
+    let alive = true;
+    api
+      .getPreferences(currentUser.id)
+      .then((prefs) => {
+        if (!alive) return;
+        setPreferences(prefs);
+        applyAccessibility(prefs);
+        // Signers: warm up the on-device vision model now, so sign detection is instant when a call starts.
+        if (prefs.preferredSignLanguage) {
+          // The first inference compiles GPU shaders and can briefly block the page, so do it when the browser
+          // is idle, a few seconds after sign-in, and never in the middle of a call.
+          const warm = () => {
+            if (callManager.snapshot && callManager.snapshot.phase !== "ended") return;
+            void import("./ai/handTracker")
+              .then((m) => m.getHandTracker())
+              .catch((err: Error) => console.warn("Vision model preload failed (will retry in the call):", err.message));
+          };
+          window.setTimeout(() => {
+            if ("requestIdleCallback" in window) window.requestIdleCallback(warm, { timeout: 15000 });
+            else warm();
+          }, 5000);
+        }
+        // "system" means no explicit choice, so the local/device theme stays in charge.
+        if (prefs.theme === "light" || prefs.theme === "dark") {
+          setTheme(prefs.theme);
+          document.documentElement.setAttribute("data-theme", prefs.theme);
+          localStorage.setItem("theme", prefs.theme);
+        }
+      })
+      .catch((err: Error) => alive && setStatus(`Could not load your preferences: ${err.message}`));
+    return () => {
+      alive = false;
+    };
+  }, [currentUser?.id]);
+
+  const updatePreferences = async (patch: PreferencesPatch) => {
+    if (!currentUser || !preferences) return;
+    const previous = preferences;
+    const optimistic: UserPreferences = {
+      ...previous,
+      ...patch,
+      accessibility: { ...previous.accessibility, ...(patch.accessibility ?? {}) },
+      voice: { ...previous.voice, ...(patch.voice ?? {}) },
+    };
+    setPreferences(optimistic);
+    applyAccessibility(optimistic);
+    try {
+      const saved = await api.updatePreferences(currentUser.id, patch);
+      setPreferences(saved);
+      applyAccessibility(saved);
+    } catch (err) {
+      setPreferences(previous);
+      applyAccessibility(previous);
+      throw err;
+    }
+  };
 
   // Theme Sync on Mount
   useEffect(() => {
@@ -148,52 +296,27 @@ export function App() {
     setTheme(nextTheme);
     document.documentElement.setAttribute("data-theme", nextTheme);
     localStorage.setItem("theme", nextTheme);
+    if (currentUser) {
+      api
+        .updatePreferences(currentUser.id, { theme: nextTheme })
+        .then(setPreferences)
+        .catch((err: Error) => setStatus(`Theme not saved to your profile: ${err.message}`));
+    }
   };
 
-  // Call duration timer
   useEffect(() => {
-    let interval: number | null = null;
-    if (callState === "active") {
-      interval = window.setInterval(() => {
-        setCallDuration((prev) => prev + 1);
-      }, 1000);
-    } else {
-      setCallDuration(0);
-    }
+    callManager.attach();
+    // Only the call layer re-renders on snapshot updates (stats, captions, signs); App just raises the alert.
+    let lastPhase: string | undefined;
+    const unsubscribe = callManager.subscribe((snap) => {
+      if (snap?.phase === "incoming" && lastPhase !== "incoming") flashVisualAlert();
+      lastPhase = snap?.phase;
+    });
     return () => {
-      if (interval) clearInterval(interval);
+      unsubscribe();
+      callManager.detach();
     };
-  }, [callState]);
-
-  // Local camera/mic stream trigger
-  useEffect(() => {
-    async function startMediaStream() {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: callType === "video",
-          audio: true
-        });
-        setLocalStream(stream);
-      } catch (err) {
-        console.warn("Failed to get media stream:", err);
-      }
-    }
-
-    function stopMediaStream() {
-      if (localStream) {
-        localStream.getTracks().forEach((track) => track.stop());
-        setLocalStream(null);
-      }
-    }
-
-    if (callState === "active") {
-      void startMediaStream();
-    } else if (callState === "idle") {
-      stopMediaStream();
-    }
-
-    return () => stopMediaStream();
-  }, [callState, callType]);
+  }, [callManager]);
 
   useEffect(() => {
     let active = true;
@@ -218,7 +341,19 @@ export function App() {
       setSocketConnected(false);
       return;
     }
-    const onConnect = () => setSocketConnected(true);
+    const onConnect = () => {
+      setSocketConnected(true);
+      joinedChatsRef.current.clear();
+      if (!currentUser) return;
+      void (async () => {
+        try {
+          await registerPresence(currentUser.id);
+          if (activeChatId) await joinChat(activeChatId);
+        } catch (err) {
+          setStatus(`Reconnected, but live sync failed: ${(err as Error).message}`);
+        }
+      })();
+    };
     const onDisconnect = () => setSocketConnected(false);
     const onPresence = (p: { userId: string; online: boolean; lastSeenAt?: string }) => {
       setOnlineUsers((prev) => {
@@ -275,19 +410,13 @@ export function App() {
       const incoming = normalizeMessageShape(m);
       
       // Decrypt message to inspect system controls
-      let plain = "";
-      try {
-        plain = decodeURIComponent(escape(atob(incoming.encryptedContent)));
-      } catch {}
 
-      if (incoming.messageType === "SYSTEM" && plain.startsWith("[CALL_")) {
-        handleCallSignal(incoming.senderId, incoming.chatId, plain);
-      }
 
       if (m.chatId === activeChatId) {
         setMessages((prev) => (prev.some((x) => x.id === incoming.id) ? prev : [...prev.map(normalizeMessageShape), incoming]));
       }
       if (currentUser && m.senderId !== currentUser.id) {
+        flashVisualAlert();
         void markDelivered(incoming.chatId, currentUser.id, [incoming.id]);
         if (incoming.chatId === activeChatId) {
           void markRead(incoming.chatId, currentUser.id, [incoming.id]);
@@ -304,7 +433,6 @@ export function App() {
     socket.on("messages_delivered", onDelivered);
     socket.on("reaction_update", onReaction);
     socket.on("receive_message", onReceive);
-    if (!socket.connected) socket.connect();
 
     return () => {
       socket.off("connect", onConnect);
@@ -315,9 +443,18 @@ export function App() {
       socket.off("messages_delivered", onDelivered);
       socket.off("reaction_update", onReaction);
       socket.off("receive_message", onReceive);
-      socket.disconnect();
     };
   }, [activeChatId, currentUser, backendReady]);
+
+  // The connection itself lives as long as a user is signed in and the backend is reachable.
+  useEffect(() => {
+    if (!currentUser || !backendReady || !getAccessToken()) return;
+    if (!socket.connected) socket.connect();
+    return () => {
+      socket.disconnect();
+      joinedChatsRef.current.clear();
+    };
+  }, [currentUser?.id, backendReady]);
 
   useEffect(() => {
     if (!currentUser || !backendReady) return;
@@ -349,7 +486,12 @@ export function App() {
 
   useEffect(() => {
     if (!activeChatId || !currentUser || !backendReady) return;
-    const t = setInterval(() => void refreshChat(activeChatId, currentUser.id), 1700);
+    // Fallback sync for the open chat. Live updates arrive over the socket; during a call the poll pauses so the
+    // call (and on-device sign/speech AI) keeps the main thread.
+    const t = setInterval(() => {
+      if (callManager.snapshot && callManager.snapshot.phase !== "ended") return;
+      void refreshChat(activeChatId, currentUser.id);
+    }, 1700);
     return () => clearInterval(t);
   }, [activeChatId, currentUser, backendReady]);
 
@@ -389,7 +531,7 @@ export function App() {
   function resolveAttachmentUrl(attachmentUrl?: string) {
     if (!attachmentUrl) return "";
     if (attachmentUrl.startsWith("http://") || attachmentUrl.startsWith("https://")) return attachmentUrl;
-    return `${apiBaseOrigin}${attachmentUrl}`;
+    return withMediaToken(absoluteUrl(attachmentUrl));
   }
 
   function formatLastSeen(lastSeenAt?: string) {
@@ -533,8 +675,9 @@ export function App() {
       api.listChatSummaries(userId),
       api.listUserDeleteRequests(userId),
     ]);
-    setSummaries(nextSummaries);
-    setDeleteRequests(nextDeleteRequests);
+    // Keep the current arrays when nothing changed, so React skips the re-render.
+    setSummaries((prev) => (fingerprint(prev) === fingerprint(nextSummaries) ? prev : nextSummaries));
+    setDeleteRequests((prev) => (fingerprint(prev) === fingerprint(nextDeleteRequests) ? prev : nextDeleteRequests));
   }
 
   async function refreshCommunities() {
@@ -552,7 +695,8 @@ export function App() {
     if (!ensureBackend()) return;
     const list = await api.listMessages(chatId);
     const normalized = list.map((m) => normalizeMessageShape(m));
-    setMessages(normalized);
+    const fp = fingerprint(normalized);
+    setMessages((prev) => (fingerprint(prev) === fp ? prev : normalized));
     const undelivered = normalized
       .filter((m) => m.senderId !== userId && !m.deliveredTo.includes(userId))
       .map((m) => m.id);
@@ -597,6 +741,7 @@ export function App() {
     if (!ensureBackend()) return;
     try {
       const result = await api.signIn(phoneVal.trim(), passwordVal);
+      setSession(result);
       setCurrentUser(result.user);
       setStatus("Signed in");
     } catch (err) {
@@ -605,16 +750,11 @@ export function App() {
     }
   }
 
-  async function handleSignUp(nameVal: string, phoneVal: string, emailVal: string, passwordVal: string) {
-    if (!ensureBackend()) return;
-    try {
-      const result = await api.signUp(nameVal.trim(), phoneVal.trim(), emailVal.trim(), passwordVal);
-      setCurrentUser(result.user);
-      setStatus("Account created");
-    } catch (err) {
-      setStatus(`Sign up failed: ${(err as Error).message}`);
-      throw err;
-    }
+  /** Verified sign-up finished (codes confirmed): the server already created the account and a session. */
+  function handleSignedUp(result: LoginResponse) {
+    setSession(result);
+    setCurrentUser(result.user);
+    setStatus("Account created. Welcome!");
   }
 
   async function startChat(peer: User) {
@@ -637,13 +777,32 @@ export function App() {
     try { await emitAck("typing_stop", { chatId: activeChatId, userId: currentUser.id }); } catch {}
   }
 
-  async function sendMessage() {
+  async function sendMessage(voiceFile?: File) {
     if (!ensureBackend()) return;
     if (!currentUser || !activeChatId) return;
-    if (!draft.trim() && !pendingFile) return;
+    const file = voiceFile ?? pendingFile;
+    if (!voiceFile && !draft.trim() && !pendingFile) return;
 
-    const text = draft.trim();
-    let encrypted = encryptMessage(text);
+    const text = voiceFile ? "" : draft.trim();
+    const memberIds = summaries.find((s) => s.chat.id === activeChatId)?.chat.memberIds ?? [currentUser.id];
+    const seal = async (plain: string) => {
+      try {
+        return await e2ee.encryptFor(activeChatId, memberIds, plain);
+      } catch (err) {
+        if (err instanceof MissingKeysError) {
+          const names = err.userIds.map((id) => resolveUserName(id)).join(", ");
+          throw new Error(`${names} hasn't set up end-to-end encryption yet. They need to sign in once on the updated app before you can message them.`);
+        }
+        throw err;
+      }
+    };
+    let encrypted = "";
+    try {
+      if (text) encrypted = await seal(text);
+    } catch (err) {
+      setStatus(`Message not sent: ${(err as Error).message}`);
+      return;
+    }
     let messageType: Message["messageType"] = "TEXT";
     let attachment:
       | {
@@ -654,23 +813,26 @@ export function App() {
         }
       | undefined;
 
-    if (pendingFile) {
+    if (file) {
       setIsSendingAttachment(true);
       try {
-        attachment = await api.uploadFile(pendingFile);
+        attachment = await api.uploadFile(file);
+        messageType = attachment.mimeType.startsWith("image/") ? "IMAGE" : attachment.mimeType.startsWith("audio/") ? "AUDIO" : "FILE";
+        if (!text) encrypted = await seal(messageType === "AUDIO" ? "🎤 Voice message" : `[Attachment] ${attachment.fileName}`);
+      } catch (err) {
+        setStatus(`Not sent: ${(err as Error).message}`);
+        return;
       } finally {
         setIsSendingAttachment(false);
       }
-      messageType = attachment.mimeType.startsWith("image/") ? "IMAGE" : "FILE";
-      if (!text) {
-        encrypted = encryptMessage(`[Attachment] ${attachment.fileName}`);
-      }
     }
+    if (!encrypted) return;
 
     await joinChat(activeChatId);
     await sendTypingStop();
+    let ack: { ok?: boolean; error?: string } | undefined;
     try {
-      await emitAck("send_message", {
+      ack = await emitAck<{ ok?: boolean; error?: string }>("send_message", {
         chatId: activeChatId,
         senderId: currentUser.id,
         encryptedContent: encrypted,
@@ -682,6 +844,20 @@ export function App() {
         fileSize: attachment?.fileSize,
       });
     } catch {
+      ack = undefined; // socket timeout: fall back to HTTP below
+    }
+    if (ack?.ok === false) {
+      // The server refused (not a network problem): say so instead of silently dropping the message.
+      const why: Record<string, string> = {
+        BLOCKED: "one of you has blocked the other",
+        NOT_A_CHAT_MEMBER: "you are not a member of this chat",
+        INVALID_CONTENT: "the message is too large",
+        NOT_AUTHENTICATED: "your session expired, please sign in again",
+      };
+      setStatus(`Message not sent: ${why[ack.error ?? ""] ?? ack.error ?? "refused by the server"}.`);
+      return;
+    }
+    if (!ack) {
       await api.sendMessage({
         chatId: activeChatId,
         senderId: currentUser.id,
@@ -694,8 +870,10 @@ export function App() {
         fileSize: attachment?.fileSize,
       });
     }
-    setDraft("");
-    setPendingFile(null);
+    if (!voiceFile) {
+      setDraft("");
+      setPendingFile(null);
+    }
     setReplyTargetId(null);
     await refreshChat(activeChatId, currentUser.id);
     await refreshSummaries(currentUser.id);
@@ -834,79 +1012,17 @@ export function App() {
     }
   }
 
-  function handleCallSignal(senderId: string, chatId: string, signal: string) {
-    if (!currentUser) return;
-    if (senderId === currentUser.id) return; // ignore own signals
-
-    if (signal.startsWith("[CALL_INITIATED:")) {
-      const parts = signal.split(":");
-      const type = (parts[1] ?? "voice") as "voice" | "video";
-      const partnerName = parts[2] ?? "Someone";
-
-      setCallState("incoming");
-      setCallType(type);
-      setCallChatId(chatId);
-      const peer = contacts.find((u) => u.id === senderId) || 
-                   summaries.find((s) => s.peer?.id === senderId)?.peer || 
-                   ({ id: senderId, name: partnerName, phone: "", createdAt: "" } as User);
-      setCallPartner(peer);
-    } else if (signal === "[CALL_ACCEPTED]") {
-      setCallState("active");
-      setCallDuration(0);
-    } else if (signal === "[CALL_DECLINED]" || signal === "[CALL_ENDED]") {
-      setCallState("idle");
-      setCallPartner(null);
-      setStatus(signal === "[CALL_DECLINED]" ? "Call was declined" : "Call ended");
-    }
-  }
-
-  async function sendCallControlMessage(chatId: string, action: string) {
-    if (!currentUser) return;
-    const content = encryptMessage(action);
-    try {
-      await emitAck("send_message", {
-        chatId,
-        senderId: currentUser.id,
-        encryptedContent: content,
-        messageType: "SYSTEM"
-      });
-    } catch {
-      await api.sendMessage({
-        chatId,
-        senderId: currentUser.id,
-        encryptedContent: content,
-        messageType: "SYSTEM"
-      });
-    }
-  }
-
   async function initiateCall(type: "voice" | "video") {
     if (!activeChatId || !activePeer || !currentUser) return;
-    setCallState("outgoing");
-    setCallType(type);
-    setCallChatId(activeChatId);
-    setCallPartner(activePeer);
-    await sendCallControlMessage(activeChatId, `[CALL_INITIATED:${type}:${currentUser.name}]`);
-  }
-
-  async function acceptCall() {
-    if (!callChatId) return;
-    setCallState("active");
-    await sendCallControlMessage(callChatId, "[CALL_ACCEPTED]");
-  }
-
-  async function declineCall() {
-    if (!callChatId) return;
-    setCallState("idle");
-    setCallPartner(null);
-    await sendCallControlMessage(callChatId, "[CALL_DECLINED]");
-  }
-
-  async function endCall() {
-    if (!callChatId) return;
-    setCallState("idle");
-    setCallPartner(null);
-    await sendCallControlMessage(callChatId, "[CALL_ENDED]");
+    try {
+      await callManager.start(activeChatId, type === "video" ? "VIDEO" : "AUDIO", {
+        id: activePeer.id,
+        name: activePeer.name,
+        avatarUrl: activePeer.avatarUrl,
+      });
+    } catch (err) {
+      setStatus((err as Error).message);
+    }
   }
 
   async function clearChatHistory() {
@@ -925,6 +1041,7 @@ export function App() {
   }
 
   function signOutUser() {
+    void logoutSession(); // revokes this device's session on the server and clears the cookie
     setCurrentUser(null);
     setActiveChatId(null);
     setDismissedDeleteNoticeIds([]);
@@ -936,8 +1053,8 @@ export function App() {
     setIsMobileChatOpen(false);
     setPendingFile(null);
     joinedChatsRef.current.clear();
-    setCallState("idle");
-    setCallPartner(null);
+    void callManager.hangup();
+    callManager.dismiss();
     setStatus("Logged out cleanly");
   }
 
@@ -966,17 +1083,35 @@ export function App() {
     }
   };
 
+  /** Block or unblock the other person in a 1:1 chat (enforced by the server for messages and calls). */
+  async function toggleBlock(peerId: string) {
+    if (!currentUser) return;
+    const blocked = currentUser.blockedUserIds?.includes(peerId);
+    try {
+      const r = blocked ? await api.unblockUser(currentUser.id, peerId) : await api.blockUser(currentUser.id, peerId);
+      setCurrentUser({ ...currentUser, blockedUserIds: r.blocked });
+      setStatus(blocked ? "Unblocked." : "Blocked. They can no longer message or call you.");
+    } catch (err) {
+      setStatus(`Could not update block: ${(err as Error).message}`);
+    }
+  }
+
   async function handleScreenshotAttempt() {
     if (!activeChatId || !currentUser) return;
     try {
-      // Send security warning message
-      const content = encryptMessage("⚠️ [SECURITY] Screenshot attempt detected. Chat history will be cleared.");
-      await api.sendMessage({
-        chatId: activeChatId,
-        senderId: currentUser.id,
-        encryptedContent: content,
-        messageType: "TEXT",
-      });
+      // Send an (end-to-end encrypted) security warning; if encryption isn't possible, skip it rather than send plaintext.
+      const memberIds = summaries.find((x) => x.chat.id === activeChatId)?.chat.memberIds ?? [currentUser.id];
+      const content = await e2ee
+        .encryptFor(activeChatId, memberIds, "⚠️ [SECURITY] Screenshot attempt detected. Chat history will be cleared.")
+        .catch(() => null);
+      if (content) {
+        await api.sendMessage({
+          chatId: activeChatId,
+          senderId: currentUser.id,
+          encryptedContent: content,
+          messageType: "TEXT",
+        });
+      }
       // Wipe the entire conversation history
       await api.clearChatHistory(activeChatId, currentUser.id);
       setMessages([]);
@@ -993,20 +1128,24 @@ export function App() {
       <div className="ambient-background" />
 
       {/* Auth Gate User */}
-      {!currentUser && (
+      {!currentUser && (sessionChecked || !backendReady) && (
         <AuthPage
           onSignIn={handleSignIn}
-          onSignUp={handleSignUp}
+          onSignedUp={handleSignedUp}
           backendReady={backendReady}
           status={status}
           socketConnected={socketConnected}
         />
       )}
 
+      {showSplash && currentUser && <BrandSplash onDone={() => setShowSplash(false)} />}
+
       {/* Main Workspace Regular User */}
       {currentUser && (
         <MainApp
           currentUser={currentUser}
+          preferences={preferences}
+          onUpdatePreferences={updatePreferences}
           activeChatId={activeChatId}
           setActiveChatId={setActiveChatId}
           userTab={userTab}
@@ -1041,7 +1180,9 @@ export function App() {
           dismissDeleteNotice={dismissDeleteNotice}
           approveDeleteFromPopup={approveDeleteFromPopup}
           rejectDeleteFromPopup={rejectDeleteFromPopup}
-          onSendMessage={sendMessage}
+          onSendMessage={() => sendMessage()}
+          onSendVoice={(f: File) => sendMessage(f)}
+          onToggleBlock={toggleBlock}
           onToggleReaction={toggleReaction}
           onPinMessage={pinMessage}
           onUnpinMessage={unpinMessage}
@@ -1079,85 +1220,20 @@ export function App() {
         />
       )}
 
-      {/* Call Overlay UI */}
-      {callState !== "idle" && (
-        <div className="call-overlay-modal animate-fade-in">
-          <div className="call-modal-card animate-scale-up">
-            <div className="call-card-header">
-              <div className={`call-avatar-pulse ${callState === "outgoing" || callState === "incoming" ? "pulsing" : ""}`}>
-                <Avatar
-                  name={callPartner?.name ?? "Partner"}
-                  avatarUrl={callPartner?.avatarUrl}
-                  size="xl"
-                  resolveUrl={resolveAttachmentUrl}
-                />
-              </div>
-              <h2>{callPartner?.name ?? "Secure Call"}</h2>
-              <p className="call-subtitle">
-                {callState === "outgoing" && "Calling..."}
-                {callState === "incoming" && `Incoming ${callType} call...`}
-                {callState === "active" && `Secure ${callType} call connected`}
-              </p>
-              {callState === "active" && (
-                <div className="call-timer">
-                  {Math.floor(callDuration / 60)}:{(callDuration % 60).toString().padStart(2, "0")}
-                </div>
-              )}
-            </div>
-
-            {callState === "active" && callType === "video" && (
-              <div className="call-video-grid">
-                <div className="video-viewport local-video-viewport">
-                  {localStream ? (
-                    <video
-                      ref={(el) => {
-                        if (el) el.srcObject = localStream;
-                      }}
-                      autoPlay
-                      playsInline
-                      muted
-                      className="call-video-element"
-                    />
-                  ) : (
-                    <div className="video-fallback-avatar">
-                      <span>You (Camera Off)</span>
-                    </div>
-                  )}
-                </div>
-                <div className="video-viewport remote-video-viewport">
-                  <div className="simulated-peer-stream">
-                    <Avatar
-                      name={callPartner?.name ?? "Peer"}
-                      avatarUrl={callPartner?.avatarUrl}
-                      size="xl"
-                      resolveUrl={resolveAttachmentUrl}
-                    />
-                    <div className="simulated-peer-scanline" />
-                    <span>Secure Video Feed</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div className="call-controls-row">
-              {callState === "incoming" ? (
-                <>
-                  <button className="btn btn-success call-btn accept-btn" onClick={acceptCall}>
-                    📞 Accept
-                  </button>
-                  <button className="btn btn-danger call-btn decline-btn" onClick={declineCall}>
-                    ❌ Decline
-                  </button>
-                </>
-              ) : (
-                <button className="btn btn-danger call-btn end-btn" onClick={endCall}>
-                  🛑 End Call
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
+      {currentUser && (
+        <CallLayer manager={callManager} currentUserId={currentUser.id} preferences={preferences} resolveUrl={resolveAttachmentUrl} />
       )}
     </main>
   );
+}
+
+/**
+ * Subscribes to call snapshots on its own, so frequent call updates re-render only the call screen and not the
+ * chat behind it. That keeps the main thread free for on-device sign and speech recognition.
+ */
+function CallLayer({ manager, ...rest }: { manager: CallManager } & Omit<ComponentProps<typeof CallScreen>, "manager" | "snap">) {
+  const [snap, setSnap] = useState<CallSnapshot | null>(manager.snapshot);
+  useEffect(() => manager.subscribe(setSnap), [manager]);
+  if (!snap) return null;
+  return <CallScreen manager={manager} snap={snap} {...rest} />;
 }

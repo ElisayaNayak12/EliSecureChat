@@ -10,7 +10,8 @@ interface AvatarProps {
 
 export default function Avatar({ name, avatarUrl, size = "md", isOnline, resolveUrl }: AvatarProps) {
   const initials = useMemo(() => {
-    const parts = name.trim().split(/\s+/).slice(0, 2);
+    // Only words that start with a letter or digit, so "Asha (Deaf, ISL)" gives "AD", not "A(".
+    const parts = name.trim().split(/\s+/).map((p) => p.replace(/^[^\p{L}\p{N}]+/u, "")).filter(Boolean).slice(0, 2);
     if (!parts.length) return "U";
     return parts.map((p) => p[0]?.toUpperCase() ?? "").join("") || "U";
   }, [name]);

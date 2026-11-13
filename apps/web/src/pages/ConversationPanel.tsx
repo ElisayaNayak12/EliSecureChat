@@ -1,4 +1,6 @@
 import { useRef, useEffect, useState, useMemo } from "react";
+import VoiceRecorder from "../components/VoiceRecorder";
+import EncryptionInfo from "../e2ee/EncryptionInfo";
 import Avatar from "../components/Avatar";
 import {
   ArrowLeftIcon,
@@ -19,7 +21,13 @@ import {
 } from "../components/Icons";
 import type { ChatSummary, Message, User, DeleteRequest } from "../types";
 
+const MESSAGE_PAGE = 150;
+
 interface ConversationPanelProps {
+  onSendVoice: (file: File) => Promise<void>;
+  onToggleBlock: (peerId: string) => Promise<void>;
+  isPeerBlocked: boolean;
+  chatId?: string | null;
   activeSummary: ChatSummary;
   currentUser: User;
   messages: Message[];
@@ -90,6 +98,10 @@ export default function ConversationPanel({
   setChatWallpaperIndex,
   activeTypingUsers,
   activePeer,
+  chatId,
+  onSendVoice,
+  onToggleBlock,
+  isPeerBlocked,
   activeChatTitle,
   activeChatStatus,
   incomingDeleteRequest,
@@ -121,6 +133,11 @@ export default function ConversationPanel({
   customWallpaper,
 }: ConversationPanelProps) {
   const [chatPanelView, setChatPanelView] = useState<"messages" | "profile">("messages");
+  // Long chats render only the most recent messages; older ones load on request.
+  const [visibleCount, setVisibleCount] = useState(MESSAGE_PAGE);
+  useEffect(() => setVisibleCount(MESSAGE_PAGE), [chatId]);
+  const firstVisible = Math.max(0, decryptedMessages.length - visibleCount);
+  const visibleMessages = firstVisible ? decryptedMessages.slice(firstVisible) : decryptedMessages;
   const [chatMenuOpen, setChatMenuOpen] = useState(false);
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
   const [isScreenHidden, setIsScreenHidden] = useState(false);
@@ -272,7 +289,7 @@ export default function ConversationPanel({
           />
           <div className="header-text-details">
             <span className="header-title">{activeChatTitle}</span>
-            <span className="header-subtitle">
+            <span className={`header-subtitle ${activeTypingUsers.length > 0 ? "is-typing" : ""} ${/online/i.test(activeChatStatus) ? "is-online" : ""}`}>
               {activeTypingUsers.length > 0 ? "typing..." : activeChatStatus}
             </span>
           </div>
@@ -309,7 +326,7 @@ export default function ConversationPanel({
               title="More Actions"
               aria-label="More Actions"
             >
-              <span style={{ fontSize: "20px", fontWeight: "bold" }}>⋮</span>
+              <span className="kebab-glyph" aria-hidden="true">⋯</span>
             </button>
 
             {chatMenuOpen && (
@@ -441,11 +458,16 @@ export default function ConversationPanel({
                   <InfoIcon size={24} />
                 </div>
                 <h3>No messages here yet</h3>
-                <p>Send a message to begin an encrypted conversation.</p>
+                <p>Send a message to start the conversation.</p>
               </div>
             ) : (
               <div className="messages-grid">
-                {decryptedMessages.map((m, index) => {
+                {firstVisible > 0 && (
+                  <button type="button" className="btn btn-ghost btn-xs messages-load-earlier" onClick={() => setVisibleCount((n) => n + MESSAGE_PAGE)}>
+                    Show earlier messages ({firstVisible})
+                  </button>
+                )}
+                {visibleMessages.map((m, index) => {
                   const isMine = m.senderId === currentUser.id;
                   const statusLabel = isMine ? getDeliveryLabel(m, currentUser) : "";
                   const showText = !(m.attachmentUrl && isAutoAttachmentText(m.plainText, m.fileName));
@@ -454,7 +476,7 @@ export default function ConversationPanel({
                   // Render date pill if date changed from previous message
                   const showDatePill =
                     index === 0 ||
-                    formatMessageDay(m.createdAt) !== formatMessageDay(decryptedMessages[index - 1].createdAt);
+                    formatMessageDay(m.createdAt) !== formatMessageDay(visibleMessages[index - 1].createdAt);
 
                   return (
                     <div key={m.id} className="message-row-wrapper">
@@ -481,7 +503,9 @@ export default function ConversationPanel({
                           {/* Media attachments */}
                           {m.attachmentUrl && (
                             <div className="attachment-content-box">
-                              {m.mimeType?.startsWith("image/") ? (
+                              {m.mimeType?.startsWith("audio/") ? (
+                                <audio className="attachment-audio" controls preload="metadata" src={resolveUrl(m.attachmentUrl)} aria-label="Voice message" />
+                              ) : m.mimeType?.startsWith("image/") ? (
                                 <a
                                   href={resolveUrl(m.attachmentUrl)}
                                   target="_blank"
@@ -643,7 +667,13 @@ export default function ConversationPanel({
               </div>
             )}
 
-            <div className="composer-input-row">
+            {isPeerBlocked && activePeer && (
+              <div className="composer-blocked" role="status">
+                You blocked {activePeer.name}. You can't message or call each other.
+                <button className="btn btn-secondary btn-xs" onClick={() => void onToggleBlock(activePeer.id)}>Unblock</button>
+              </div>
+            )}
+            <div className={`composer-input-row ${isPeerBlocked ? "is-blocked" : ""}`}>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -702,8 +732,14 @@ export default function ConversationPanel({
                 value={draft}
                 onChange={handleComposerChange}
                 onKeyDown={handleKeyPress}
-                placeholder="Write an encrypted message..."
+                placeholder="Message"
                 className="composer-input-field"
+              />
+
+              <VoiceRecorder
+                disabled={!backendReady || isSendingAttachment || isPeerBlocked}
+                onRecorded={(f) => onSendVoice(f)}
+                onError={(msg) => window.alert(msg)}
               />
 
               <button
@@ -758,14 +794,19 @@ export default function ConversationPanel({
                 <span className="info-value">{getUsername(activePeer)}</span>
               </div>
               <div className="peer-info-item">
-                <span className="info-label">Encryption Level</span>
-                <span className="info-value text-accent">AES-256 base64 (End-to-End Encrypted)</span>
+                <span className="info-label">Encryption</span>
+                <EncryptionInfo chatId={chatId ?? null} peerId={activePeer?.id} peerName={activePeer?.name} />
               </div>
               <div className="peer-info-item">
                 <span className="info-label">Erasure Status</span>
                 <span className="info-value text-accent">Mutual delete capability enabled</span>
               </div>
             </div>
+            {activePeer && (
+              <button className={`btn btn-sm ${isPeerBlocked ? "btn-secondary" : "btn-danger"} peer-block-btn`} onClick={() => void onToggleBlock(activePeer.id)}>
+                {isPeerBlocked ? `Unblock ${activePeer.name}` : `Block ${activePeer.name}`}
+              </button>
+            )}
           </div>
         </div>
       )}
