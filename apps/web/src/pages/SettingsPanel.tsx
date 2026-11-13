@@ -1,26 +1,40 @@
 import { useState } from "react";
 import { LockIcon, InfoIcon, TrashIcon } from "../components/Icons";
+import type { Appearance, PreferencesPatch, UserPreferences, WallpaperId } from "../types";
+import { ACCENTS, DESIGNS, WALLPAPERS } from "../theme";
+import LanguageAccessibilitySettings from "./LanguageAccessibilitySettings";
+import SecuritySettings from "./SecuritySettings";
 
 interface SettingsPanelProps {
   theme: "light" | "dark";
   onToggleTheme: () => void;
-  chatWallpaperIndex: number;
-  setChatWallpaperIndex: (val: number) => void;
+  chatWallpaper: WallpaperId;
+  setChatWallpaper: (val: WallpaperId) => void;
+  appearance: Appearance;
+  onUpdateAppearance: (patch: Partial<Appearance>) => void;
   onNavigateToProfile: () => void;
   customWallpaper: string | null;
   onCustomWallpaperChange: (url: string | null) => void;
   onDeleteAccount: () => Promise<void>;
+  preferences: UserPreferences | null;
+  onUpdatePreferences: (patch: PreferencesPatch) => Promise<void>;
+  backendReady: boolean;
 }
 
 export default function SettingsPanel({
   theme,
   onToggleTheme,
-  chatWallpaperIndex,
-  setChatWallpaperIndex,
+  chatWallpaper,
+  setChatWallpaper,
+  appearance,
+  onUpdateAppearance,
   onNavigateToProfile,
   customWallpaper,
   onCustomWallpaperChange,
   onDeleteAccount,
+  preferences,
+  onUpdatePreferences,
+  backendReady,
 }: SettingsPanelProps) {
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -64,70 +78,101 @@ export default function SettingsPanel({
           </div>
         </div>
 
-        {/* Customization Settings */}
-        <div className="settings-section">
-          <h3>Customization</h3>
+        <LanguageAccessibilitySettings
+          preferences={preferences}
+          onUpdatePreferences={onUpdatePreferences}
+          backendReady={backendReady}
+        />
+
+        {/* Appearance: 5 designs, light/dark, accent, bubbles, wallpaper */}
+        <div className="settings-section appearance-section">
+          <h3>Appearance</h3>
           <div className="settings-card">
-            <div className="setting-row">
-              <div className="setting-label-col">
-                <strong>Appearance Mode</strong>
-                <span>Switch between light and dark backgrounds.</span>
-              </div>
-              <button className="btn btn-secondary btn-sm" onClick={onToggleTheme}>
-                {theme === "light" ? "Switch to Dark" : "Switch to Light"}
-              </button>
+            <div className={`appearance-preview wallpaper-${chatWallpaper}`} style={customWallpaper ? { backgroundImage: `url(${customWallpaper})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined} aria-label="Live preview">
+              <div className="message-bubble bubble-incoming"><span className="message-plain-text">Good morning! Shall we meet at 10?</span></div>
+              <div className="message-bubble bubble-mine"><span className="message-plain-text">Yes, see you there 👋</span></div>
             </div>
 
-            <div className="setting-row" style={{ borderTop: "1px solid var(--border-color)", paddingTop: "14px", marginTop: "14px" }}>
-              <div className="setting-label-col">
-                <strong>Chat Wallpaper</strong>
-                <span>Select active chat room background style.</span>
-              </div>
-              <div className="wallpaper-selectors-grid">
-                {[0, 1, 2, 3].map((idx) => (
-                  <button
-                    key={idx}
-                    className={`wallpaper-select-btn wallpaper-preview-btn-${idx} ${
-                      !customWallpaper && chatWallpaperIndex === idx ? "active" : ""
-                    }`}
-                    onClick={() => {
-                      onCustomWallpaperChange(null);
-                      setChatWallpaperIndex(idx);
-                    }}
-                    title={`Wallpaper Preset ${idx + 1}`}
-                    aria-label={`Select Preset ${idx + 1}`}
-                  />
+            <div className="appearance-row">
+              <div className="setting-label-col"><strong>Mode</strong><span>Light or dark backgrounds.</span></div>
+              <div className="seg" role="radiogroup" aria-label="Mode">
+                {(["light", "dark"] as const).map((m) => (
+                  <button key={m} type="button" role="radio" aria-checked={theme === m} className={theme === m ? "on" : ""} onClick={() => theme !== m && onToggleTheme()}>
+                    {m === "light" ? "Light" : "Dark"}
+                  </button>
                 ))}
               </div>
+            </div>
 
-              <div style={{ marginTop: "12px", display: "flex", alignItems: "center", gap: "10px" }}>
-                <label className="btn btn-secondary btn-sm" style={{ display: "inline-block", cursor: "pointer", margin: 0 }}>
-                  Upload Custom Wallpaper
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleCustomWallpaperUpload}
-                    style={{ display: "none" }}
-                  />
-                </label>
-                {customWallpaper && (
-                  <>
-                    <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>
-                      Custom background active
-                    </span>
-                    <button
-                      className="btn btn-danger btn-xs"
-                      onClick={() => onCustomWallpaperChange(null)}
-                      style={{ fontSize: "11px", padding: "2px 8px" }}
-                    >
-                      Clear
-                    </button>
-                  </>
-                )}
+            <div className="appearance-block">
+              <div className="setting-label-col"><strong>Design</strong><span>Choose one of five looks. Each has a light and a dark version.</span></div>
+              <div className="design-grid" role="radiogroup" aria-label="Design">
+                {DESIGNS.map((d) => (
+                  <button key={d.id} type="button" role="radio" aria-checked={appearance.design === d.id} className={`design-card ${appearance.design === d.id ? "active" : ""}`} onClick={() => onUpdateAppearance({ design: d.id })}>
+                    <span className="design-swatch" style={{ background: `linear-gradient(135deg, ${d.swatch[0]} 0 45%, ${d.swatch[1]} 45% 70%, ${d.swatch[2]} 70%)` }} />
+                    <strong>{d.name}</strong>
+                    <small>{d.blurb}</small>
+                  </button>
+                ))}
               </div>
+            </div>
+
+            <div className="appearance-row">
+              <div className="setting-label-col"><strong>Accent colour</strong><span>Colour of your bubbles and highlights.</span></div>
+              <div className="accent-row" role="radiogroup" aria-label="Accent colour">
+                <button type="button" role="radio" aria-checked={appearance.accent === null} className={`accent-dot accent-auto ${appearance.accent === null ? "active" : ""}`} onClick={() => onUpdateAppearance({ accent: null })} title="Design default">Auto</button>
+                {ACCENTS.map((a) => (
+                  <button key={a.id} type="button" role="radio" aria-checked={appearance.accent === a.id} aria-label={a.name} title={a.name} className={`accent-dot ${appearance.accent === a.id ? "active" : ""}`} style={{ background: a.color }} onClick={() => onUpdateAppearance({ accent: a.id })} />
+                ))}
+              </div>
+            </div>
+
+            <div className="appearance-row">
+              <div className="setting-label-col"><strong>Message bubbles</strong><span>Rounded and roomy, or compact.</span></div>
+              <div className="seg" role="radiogroup" aria-label="Message bubbles">
+                {(["rounded", "compact"] as const).map((b) => (
+                  <button key={b} type="button" role="radio" aria-checked={appearance.bubbles === b} className={appearance.bubbles === b ? "on" : ""} onClick={() => onUpdateAppearance({ bubbles: b })}>
+                    {b === "rounded" ? "Rounded" : "Compact"}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="appearance-block">
+              <div className="setting-label-col"><strong>Chat wallpaper</strong><span>Background behind your messages.</span></div>
+              <div className="wallpaper-selectors-grid" role="radiogroup" aria-label="Chat wallpaper">
+                {WALLPAPERS.map((w) => (
+                  <button
+                    key={w.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={!customWallpaper && chatWallpaper === w.id}
+                    className={`wallpaper-select-btn wallpaper-${w.id} ${!customWallpaper && chatWallpaper === w.id ? "active" : ""}`}
+                    onClick={() => {
+                      onCustomWallpaperChange(null);
+                      setChatWallpaper(w.id);
+                    }}
+                    title={w.name}
+                    aria-label={w.name}
+                  >
+                    <span>{w.name}</span>
+                  </button>
+                ))}
+                <label className={`wallpaper-select-btn wallpaper-upload ${customWallpaper ? "active" : ""}`} title="Use my photo">
+                  <span>{customWallpaper ? "My photo" : "+ My photo"}</span>
+                  <input type="file" accept="image/*" onChange={handleCustomWallpaperUpload} style={{ display: "none" }} />
+                </label>
+              </div>
+              {customWallpaper && (
+                <button type="button" className="btn btn-secondary btn-sm" style={{ marginTop: 10 }} onClick={() => onCustomWallpaperChange(null)}>
+                  Remove my photo
+                </button>
+              )}
             </div>
           </div>
         </div>
+
+        <SecuritySettings backendReady={backendReady} />
 
         {/* Security Settings */}
         <div className="settings-section">
@@ -136,8 +181,8 @@ export default function SettingsPanel({
             <div className="security-status-indicator">
               <LockIcon size={24} className="text-accent" />
               <div>
-                <strong>End-to-End Cryptography Active</strong>
-                <span>All chat histories are obfuscated using unique base-64 keys.</span>
+                <strong>Messages are end-to-end encrypted</strong>
+                <span>New messages are encrypted on your device for each recipient device and signed, so the server cannot read or alter them. Verify a contact's security code in their chat info. Photos and files are not end-to-end encrypted yet. Messages from before encryption was turned on remain readable by the server.</span>
               </div>
             </div>
 

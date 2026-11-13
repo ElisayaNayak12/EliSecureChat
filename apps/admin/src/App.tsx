@@ -9,8 +9,8 @@ export function App() {
   const [backendReady, setBackendReady] = useState(false);
   const [theme, setTheme] = useState<"light" | "dark">("dark");
 
-  const [adminUsername, setAdminUsername] = useState("admin");
-  const [adminPassword, setAdminPassword] = useState("admin123");
+  const [adminUsername, setAdminUsername] = useState("");
+  const [adminPassword, setAdminPassword] = useState("");
   const [adminToken, setAdminToken] = useState("");
   const [adminOverview, setAdminOverview] = useState<AdminOverview | null>(null);
   const [adminUsers, setAdminUsers] = useState<User[]>([]);
@@ -19,6 +19,13 @@ export function App() {
   const [adminCommunities, setAdminCommunities] = useState<Community[]>([]);
   const [adminDeleteRequests, setAdminDeleteRequests] = useState<DeleteRequest[]>([]);
   const [adminRecoveryRequests, setAdminRecoveryRequests] = useState<RecoveryRequest[]>([]);
+
+  function toggleTheme() {
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    localStorage.setItem("theme", next);
+    document.documentElement.setAttribute("data-theme", next);
+  }
 
   // Theme Sync on Mount
   useEffect(() => {
@@ -104,7 +111,14 @@ export function App() {
       setAdminDeleteRequests(deleteRequestsData);
       setAdminRecoveryRequests(recoveryData);
     } catch (err) {
-      setStatus(`Failed to fetch admin stats: ${(err as Error).message}`);
+      const msg = (err as Error).message;
+      if (/ADMIN_AUTH_REQUIRED|401/.test(msg)) {
+        // Admin sessions expire (8 h by default): go back to the login screen.
+        setAdminToken("");
+        setStatus("Your admin session expired. Please sign in again.");
+        return;
+      }
+      setStatus(`Failed to fetch admin stats: ${msg}`);
     }
   }
 
@@ -219,40 +233,65 @@ export function App() {
 
       {/* Auth Gate Admin */}
       {!adminToken && (
-        <section className="admin-login-overlay animate-fade-in" style={{ position: "static", display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
+        <section className="admin-auth">
+          <div className="admin-auth-hero">
+            <div className="admin-brand">
+              <span className="v-tile v-tile-sm"><ShieldIcon size={20} /></span>
+              <span className="admin-brand-word">ELiSecureChat</span>
+            </div>
+            <div className="admin-auth-copy">
+              <span className="v-overline-chip">Restricted access</span>
+              <h1>Govern your workspace, quietly.</h1>
+              <p>Review accounts, recovery requests and erasure activity from one calm, secure console.</p>
+            </div>
+            <ul className="admin-auth-chips">
+              <li><i /> Account moderation</li>
+              <li><i /> AI recovery checks</li>
+              <li><i /> Audit trail</li>
+            </ul>
+          </div>
+
           <div className="admin-login-card">
             <div className="admin-login-header">
-              <ShieldIcon size={32} className="text-accent" />
-              <h3>Admin Authorization Gate</h3>
-              <p>Sign in using administrative credentials to review active databases.</p>
+              <span className="v-tile"><ShieldIcon size={26} /></span>
+              <h3>Admin sign in</h3>
+              <p>Use your administrative credentials to open the console.</p>
             </div>
-            {status && <div className="auth-status-banner">{status}</div>}
+            {status && status !== "Ready" && (
+              <div className={`auth-status-banner ${/fail|error|invalid|denied|offline|unable|wrong|unreach/i.test(status) ? "is-error" : "is-info"}`}>
+                {status}
+              </div>
+            )}
             <form onSubmit={adminSignIn} className="auth-form">
               <div className="input-group">
-                <label>Admin Username</label>
+                <label>Username</label>
                 <input
                   value={adminUsername}
                   onChange={(e) => setAdminUsername(e.target.value)}
                   placeholder="admin"
+                  autoComplete="username"
                   required
                 />
               </div>
               <div className="input-group">
-                <label>Admin Password</label>
+                <label>Password</label>
                 <input
                   type="password"
                   value={adminPassword}
                   onChange={(e) => setAdminPassword(e.target.value)}
                   placeholder="••••••••"
+                  autoComplete="current-password"
                   required
                 />
               </div>
-              <div className="row mini" style={{ marginTop: "14px" }}>
-                <button type="submit" className="btn btn-primary" style={{ flex: 1 }} disabled={!backendReady}>
-                  Log In
-                </button>
-              </div>
+              <button type="submit" className="btn btn-primary btn-cta" disabled={!backendReady}>
+                Open console <span className="btn-arrow">→</span>
+              </button>
             </form>
+            <div className="admin-login-foot">
+              <span className={`v-dot ${backendReady ? "on" : "off"}`} />
+              {backendReady ? "Backend connected" : "Waiting for backend…"}
+            </div>
           </div>
         </section>
       )}
@@ -269,7 +308,7 @@ export function App() {
           adminDeleteRequests={adminDeleteRequests}
           adminRecoveryRequests={adminRecoveryRequests}
           onRefreshData={refreshAdminData}
-          onSignOut={() => { setAdminToken(""); setStatus("Signed out cleanly"); }}
+          onSignOut={() => { void api.adminSignOut(adminToken).catch(() => undefined); setAdminToken(""); setStatus("Signed out cleanly"); }}
           onApproveDelete={approveDeleteFromPopup}
           onRejectDelete={rejectDeleteFromPopup}
           onDeleteUser={deleteUser}
@@ -280,6 +319,8 @@ export function App() {
           resolveUserName={resolveUserName}
           formatLastSeen={formatLastSeen}
           backendReady={backendReady}
+          theme={theme}
+          onToggleTheme={toggleTheme}
         />
       )}
     </main>

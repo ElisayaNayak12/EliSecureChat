@@ -1,0 +1,6 @@
+torch==2.14.1
+numpy==2.4.6
+onnx==1.22.0
+onnxruntime
+onnxscript
+pytest

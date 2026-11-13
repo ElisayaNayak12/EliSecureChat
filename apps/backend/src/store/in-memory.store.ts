@@ -1,9 +1,10 @@
 import { Injectable, OnModuleInit } from "@nestjs/common";
-import { randomBytes, scryptSync, timingSafeEqual } from "crypto";
+import { createHash, randomBytes, scryptSync, timingSafeEqual } from "crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import { dirname, resolve } from "path";
 import { v4 as uuidv4 } from "uuid";
-import { AIVerificationResult, Chat, Community, DeleteRequest, Message, RecoveryRequest, User } from "./models";
+import { AdminSession, AIVerificationResult, CallRecord, DeviceKeyRecord, DeviceSession, PasswordResetCode, PendingRegistration, UploadRecord, Chat, Community, DatasetConsent, DatasetSample, DeleteRequest, Message, RecoveryRequest, SignModel, SignVideo, User, VocabularyEntry } from "./models";
+import { canonicalPhone } from "../auth/contact";
 
 @Injectable()
 export class InMemoryStore implements OnModuleInit {
@@ -13,7 +14,18 @@ export class InMemoryStore implements OnModuleInit {
   deleteRequests: DeleteRequest[] = [];
   communities: Community[] = [];
   recoveryRequests: RecoveryRequest[] = [];
-  adminSessions: string[] = [];
+  adminSessions: AdminSession[] = [];
+  sessions: DeviceSession[] = [];
+  uploads: UploadRecord[] = [];
+  passwordResets: PasswordResetCode[] = [];
+  pendingRegistrations: PendingRegistration[] = [];
+  deviceKeys: DeviceKeyRecord[] = [];
+  calls: CallRecord[] = [];
+  signVideos: SignVideo[] = [];
+  vocabulary: VocabularyEntry[] = [];
+  datasetConsents: DatasetConsent[] = [];
+  datasetSamples: DatasetSample[] = [];
+  signModels: SignModel[] = [];
   readonly adminUsername = process.env.ADMIN_USERNAME ?? "admin";
   readonly adminPasswordHash = this.hashPassword(process.env.ADMIN_PASSWORD ?? "admin123");
   readonly storeFilePath = (() => {
@@ -31,8 +43,12 @@ export class InMemoryStore implements OnModuleInit {
     this.load();
   }
 
+  /** Matches any way of writing the number (+91 98765 43210, 9876543210, ...) against old and new accounts. */
   findUserByPhone(phone: string) {
-    return this.users.find((u) => u.phone === phone);
+    const exact = this.users.find((u) => u.phone === phone);
+    if (exact) return exact;
+    const key = canonicalPhone(phone);
+    return key ? this.users.find((u) => canonicalPhone(u.phone) === key) : undefined;
   }
 
   findUserByEmail(email: string) {
@@ -92,21 +108,58 @@ export class InMemoryStore implements OnModuleInit {
     return timingSafeEqual(storedBuffer, hashBuffer);
   }
 
+  /** In production the admin console is disabled unless ADMIN_PASSWORD (12+ characters) is configured. */
+  get adminLoginEnabled() {
+    if (process.env.NODE_ENV !== "production") return true;
+    return (process.env.ADMIN_PASSWORD ?? "").length >= 12;
+  }
+
   verifyAdminCredentials(username: string, password: string) {
+    if (!this.adminLoginEnabled) return false;
     if (username !== this.adminUsername) return false;
     return this.verifyPassword(password, this.adminPasswordHash);
   }
 
+  /** Admin sessions: random token, only its hash stored, expires after ADMIN_SESSION_HOURS (default 8). */
   createAdminSession() {
-    const token = `admin_${uuidv4()}`;
-    this.adminSessions.push(token);
-    if (this.adminSessions.length > 20) this.adminSessions.shift();
+    const token = `admin_${randomBytes(32).toString("base64url")}`;
+    const now = Date.now();
+    const hours = Number(process.env.ADMIN_SESSION_HOURS ?? 8);
+    this.adminSessions = this.adminSessions.filter((s) => Date.parse(s.expiresAt) > now).slice(-19);
+    this.adminSessions.push({
+      tokenHash: createHash("sha256").update(token).digest("hex"),
+      createdAt: new Date(now).toISOString(),
+      expiresAt: new Date(now + hours * 3600_000).toISOString(),
+    });
     this.persist();
     return token;
   }
 
+  /** True if either user has blocked the other. */
+  isBlockedBetween(a: string, b: string) {
+    const ua = this.users.find((u) => u.id === a);
+    const ub = this.users.find((u) => u.id === b);
+    return !!(ua?.blockedUserIds?.includes(b) || ub?.blockedUserIds?.includes(a));
+  }
+
+  /** For 1:1 chats: is messaging/calling between the members blocked? Groups are not affected. */
+  isChatBlocked(chatId: string, senderId: string) {
+    const chat = this.chats.find((c) => c.id === chatId);
+    if (!chat || chat.type !== "ONE_TO_ONE") return false;
+    const other = chat.memberIds.find((id) => id !== senderId);
+    return !!other && this.isBlockedBetween(senderId, other);
+  }
+
   isValidAdminSession(token: string) {
-    return this.adminSessions.includes(token);
+    if (typeof token !== "string" || !token.startsWith("admin_")) return false;
+    const hash = createHash("sha256").update(token).digest("hex");
+    return this.adminSessions.some((s) => s.tokenHash === hash && Date.parse(s.expiresAt) > Date.now());
+  }
+
+  revokeAdminSession(token: string) {
+    const hash = createHash("sha256").update(token).digest("hex");
+    this.adminSessions = this.adminSessions.filter((s) => s.tokenHash !== hash);
+    this.persist();
   }
 
   /** Soft-suspend a user (keeps all data). Returns false if user not found. */
@@ -197,45 +250,22 @@ export class InMemoryStore implements OnModuleInit {
   }
 
   /** Simulate AI verification for a recovery request */
+  /**
+   * Account recovery goes to a human admin. There is NO automatic identity verification: the earlier version
+   * produced random "face match" scores, which must never be shown as real (spec section 13).
+   */
   processAIVerification(requestId: string): RecoveryRequest | null {
     const req = this.recoveryRequests.find((r) => r.id === requestId);
     if (!req) return null;
-
-    req.status = "AI_PROCESSING";
-    req.aiVerification.status = "PROCESSING";
-    this.persist();
-
-    // Simulate AI result — realistic score based on having both document+video
-    const hasDoc = req.hasDocument;
-    const hasVid = req.hasVideo;
-    const faceMatchScore = hasDoc && hasVid
-      ? Math.round(78 + Math.random() * 18) // 78–96%
-      : hasDoc || hasVid
-      ? Math.round(55 + Math.random() * 20)  // 55–75%
-      : Math.round(30 + Math.random() * 20); // 30–50%
-
-    const documentAuthentic = hasDoc && faceMatchScore > 60;
-    const user = this.users.find((u) => u.id === req.userId);
-    const nameMatch = !!(user && documentAuthentic);
-    const isAuthorized = faceMatchScore >= 78 && documentAuthentic && nameMatch;
-
-    const result: AIVerificationResult = {
-      status: "COMPLETED",
-      faceMatchScore,
-      documentAuthentic,
-      nameMatch,
-      isAuthorized,
-      processedAt: new Date().toISOString(),
-      summary: isAuthorized
-        ? `Identity verified. Face match: ${faceMatchScore}%. Document authentic. Name confirmed. User is authorized.`
-        : `Verification incomplete. Face match: ${faceMatchScore}%. ${!documentAuthentic ? "Document could not be verified." : ""} ${!nameMatch ? "Name mismatch detected." : ""}`,
+    req.aiVerification = {
+      status: "NOT_AVAILABLE",
+      summary: "Automatic identity verification is not available. An admin must verify this person manually (for example by video call or official document check).",
     };
-
-    req.aiVerification = result;
     req.status = "PENDING_ADMIN";
     this.persist();
     return req;
   }
+
 
   /** Admin approves recovery request — restores user account */
   approveRecovery(requestId: string): RecoveryRequest | null {
@@ -270,6 +300,17 @@ export class InMemoryStore implements OnModuleInit {
       communities: this.communities,
       recoveryRequests: this.recoveryRequests,
       adminSessions: this.adminSessions,
+      sessions: this.sessions,
+      uploads: this.uploads,
+      passwordResets: this.passwordResets,
+      pendingRegistrations: this.pendingRegistrations,
+      deviceKeys: this.deviceKeys,
+      calls: this.calls,
+      signVideos: this.signVideos,
+      vocabulary: this.vocabulary,
+      datasetConsents: this.datasetConsents,
+      datasetSamples: this.datasetSamples,
+      signModels: this.signModels,
     };
     writeFileSync(this.storeFilePath, JSON.stringify(payload, null, 2), "utf8");
   }
@@ -286,13 +327,26 @@ export class InMemoryStore implements OnModuleInit {
         deleteRequests: DeleteRequest[];
         communities: Community[];
         recoveryRequests: RecoveryRequest[];
-        adminSessions: string[];
+        adminSessions: unknown[];
+        sessions: DeviceSession[];
+        uploads: UploadRecord[];
+        passwordResets: PasswordResetCode[];
+        pendingRegistrations: PendingRegistration[];
+        deviceKeys: DeviceKeyRecord[];
+        calls: CallRecord[];
+        signVideos: SignVideo[];
+        vocabulary: VocabularyEntry[];
+        datasetConsents: DatasetConsent[];
+        datasetSamples: DatasetSample[];
+        signModels: SignModel[];
       }>;
       this.users = (parsed.users ?? []).map((u) => ({
         id: u.id,
         name: u.name,
         phone: u.phone,
         email: u.email,
+        emailVerified: u.emailVerified,
+        phoneVerified: u.phoneVerified,
         passwordHash: u.passwordHash,
         avatarUrl: u.avatarUrl,
         createdAt: u.createdAt,
@@ -301,6 +355,8 @@ export class InMemoryStore implements OnModuleInit {
         suspensionReason: u.suspensionReason,
         suspendedAt: u.suspendedAt,
         suspendedBy: u.suspendedBy,
+        preferences: u.preferences,
+        blockedUserIds: Array.isArray(u.blockedUserIds) ? u.blockedUserIds : undefined,
       }));
       this.chats = (parsed.chats ?? []).map((c) => ({
         id: c.id,
@@ -340,7 +396,23 @@ export class InMemoryStore implements OnModuleInit {
         ...r,
         aiVerification: r.aiVerification ?? { status: "PENDING" },
       }));
-      this.adminSessions = Array.isArray(parsed.adminSessions) ? parsed.adminSessions : [];
+      // Old plain-string admin tokens are dropped on purpose (admins sign in again).
+      this.adminSessions = Array.isArray(parsed.adminSessions)
+        ? (parsed.adminSessions.filter((s) => typeof s === "object" && s !== null && "tokenHash" in s) as AdminSession[])
+        : [];
+      this.sessions = Array.isArray(parsed.sessions) ? parsed.sessions : [];
+      this.uploads = Array.isArray(parsed.uploads) ? parsed.uploads : [];
+      // Old-format reset codes (keyed by phone) are simply dropped; they expire within minutes anyway.
+      this.passwordResets = Array.isArray(parsed.passwordResets) ? parsed.passwordResets.filter((r) => typeof r?.userId === "string" && r.code) : [];
+      const now = Date.now();
+      this.pendingRegistrations = Array.isArray(parsed.pendingRegistrations) ? parsed.pendingRegistrations.filter((r) => Date.parse(r?.expiresAt) > now) : [];
+      this.deviceKeys = Array.isArray(parsed.deviceKeys) ? parsed.deviceKeys : [];
+      this.calls = Array.isArray(parsed.calls) ? parsed.calls : [];
+      this.signVideos = Array.isArray(parsed.signVideos) ? parsed.signVideos : [];
+      this.vocabulary = Array.isArray(parsed.vocabulary) ? parsed.vocabulary : [];
+      this.datasetConsents = Array.isArray(parsed.datasetConsents) ? parsed.datasetConsents : [];
+      this.datasetSamples = Array.isArray(parsed.datasetSamples) ? parsed.datasetSamples : [];
+      this.signModels = Array.isArray(parsed.signModels) ? parsed.signModels : [];
       this.persist();
     } catch {
       // Ignore corrupted store file.

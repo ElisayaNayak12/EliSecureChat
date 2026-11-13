@@ -1050,21 +1050,9 @@ h1, h2, h3, h4 {
   transform: scale(1.1);
 }
 
-.wallpaper-preview-btn-0 {
-  background-color: #8bb18b;
-}
 
-.wallpaper-preview-btn-1 {
-  background-color: #79ab9a;
-}
 
-.wallpaper-preview-btn-2 {
-  background-color: #8dc1ab;
-}
 
-.wallpaper-preview-btn-3 {
-  background-color: #84bca7;
-}
 
 .security-status-indicator {
   display: flex;
@@ -1429,34 +1417,9 @@ h1, h2, h3, h4 {
 }
 
 /* Wallpapers definitions */
-.chat-scroll-area.wallpaper-0 {
-  /* WhatsApp Dark Teal Theme */
-  background-color: #0b141a;
-  background-image: 
-    radial-gradient(rgba(18, 140, 126, 0.15) 1px, transparent 1px),
-    radial-gradient(rgba(18, 140, 126, 0.1) 1px, transparent 1px);
-  background-size: 20px 20px;
-  background-position: 0 0, 10px 10px;
-}
 
-.chat-scroll-area.wallpaper-1 {
-  /* WhatsApp Light Beige-Teal Theme */
-  background-color: #efeae2;
-  background-image: 
-    radial-gradient(rgba(8, 124, 116, 0.08) 1.5px, transparent 1.5px);
-  background-size: 24px 24px;
-}
 
-.chat-scroll-area.wallpaper-2 {
-  /* Telegram Classic Starry Blue Gradient */
-  background: linear-gradient(135deg, #172554, #1e1b4b, #0f172a);
-  background-size: 200% 200%;
-}
 
-.chat-scroll-area.wallpaper-3 {
-  /* Telegram Soft Sunset Peach Gradient */
-  background: linear-gradient(135deg, #ffedd5, #fce7f3, #e0f2fe);
-}
 
 /* Security Shield Defocus Protection Overlay */
 .security-shield-overlay {
@@ -2693,28 +2656,12 @@ h1, h2, h3, h4 {
 }
 
 /* Preset 0: WhatsApp Dark Teal dot pattern */
-.wallpaper-preview-btn-0 {
-  background-color: #0b141a;
-  background-image: radial-gradient(rgba(18, 140, 126, 0.6) 1px, transparent 1px);
-  background-size: 8px 8px;
-}
 
 /* Preset 1: WhatsApp Light Beige */
-.wallpaper-preview-btn-1 {
-  background-color: #efeae2;
-  background-image: radial-gradient(rgba(8, 124, 116, 0.3) 1.5px, transparent 1.5px);
-  background-size: 9px 9px;
-}
 
 /* Preset 2: Telegram Starry Blue */
-.wallpaper-preview-btn-2 {
-  background: linear-gradient(135deg, #172554, #1e1b4b, #0f172a);
-}
 
 /* Preset 3: Telegram Sunset Peach */
-.wallpaper-preview-btn-3 {
-  background: linear-gradient(135deg, #ffedd5, #fce7f3, #e0f2fe);
-}
 
 /* ─── Utility size classes ───────────────────────────────────────── */
 .btn-xs {

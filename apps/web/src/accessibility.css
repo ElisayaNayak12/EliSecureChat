@@ -1,0 +1,280 @@
+/* ==========================================================================
+   SignConnect Phase 1a - language & accessibility settings
+   Loaded last. Global preference hooks live on <html>:
+     data-text-size="default|large|x-large"
+     data-contrast="normal|high"
+     data-motion="normal|reduce"
+     .visual-alert-flash (added briefly by flashVisualAlert())
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. TEXT SIZE - scales the reading surfaces (most UI sizes are px-based)
+   -------------------------------------------------------------------------- */
+:root { --a11y-scale: 1; }
+:root[data-text-size="large"] { --a11y-scale: 1.15; }
+:root[data-text-size="x-large"] { --a11y-scale: 1.3; }
+
+:root:not([data-text-size="default"]) .message-plain-text { font-size: calc(15px * var(--a11y-scale)); line-height: 1.45; }
+:root:not([data-text-size="default"]) .chat-summary-name { font-size: calc(16px * var(--a11y-scale)); line-height: 1.35; }
+:root:not([data-text-size="default"]) .chat-summary-preview { font-size: calc(14px * var(--a11y-scale)); line-height: 1.4; }
+:root:not([data-text-size="default"]) .composer-input-field { font-size: calc(16px * var(--a11y-scale)); }
+:root:not([data-text-size="default"]) .header-title { font-size: calc(17px * var(--a11y-scale)); }
+:root:not([data-text-size="default"]) .header-subtitle,
+:root:not([data-text-size="default"]) .message-timestamp { font-size: calc(12px * var(--a11y-scale)); }
+:root:not([data-text-size="default"]) .setting-label-col strong,
+:root:not([data-text-size="default"]) .settings-card-clickable-main strong { font-size: calc(16px * var(--a11y-scale)); line-height: 1.35; }
+:root:not([data-text-size="default"]) .setting-label-col span,
+:root:not([data-text-size="default"]) .settings-info-item span { font-size: calc(14px * var(--a11y-scale)); line-height: 1.45; }
+
+/* --------------------------------------------------------------------------
+   2. HIGH CONTRAST - solid surfaces, stronger ink and borders
+   -------------------------------------------------------------------------- */
+:root[data-contrast="high"] {
+  --aura-ink-500: var(--aura-ink-700);
+  --aura-ink-300: var(--aura-ink-500);
+  --aura-glass: var(--aura-surface);
+  --aura-glass-strong: var(--aura-surface);
+  --aura-glass-blur: none;
+}
+:root[data-contrast="high"][data-theme="light"],
+:root[data-contrast="high"] [data-theme="light"] {
+  --aura-ink-900: #000000;
+  --aura-ink-700: #1A1F1B;
+  --aura-line: rgba(0, 0, 0, 0.45);
+  --aura-glass-border: rgba(0, 0, 0, 0.45);
+}
+:root[data-contrast="high"]:not([data-theme="light"]),
+:root[data-contrast="high"] [data-theme="dark"] {
+  --aura-ink-900: #FFFFFF;
+  --aura-ink-700: #E8EEE4;
+  --aura-line: rgba(255, 255, 255, 0.45);
+  --aura-glass-border: rgba(255, 255, 255, 0.45);
+  --aura-surface: #0B120E;
+  --aura-surface-2: #16201A;
+}
+:root[data-contrast="high"] .app-sub-sidebar,
+:root[data-contrast="high"] .conversation-header,
+:root[data-contrast="high"] .composer-input-row,
+:root[data-contrast="high"] .auth-card,
+:root[data-contrast="high"] .settings-card {
+  background: var(--aura-surface) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  border: 1px solid var(--aura-line) !important;
+}
+:root[data-contrast="high"] .bubble-incoming {
+  background: var(--aura-surface-2) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  box-shadow: inset 0 0 0 1.5px var(--aura-line) !important;
+}
+:root[data-contrast="high"] .bubble-mine { background: var(--aura-tile-700) !important; color: #FFFFFF !important; }
+:root[data-contrast="high"] :focus-visible { outline: 3px solid var(--aura-ink-900) !important; outline-offset: 2px; }
+:root[data-contrast="high"] .chat-scroll-area { background-image: none !important; }
+
+/* --------------------------------------------------------------------------
+   3. REDUCE MOTION (user setting; the OS setting is honoured in aura.css)
+   -------------------------------------------------------------------------- */
+:root[data-motion="reduce"] *,
+:root[data-motion="reduce"] *::before,
+:root[data-motion="reduce"] *::after {
+  animation-duration: 1ms !important;
+  animation-delay: 0ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 1ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* --------------------------------------------------------------------------
+   4. VISUAL ALERT FLASH
+   -------------------------------------------------------------------------- */
+@keyframes a11y-flash {
+  0%, 100% { box-shadow: inset 0 0 0 0 rgba(var(--aura-tile-rgb), 0); }
+  20%, 60% { box-shadow: inset 0 0 0 10px rgba(var(--aura-tile-rgb), 0.85); }
+  40% { box-shadow: inset 0 0 0 10px rgba(var(--aura-tile-rgb), 0.25); }
+}
+:root.visual-alert-flash body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  pointer-events: none;
+  animation: a11y-flash 900ms ease-in-out both;
+}
+/* With reduce-motion, keep the alert but make it a steady frame instead of a pulse. */
+:root[data-motion="reduce"].visual-alert-flash body::after {
+  animation: none !important;
+  box-shadow: inset 0 0 0 10px rgba(var(--aura-tile-rgb), 0.85);
+}
+
+/* --------------------------------------------------------------------------
+   5. SETTINGS CONTROLS
+   -------------------------------------------------------------------------- */
+.pref-rows .setting-row + .setting-row {
+  border-top: 1px solid var(--aura-line);
+  padding-top: 14px;
+  margin-top: 14px;
+}
+.setting-row { gap: 16px; }
+.setting-label-col { min-width: 0; }
+
+.pref-loading { color: var(--aura-ink-500); font: 500 14px/20px var(--aura-font-sans); }
+
+.pref-select {
+  min-height: 42px;
+  max-width: 240px;
+  padding: 0 36px 0 14px;
+  border-radius: var(--aura-r-pill);
+  border: 1px solid var(--aura-glass-border);
+  background-color: var(--input-bg, var(--aura-surface-2));
+  color: var(--aura-ink-900);
+  font: 500 14px/18px var(--aura-font-sans);
+  cursor: pointer;
+}
+.pref-select:focus-visible { box-shadow: var(--aura-focus-ring); outline: none; }
+.pref-select option { background: var(--aura-surface); color: var(--aura-ink-900); }
+
+/* switch */
+.pref-switch {
+  width: 52px;
+  height: 30px;
+  flex-shrink: 0;
+  border-radius: var(--aura-r-pill);
+  border: 1px solid var(--aura-glass-border);
+  background: rgba(var(--aura-tile-rgb), 0.12);
+  padding: 2px;
+  cursor: pointer;
+  position: relative;
+  transition: background-color var(--aura-dur-base) var(--aura-ease-out-expo);
+}
+.pref-switch-thumb {
+  display: block;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--aura-ink-500);
+  box-shadow: var(--aura-shadow-sm);
+  transition: transform var(--aura-dur-base) var(--aura-ease-spring), background-color var(--aura-dur-fast);
+}
+.pref-switch.on { background: var(--aura-gradient-cta); border-color: transparent; }
+.pref-switch.on .pref-switch-thumb { transform: translateX(22px); background: var(--aura-on-cta); }
+.pref-switch:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* segmented */
+.pref-segmented {
+  display: inline-flex;
+  flex-shrink: 0;
+  padding: 3px;
+  gap: 2px;
+  border-radius: var(--aura-r-pill);
+  background: rgba(var(--aura-tile-rgb), 0.08);
+  box-shadow: inset 0 0 0 1px var(--aura-glass-border);
+}
+.pref-segmented button {
+  min-height: 34px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--aura-r-pill);
+  background: transparent;
+  color: var(--aura-ink-700);
+  font: 500 13px/16px var(--aura-font-sans);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color var(--aura-dur-fast), color var(--aura-dur-fast);
+}
+.pref-segmented button.active { background: var(--aura-gradient-cta); color: var(--aura-on-cta); font-weight: 600; box-shadow: var(--aura-shadow-sm); }
+.pref-segmented button:disabled { cursor: not-allowed; opacity: 0.6; }
+
+/* sign-language pack radio cards */
+.sign-pack-list { display: flex; flex-direction: column; gap: 8px; }
+.sign-pack {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 12px 14px 12px 12px;
+  border-radius: var(--aura-r-xl);
+  border: 1px solid var(--aura-glass-border);
+  background: rgba(var(--aura-tile-rgb), 0.04);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--aura-dur-fast), border-color var(--aura-dur-fast), transform var(--aura-dur-fast) var(--aura-ease-out-expo);
+}
+.sign-pack:hover:not(:disabled) { background: rgba(var(--aura-tile-rgb), 0.09); }
+.sign-pack:active:not(:disabled) { transform: scale(0.99); }
+.sign-pack.selected {
+  border-color: rgba(var(--aura-tile-rgb), 0.55);
+  background: var(--aura-active-fill);
+  box-shadow: inset 0 0 0 1px rgba(var(--aura-tile-rgb), 0.35);
+}
+.sign-pack:disabled { cursor: not-allowed; opacity: 0.6; }
+.sign-pack-code {
+  width: 52px;
+  height: 40px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: var(--aura-r-md);
+  font: 600 13px/16px var(--aura-font-sans);
+  letter-spacing: 0.02em;
+  color: var(--aura-tile-700);
+  background: var(--aura-tile-100);
+}
+:root:not([data-theme="light"]) .sign-pack-code { color: var(--aura-tile-300); }
+.sign-pack-code.muted { color: var(--aura-ink-500); background: rgba(var(--aura-tile-rgb), 0.06); }
+.sign-pack.selected .sign-pack-code { background: var(--aura-gradient-cta); color: var(--aura-on-cta); }
+.sign-pack-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.sign-pack-text strong { font: 600 15px/20px var(--aura-font-sans); color: var(--aura-ink-900); }
+.sign-pack-text span { font: 400 13px/18px var(--aura-font-sans); color: var(--aura-ink-500); }
+.sign-pack-status {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  border-radius: var(--aura-r-pill);
+  font: 600 11px/14px var(--aura-font-sans);
+  white-space: nowrap;
+}
+.sign-pack-status.dev { color: var(--aura-tile-700); background: var(--aura-tile-100); box-shadow: inset 0 0 0 1px rgba(var(--aura-tile-rgb), 0.3); }
+:root:not([data-theme="light"]) .sign-pack-status.dev { color: var(--aura-tile-300); }
+.sign-pack-status.planned { color: var(--aura-ink-500); background: rgba(var(--aura-tile-rgb), 0.06); }
+
+.pref-honest-note { margin-top: 14px; }
+.sign-pack-text .sign-pack-status { align-self: flex-start; margin-top: 6px; }
+
+/* In the narrow settings column, controls wider than a switch go under their label. */
+.setting-row:has(.pref-select),
+.setting-row:has(.pref-segmented),
+.setting-row:has(.pref-rate) {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+}
+.setting-row .pref-select { max-width: none; width: 100%; }
+.setting-row .pref-segmented { align-self: flex-start; }
+.setting-row:has(.pref-switch) .setting-label-col { flex: 1; }
+
+/* voice rate */
+.pref-rate { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+.pref-rate input[type="range"] { width: 160px; accent-color: var(--aura-tile-500); }
+
+/* errors */
+.pref-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  border-radius: var(--aura-r-lg);
+  background: var(--aura-danger-soft);
+  color: var(--aura-danger);
+  font: 500 14px/20px var(--aura-font-sans);
+}
+.pref-error-inline { color: var(--aura-danger); font: 500 13px/18px var(--aura-font-sans); margin-bottom: 10px; }
+
+@media (max-width: 950px) {
+  .pref-rows .setting-row { flex-wrap: wrap; }
+  .pref-select { max-width: 100%; }
+  .pref-rate { width: 100%; }
+  .pref-rate input[type="range"] { flex: 1; width: auto; }
+}

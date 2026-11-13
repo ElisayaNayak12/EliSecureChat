@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AURA Brand Splash</title>
+<meta name="description" content="Post-login brand splash: comet wordmark reveal (orbiting sparks, letters reveal, sparks land), or mark + sparks; loop while loading; exit into the app." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+/* ==========================================================================
+   AURA Premium UI - Design Tokens (CSS)
+   Paste this file into your project and reference ONLY these variables.
+   Light theme is default. Dark theme applies via prefers-color-scheme or
+   <html data-theme="dark">. Force light with <html data-theme="light">.
+   ========================================================================== */
+
+:root {
+  /* ---------- Fonts ---------- */
+  --aura-font-display: "Fraunces", "New York", "Playfair Display", Georgia, serif;
+  --aura-font-sans: "Inter", -apple-system, "SF Pro Text", "Roboto", system-ui, sans-serif;
+  --aura-font-mono: "JetBrains Mono", "SF Mono", ui-monospace, monospace;
+
+  /* ---------- Type scale (size / line-height) ---------- */
+  --aura-text-display-xl: 700 40px/44px var(--aura-font-display);
+  --aura-text-display-lg: 700 32px/36px var(--aura-font-display);
+  --aura-text-display-md: 600 26px/30px var(--aura-font-display);
+  --aura-text-title-lg: 600 22px/28px var(--aura-font-sans);
+  --aura-text-title-md: 600 18px/24px var(--aura-font-sans);
+  --aura-text-body-lg: 500 17px/24px var(--aura-font-sans);
+  --aura-text-body-md: 400 15px/22px var(--aura-font-sans);
+  --aura-text-label-md: 500 14px/18px var(--aura-font-sans);
+  --aura-text-label-sm: 500 13px/16px var(--aura-font-sans);
+  --aura-text-overline: 600 12px/16px var(--aura-font-sans);
+  --aura-tracking-display: -0.02em;
+  --aura-tracking-overline: 0.06em;
+
+  /* ---------- Brand hue (swap these 4 to re-brand) ---------- */
+  --aura-brand-900: #6E0A12;
+  --aura-brand-600: #B3121F;
+  --aura-cta-500: #F26A1B;
+  --aura-tile-500: #1E6BFF;
+
+  /* derived brand ramps */
+  --aura-brand-700: #8F0E19;
+  --aura-brand-400: #D93A47;
+  --aura-brand-100: #FDE8EA;
+  --aura-cta-600: #E85D12;
+  --aura-cta-400: #F7931E;
+  --aura-tile-700: #0A3FCC;
+  --aura-tile-300: #6FA3FF;
+  --aura-tile-100: #E3EDFF;
+
+  /* ---------- Semantic ---------- */
+  --aura-success: #0E8A4E;
+  --aura-warning: #D97706;
+  --aura-danger: #DC2626;
+  --aura-info: #1E6BFF;
+  --aura-mint: #D8F5E6;
+  --aura-mint-ink: #0E8A4E;
+  --aura-lilac: #EBDDFB;
+  --aura-lilac-ink: #6A1FB8;
+  --aura-sky: #E6F3FF;
+  --aura-gold: #F2B134;
+
+  /* ---------- Canvas & ink (light) ---------- */
+  --aura-canvas: #F5F6FA;
+  --aura-surface: #FFFFFF;
+  --aura-surface-2: #F0F2F7;
+  --aura-ink-900: #0B1220;
+  --aura-ink-700: #2A3242;
+  --aura-ink-500: #6B7385;
+  --aura-ink-300: #B9BFCC;
+  --aura-line: rgba(11, 18, 32, 0.08);
+  --aura-on-brand: #FFFFFF;
+
+  /* ---------- Glass ---------- */
+  --aura-glass: rgba(255, 255, 255, 0.62);
+  --aura-glass-strong: rgba(255, 255, 255, 0.82);
+  --aura-glass-border: rgba(255, 255, 255, 0.75);
+  --aura-glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  --aura-glass-blur: blur(24px) saturate(160%);
+
+  /* ---------- Gradients ---------- */
+  --aura-gradient-header: linear-gradient(180deg, var(--aura-brand-600) 0%, var(--aura-brand-700) 55%, var(--aura-brand-900) 100%);
+  --aura-gradient-header-vignette: radial-gradient(120% 80% at 50% -20%, rgba(255,255,255,0.18), transparent 60%);
+  --aura-gradient-cta: linear-gradient(180deg, var(--aura-cta-400) 0%, var(--aura-cta-500) 100%);
+  --aura-gradient-tile: radial-gradient(120% 100% at 30% 15%, var(--aura-tile-300) 0%, var(--aura-tile-500) 45%, var(--aura-tile-700) 100%);
+  --aura-gradient-tile-gloss: radial-gradient(60% 45% at 30% 18%, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 100%);
+  --aura-gradient-sky: linear-gradient(180deg, #CFE6FF 0%, #EAF4FF 60%, var(--aura-canvas) 100%);
+  --aura-gradient-aurora: linear-gradient(135deg, #FF8A3D 0%, #FFB347 30%, #2F80ED 70%, #0A3FCC 100%);
+  --aura-gradient-gold: linear-gradient(135deg, #F9D976 0%, #F39F2C 100%);
+  --aura-gradient-festive: linear-gradient(180deg, var(--aura-brand-600) 0%, #5C0810 100%);
+  --aura-gradient-shimmer: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.55) 50%, transparent 100%);
+
+  /* ---------- Spacing (4pt) ---------- */
+  --aura-space-1: 4px;
+  --aura-space-2: 8px;
+  --aura-space-3: 12px;
+  --aura-space-4: 16px;
+  --aura-space-5: 20px;
+  --aura-space-6: 24px;
+  --aura-space-8: 32px;
+  --aura-space-10: 40px;
+  --aura-space-12: 48px;
+  --aura-space-16: 64px;
+  --aura-gutter: 20px;
+  --aura-touch: 56px;
+
+  /* ---------- Radius ---------- */
+  --aura-r-sm: 10px;
+  --aura-r-md: 14px;
+  --aura-r-lg: 16px;
+  --aura-r-xl: 20px;
+  --aura-r-2xl: 22px;
+  --aura-r-3xl: 28px;
+  --aura-r-pill: 999px;
+
+  /* ---------- Elevation ---------- */
+  --aura-shadow-sm: 0 2px 8px -2px rgba(11, 18, 32, 0.08);
+  --aura-shadow-md: 0 10px 30px -12px rgba(11, 18, 32, 0.14);
+  --aura-shadow-lg: 0 24px 60px -20px rgba(11, 18, 32, 0.22);
+  --aura-shadow-tile: 0 12px 32px -8px rgba(30, 107, 255, 0.45);
+  --aura-shadow-cta: 0 14px 32px -10px rgba(242, 106, 27, 0.55);
+  --aura-halo-tile: 0 0 0 8px rgba(227, 237, 255, 0.6);
+  --aura-focus-ring: 0 0 0 3px rgba(30, 107, 255, 0.4);
+
+  /* ---------- Motion ---------- */
+  --aura-dur-instant: 80ms;
+  --aura-dur-fast: 160ms;
+  --aura-dur-base: 260ms;
+  --aura-dur-slow: 420ms;
+  --aura-dur-cinematic: 700ms;
+  --aura-ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --aura-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --aura-ease-spring: linear(0, 0.009, 0.035 2.1%, 0.141, 0.281 6.7%, 0.723 12.9%, 0.938 16.7%, 1.017, 1.077, 1.121, 1.149 24.3%, 1.159, 1.163, 1.161, 1.154 29.9%, 1.129 32.8%, 1.051 39.6%, 1.017 43.1%, 0.991, 0.977 51%, 0.974 53.8%, 0.975 57.1%, 0.997 69.8%, 1.003 76.9%, 1);
+  --aura-ease-spring-soft: linear(0, 0.006, 0.025 2.8%, 0.101 6.1%, 0.539 18.9%, 0.721 25.3%, 0.849 31.5%, 0.937 38.1%, 0.968 41.8%, 0.991 45.7%, 1.006 50.1%, 1.015 55%, 1.017 63.9%, 1.001);
+  --aura-stagger: 40ms;
+  --aura-press-scale: 0.97;
+  --aura-hover-lift: -2px;
+}
+
+/* ---------- Dark theme ---------- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --aura-canvas: #0B0C10;
+    --aura-surface: #15171E;
+    --aura-surface-2: #1C1F28;
+    --aura-ink-900: #F4F6FB;
+    --aura-ink-700: #C9CFDB;
+    --aura-ink-500: #8A91A3;
+    --aura-ink-300: #4A5062;
+    --aura-line: rgba(255, 255, 255, 0.08);
+    --aura-glass: rgba(21, 23, 30, 0.58);
+    --aura-glass-strong: rgba(21, 23, 30, 0.82);
+    --aura-glass-border: rgba(255, 255, 255, 0.10);
+    --aura-glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    --aura-mint: rgba(14, 138, 78, 0.22);
+    --aura-mint-ink: #5FE0A3;
+    --aura-lilac: rgba(106, 31, 184, 0.28);
+    --aura-lilac-ink: #D3B4FF;
+    --aura-sky: rgba(30, 107, 255, 0.14);
+    --aura-success: #34C77B;
+    --aura-shadow-sm: 0 2px 8px -2px rgba(0, 0, 0, 0.5);
+    --aura-shadow-md: 0 10px 30px -12px rgba(0, 0, 0, 0.6);
+    --aura-shadow-lg: 0 24px 60px -20px rgba(0, 0, 0, 0.7);
+    --aura-halo-tile: 0 0 0 8px rgba(30, 107, 255, 0.14);
+    --aura-gradient-sky: linear-gradient(180deg, #121A2E 0%, #0E1320 60%, var(--aura-canvas) 100%);
+  }
+}
+:root[data-theme="dark"] {
+  --aura-canvas: #0B0C10;
+  --aura-surface: #15171E;
+  --aura-surface-2: #1C1F28;
+  --aura-ink-900: #F4F6FB;
+  --aura-ink-700: #C9CFDB;
+  --aura-ink-500: #8A91A3;
+  --aura-ink-300: #4A5062;
+  --aura-line: rgba(255, 255, 255, 0.08);
+  --aura-glass: rgba(21, 23, 30, 0.58);
+  --aura-glass-strong: rgba(21, 23, 30, 0.82);
+  --aura-glass-border: rgba(255, 255, 255, 0.10);
+  --aura-glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  --aura-mint: rgba(14, 138, 78, 0.22);
+  --aura-mint-ink: #5FE0A3;
+  --aura-lilac: rgba(106, 31, 184, 0.28);
+  --aura-lilac-ink: #D3B4FF;
+  --aura-sky: rgba(30, 107, 255, 0.14);
+  --aura-success: #34C77B;
+  --aura-shadow-sm: 0 2px 8px -2px rgba(0, 0, 0, 0.5);
+  --aura-shadow-md: 0 10px 30px -12px rgba(0, 0, 0, 0.6);
+  --aura-shadow-lg: 0 24px 60px -20px rgba(0, 0, 0, 0.7);
+  --aura-halo-tile: 0 0 0 8px rgba(30, 107, 255, 0.14);
+  --aura-gradient-sky: linear-gradient(180deg, #121A2E 0%, #0E1320 60%, var(--aura-canvas) 100%);
+}
+
+/* ---------- Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --aura-dur-fast: 1ms;
+    --aura-dur-base: 120ms;
+    --aura-dur-slow: 150ms;
+    --aura-dur-cinematic: 150ms;
+    --aura-stagger: 0ms;
+    --aura-press-scale: 1;
+    --aura-hover-lift: 0px;
+    --aura-ease-spring: ease-out;
+    --aura-ease-spring-soft: ease-out;
+  }
+}
+
+/* ---------- Base resets that AURA assumes ---------- */
+.aura, .aura * { box-sizing: border-box; }
+.aura {
+  background: var(--aura-canvas);
+  color: var(--aura-ink-900);
+  font: var(--aura-text-body-md);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Utility classes (optional, framework-free) ---------- */
+.aura-display-lg { font: var(--aura-text-display-lg); letter-spacing: var(--aura-tracking-display); }
+.aura-display-md { font: var(--aura-text-display-md); letter-spacing: var(--aura-tracking-display); }
+.aura-title-lg { font: var(--aura-text-title-lg); }
+.aura-title-md { font: var(--aura-text-title-md); }
+.aura-body-lg { font: var(--aura-text-body-lg); }
+.aura-label-md { font: var(--aura-text-label-md); color: var(--aura-ink-500); }
+.aura-label-sm { font: var(--aura-text-label-sm); color: var(--aura-ink-500); }
+.aura-overline { font: var(--aura-text-overline); letter-spacing: var(--aura-tracking-overline); text-transform: uppercase; color: var(--aura-ink-500); }
+
+.aura-glass {
+  background: var(--aura-glass);
+  border: 1px solid var(--aura-glass-border);
+  box-shadow: var(--aura-shadow-lg), var(--aura-glass-highlight);
+  -webkit-backdrop-filter: var(--aura-glass-blur);
+  backdrop-filter: var(--aura-glass-blur);
+}
+
+.aura-card {
+  background: var(--aura-surface);
+  border-radius: var(--aura-r-3xl);
+  box-shadow: var(--aura-shadow-md);
+  padding: var(--aura-space-5);
+  position: relative;
+  overflow: hidden;
+}
+
+.aura-tile {
+  width: 64px; height: 64px;
+  border-radius: var(--aura-r-2xl);
+  background: var(--aura-gradient-tile);
+  box-shadow: var(--aura-shadow-tile), var(--aura-halo-tile);
+  display: grid; place-items: center;
+  color: #fff; position: relative;
+}
+.aura-tile::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit;
+  background: var(--aura-gradient-tile-gloss); pointer-events: none;
+}
+
+.aura-btn-primary {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  width: 100%; min-height: var(--aura-touch);
+  border: 0; border-radius: var(--aura-r-xl);
+  background: var(--aura-gradient-cta);
+  color: #fff; font: 600 18px/24px var(--aura-font-sans);
+  box-shadow: var(--aura-shadow-cta), inset 0 1px 0 rgba(255,255,255,0.35);
+  cursor: pointer;
+  transition: transform var(--aura-dur-fast) var(--aura-ease-out-expo), box-shadow var(--aura-dur-fast);
+}
+.aura-btn-primary:hover { transform: translateY(var(--aura-hover-lift)); }
+.aura-btn-primary:active { transform: scale(var(--aura-press-scale)); }
+.aura-btn-primary:focus-visible { outline: none; box-shadow: var(--aura-shadow-cta), var(--aura-focus-ring); }
+
+.aura-press { transition: transform var(--aura-dur-fast) var(--aura-ease-out-expo); }
+.aura-press:active { transform: scale(var(--aura-press-scale)); }
+
+@keyframes aura-rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+.aura-rise { animation: aura-rise var(--aura-dur-slow) var(--aura-ease-out-expo) both; }
+.aura-rise[data-i="1"] { animation-delay: calc(1 * var(--aura-stagger)); }
+.aura-rise[data-i="2"] { animation-delay: calc(2 * var(--aura-stagger)); }
+.aura-rise[data-i="3"] { animation-delay: calc(3 * var(--aura-stagger)); }
+.aura-rise[data-i="4"] { animation-delay: calc(4 * var(--aura-stagger)); }
+.aura-rise[data-i="5"] { animation-delay: calc(5 * var(--aura-stagger)); }
+.aura-rise[data-i="6"] { animation-delay: calc(6 * var(--aura-stagger)); }
+.aura-rise[data-i="7"] { animation-delay: calc(7 * var(--aura-stagger)); }
+.aura-rise[data-i="8"] { animation-delay: calc(8 * var(--aura-stagger)); }
+
+@keyframes aura-shimmer { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+.aura-skeleton {
+  position: relative; overflow: hidden;
+  background: var(--aura-surface-2); border-radius: var(--aura-r-md);
+}
+.aura-skeleton::after {
+  content: ""; position: absolute; inset: 0;
+  background: var(--aura-gradient-shimmer);
+  animation: aura-shimmer 1.4s var(--aura-ease-in-out) infinite;
+}
+
+html, body { margin: 0; min-height: 100%; }
+body { background: var(--aura-canvas); padding: 24px 16px 48px; display: flex; flex-direction: column; align-items: center; gap: 20px; }
+.hero { text-align: center; max-width: 720px; }
+.hero h1 { font: var(--aura-text-display-xl); letter-spacing: var(--aura-tracking-display); margin: 0 0 8px; }
+.hero p { margin: 0; color: var(--aura-ink-500); font: var(--aura-text-body-md); }
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; padding: 8px; border-radius: var(--aura-r-3xl); max-width: 760px; }
+.toolbar button { border: 1px solid var(--aura-line); background: var(--aura-surface); color: var(--aura-ink-700); font: var(--aura-text-label-md); padding: 10px 16px; border-radius: var(--aura-r-pill); cursor: pointer; box-shadow: var(--aura-shadow-sm); transition: transform var(--aura-dur-fast) var(--aura-ease-out-expo), background var(--aura-dur-fast), color var(--aura-dur-fast); }
+.toolbar button:hover { transform: translateY(var(--aura-hover-lift)); }
+.toolbar button:active { transform: scale(var(--aura-press-scale)); }
+.toolbar button[aria-pressed="true"] { background: var(--aura-ink-900); color: var(--aura-surface); border-color: transparent; }
+.toolbar .swatch { width: 12px; height: 12px; border-radius: 50%; display: inline-block; vertical-align: -1px; margin-right: 6px; }
+.toolbar .sep { width: 100%; height: 0; }
+
+.phone { width: 390px; height: 844px; max-width: 100%; border-radius: 48px; overflow: hidden; position: relative; background: var(--aura-canvas); box-shadow: 0 40px 100px -30px rgba(11,18,32,0.45), 0 0 0 10px #15171E, 0 0 0 12px #2A2C31; }
+
+/* ======================= SPLASH LAYER ======================= */
+.splash { --logo: var(--aura-tile-500); position: absolute; inset: 0; z-index: 10; display: grid; place-items: center; background: var(--aura-surface); transition: opacity 420ms var(--aura-ease-out-expo); }
+.splash.brand { --logo: #fff; background: var(--aura-gradient-header); }
+.splash.brand::before { content: ""; position: absolute; inset: 0; background: var(--aura-gradient-header-vignette); }
+.splash.leave { opacity: 0; pointer-events: none; }
+.stack { position: relative; display: flex; flex-direction: column; align-items: center; gap: 18px; transition: transform 420ms var(--aura-ease-out-expo), opacity 300ms; }
+.splash.leave .stack { transform: scale(1.12); opacity: 0; }
+.variant { display: none; }
+.splash[data-variant="comet"] .variant-comet, .splash[data-variant="mark"] .variant-mark { display: flex; flex-direction: column; align-items: center; gap: 18px; }
+
+.tagline { font: var(--aura-text-label-md); color: var(--aura-ink-500); opacity: 0; transform: translateY(8px); display: flex; align-items: center; gap: 8px; }
+.splash.brand .tagline { color: rgba(255,255,255,0.75); }
+.dots { display: inline-flex; gap: 4px; }
+.dots i { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0.35; }
+.play .tagline { animation: rise 420ms var(--aura-ease-out-expo) 1900ms forwards; }
+.play .dots i { animation: dot 1.2s ease-in-out infinite; }
+.play .dots i:nth-child(2) { animation-delay: 0.2s; } .play .dots i:nth-child(3) { animation-delay: 0.4s; }
+@keyframes rise { to { opacity: 1; transform: none; } }
+@keyframes dot { 0%,100% { opacity: 0.35; transform: translateY(0); } 50% { opacity: 1; transform: translateY(-3px); } }
+
+/* ======================= VARIANT A: COMET WORDMARK (the Keka-style reveal) ======================= */
+/* Scene: 420 x 200 box. The word is HTML (so you can type any wordmark); the comets, trails and
+   sparks are an SVG overlay in the same box. Everything sits inside .shift, which starts offset
+   to the right so the FIRST letter is centred, then slides to 0 as the other letters reveal. */
+.scene { position: relative; width: 420px; height: 200px; max-width: 100%; }
+.shift { position: absolute; inset: 0; transform: translateX(var(--shift, 70px)); }
+.play .shift { animation: shift 650ms var(--aura-ease-out-expo) 450ms forwards; }
+@keyframes shift { to { transform: translateX(0); } }
+.word { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); display: flex; justify-content: center; font: 800 84px/1 var(--aura-font-sans); letter-spacing: -0.045em; color: var(--logo); }
+.word span { display: inline-block; opacity: 0; transform: translateX(-6px) scale(0.9); transform-origin: left center; }
+.word span:first-child { opacity: 0; transform: scale(0.6); transform-origin: center; }
+.play .word span:first-child { animation: pop-letter 520ms var(--aura-ease-spring) forwards; }
+.play .word span:nth-child(2) { animation: reveal 380ms var(--aura-ease-out-expo) 520ms forwards; }
+.play .word span:nth-child(3) { animation: reveal 380ms var(--aura-ease-out-expo) 700ms forwards; }
+.play .word span:nth-child(4) { animation: reveal 380ms var(--aura-ease-out-expo) 880ms forwards; }
+.play .word span:nth-child(5) { animation: reveal 380ms var(--aura-ease-out-expo) 1060ms forwards; }
+.play .word span:nth-child(6) { animation: reveal 380ms var(--aura-ease-out-expo) 1240ms forwards; }
+@keyframes pop-letter { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; transform: scale(1); } }
+@keyframes reveal { to { opacity: 1; transform: none; } }
+
+.fx { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.trail { fill: none; stroke: var(--logo); stroke-width: 3; stroke-linecap: round; opacity: 0.32; stroke-dasharray: 110 1000; stroke-dashoffset: 110; }
+.comet { fill: var(--logo); offset-rotate: auto; offset-distance: 0%; opacity: 1; }
+.comet.a { offset-path: path("M165 45 C 120 8, 56 40, 64 100 S 150 182, 232 166 S 338 150, 318 52"); }
+.comet.b { offset-path: path("M165 45 C 188 -22, 288 -26, 342 18 S 336 46, 318 50"); }
+.comet.c { offset-path: path("M165 48 C 170 112, 238 152, 298 126 S 346 86, 320 50"); }
+.play .comet.a { animation: fly 1300ms cubic-bezier(0.45, 0, 0.2, 1) 300ms forwards; }
+.play .comet.b { animation: fly 1150ms cubic-bezier(0.45, 0, 0.2, 1) 360ms forwards; }
+.play .comet.c { animation: fly 1400ms cubic-bezier(0.45, 0, 0.2, 1) 420ms forwards; }
+.play .trail.a { animation: sweep 1300ms cubic-bezier(0.45, 0, 0.2, 1) 300ms forwards; }
+.play .trail.b { animation: sweep 1150ms cubic-bezier(0.45, 0, 0.2, 1) 360ms forwards; }
+.play .trail.c { animation: sweep 1400ms cubic-bezier(0.45, 0, 0.2, 1) 420ms forwards; }
+@keyframes fly { 0% { offset-distance: 0%; opacity: 1; } 88% { opacity: 1; } 100% { offset-distance: 100%; opacity: 0; } }
+@keyframes sweep { 0% { stroke-dashoffset: 110; opacity: 0.32; } 80% { opacity: 0.32; } 100% { stroke-dashoffset: -890; opacity: 0; } }
+.spark { fill: var(--logo); transform-box: fill-box; transform-origin: center; transform: scale(0); }
+.play .spark.s1 { animation: land 520ms var(--aura-ease-spring) 1560ms forwards, twinkle 2.4s ease-in-out 2400ms infinite; }
+.play .spark.s2 { animation: land 520ms var(--aura-ease-spring) 1640ms forwards, twinkle 2.4s ease-in-out 2600ms infinite; }
+.play .spark.s3 { animation: land 520ms var(--aura-ease-spring) 1720ms forwards, twinkle 2.4s ease-in-out 2800ms infinite; }
+@keyframes land { 0% { transform: scale(0); } 55% { transform: scale(1.25); } 100% { transform: scale(1); } }
+@keyframes twinkle { 0%,100% { opacity: 1; } 50% { opacity: 0.55; } }
+
+/* ======================= VARIANT B: MARK + SPARKS ======================= */
+.mark { width: 112px; height: 112px; position: relative; }
+.mark .puck { position: absolute; inset: 0; border-radius: 34px; background: var(--aura-gradient-tile); box-shadow: var(--aura-shadow-tile); transform: scale(0.6); opacity: 0; }
+.mark .puck::before { content: ""; position: absolute; inset: 0; border-radius: inherit; background: var(--aura-gradient-tile-gloss); }
+.splash.brand .mark .puck { background: radial-gradient(120% 100% at 30% 15%, #fff 0%, #f2f4f8 55%, #d9dde6 100%); box-shadow: 0 24px 50px -16px rgba(0,0,0,0.45); }
+.mark svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.mark .letter { fill: none; stroke: #fff; stroke-width: 9; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 240; stroke-dashoffset: 240; }
+.splash.brand .mark .letter { stroke: var(--aura-brand-600); }
+.mark .mspark { fill: none; stroke: var(--aura-cta-400); stroke-width: 7; stroke-linecap: round; transform-origin: 84px 26px; transform: scale(0); opacity: 0; }
+.mark .glow { position: absolute; inset: -30%; border-radius: 50%; background: radial-gradient(circle, rgba(30,107,255,0.35), transparent 60%); opacity: 0; filter: blur(10px); }
+.splash.brand .mark .glow { background: radial-gradient(circle, rgba(255,255,255,0.45), transparent 60%); }
+.wordmark { display: flex; gap: 1px; font: 700 34px/1 var(--aura-font-display); letter-spacing: 0.08em; color: var(--aura-ink-900); }
+.splash.brand .wordmark { color: #fff; }
+.wordmark span { display: inline-block; opacity: 0; transform: translateY(14px); }
+.play .mark .puck { animation: puck-in 600ms var(--aura-ease-spring) forwards, breathe 2.4s ease-in-out 1.2s infinite; }
+@keyframes puck-in { from { transform: scale(0.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes breathe { 0%,100% { transform: scale(1); } 50% { transform: scale(1.045); } }
+.play .mark .letter { animation: draw 700ms var(--aura-ease-out-expo) 180ms forwards; }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+.play .mark .mspark { animation: mspark 900ms var(--aura-ease-spring) forwards, respark 2.4s ease-out 1.6s infinite; }
+.play .mark .mspark:nth-child(1) { animation-delay: 520ms, 1.6s; }
+.play .mark .mspark:nth-child(2) { animation-delay: 600ms, 1.68s; }
+.play .mark .mspark:nth-child(3) { animation-delay: 680ms, 1.76s; }
+@keyframes mspark { 0% { transform: scale(0); opacity: 0; } 45% { transform: scale(1.18); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+@keyframes respark { 0% { transform: scale(1); opacity: 1; } 12% { transform: scale(0.7); opacity: 0.4; } 32% { transform: scale(1.14); opacity: 1; } 50%,100% { transform: scale(1); opacity: 1; } }
+.play .mark .glow { animation: glow 900ms var(--aura-ease-out-expo) 420ms forwards, glowloop 2.4s ease-in-out 1.4s infinite; }
+@keyframes glow { to { opacity: 1; } }
+@keyframes glowloop { 0%,100% { opacity: 0.7; transform: scale(1); } 50% { opacity: 1; transform: scale(1.12); } }
+.play .wordmark span { animation: rise 520ms var(--aura-ease-out-expo) forwards; }
+.play .wordmark span:nth-child(1) { animation-delay: 700ms; } .play .wordmark span:nth-child(2) { animation-delay: 760ms; }
+.play .wordmark span:nth-child(3) { animation-delay: 820ms; } .play .wordmark span:nth-child(4) { animation-delay: 880ms; }
+
+/* ======================= APP (revealed under the splash) ======================= */
+.app { position: absolute; inset: 0; overflow: hidden; }
+.app .header { background: var(--aura-gradient-header); color: #fff; padding: 56px 20px 48px; position: relative; }
+.app .header::before { content: ""; position: absolute; inset: 0; background: var(--aura-gradient-header-vignette); }
+.app .header h2 { position: relative; margin: 0; font: var(--aura-text-display-md); letter-spacing: var(--aura-tracking-display); }
+.app .header p { position: relative; margin: 6px 0 0; font: var(--aura-text-body-md); opacity: 0.85; }
+.app .avatar { position: absolute; right: 20px; top: 52px; width: 44px; height: 44px; border-radius: 50%; background: var(--aura-gradient-gold); box-shadow: 0 0 0 2px rgba(255,255,255,0.6); }
+.app .panel { position: relative; margin-top: -28px; background: var(--aura-surface); border-radius: 28px 28px 0 0; padding: 24px 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.app .card { background: var(--aura-surface); border-radius: var(--aura-r-3xl); box-shadow: 0 1px 0 var(--aura-line), var(--aura-shadow-md); padding: 18px 20px; min-height: 112px; }
+.app .card .ov { font: var(--aura-text-overline); letter-spacing: var(--aura-tracking-overline); text-transform: uppercase; color: var(--aura-ink-500); }
+.app .card .val { font: var(--aura-text-display-md); letter-spacing: var(--aura-tracking-display); margin-top: 10px; }
+.app .card .delta { display: inline-block; margin-top: 8px; font: 600 12px/16px var(--aura-font-sans); background: var(--aura-mint); color: var(--aura-mint-ink); padding: 3px 8px; border-radius: 10px; }
+.app .card.wide { grid-column: span 2; display: flex; align-items: center; gap: 16px; }
+.app .clock { width: 72px; height: 72px; border-radius: 50%; background: var(--aura-gradient-tile); box-shadow: var(--aura-shadow-tile), var(--aura-halo-tile); display: grid; place-items: center; color: #fff; font: 600 13px/1 var(--aura-font-sans); flex: none; position: relative; }
+.app .clock::before { content: ""; position: absolute; inset: 0; border-radius: inherit; background: var(--aura-gradient-tile-gloss); }
+.app .clock span { position: relative; }
+.app .card h3 { margin: 0; font: var(--aura-text-title-md); }
+.app .card small { color: var(--aura-ink-500); font: var(--aura-text-label-md); }
+.app .enter { opacity: 0; transform: translateY(16px); }
+.app.show .enter { animation: rise 420ms var(--aura-ease-out-expo) forwards; }
+.app.show .enter:nth-child(1) { animation-delay: 0ms; } .app.show .enter:nth-child(2) { animation-delay: 40ms; } .app.show .enter:nth-child(3) { animation-delay: 80ms; }
+.app.show .enter:nth-child(4) { animation-delay: 120ms; } .app.show .enter:nth-child(5) { animation-delay: 160ms; } .app.show .enter:nth-child(6) { animation-delay: 200ms; }
+.app .header.enter { transform: none; }
+
+.notes { max-width: 720px; color: var(--aura-ink-500); font: var(--aura-text-body-md); text-align: center; }
+.notes code { font: 13px/1 var(--aura-font-mono); background: var(--aura-surface-2); padding: 2px 6px; border-radius: 6px; color: var(--aura-ink-700); }
+@media (max-width: 420px) { .phone { height: 92vh; border-radius: 32px; } .scene { transform: scale(0.85); } }
+@media (prefers-reduced-motion: reduce) {
+  .play .comet, .play .trail { animation: none !important; opacity: 0; }
+  .play .word span, .play .spark, .play .shift { animation-duration: 150ms !important; animation-delay: 0ms !important; }
+  .play .spark { animation-name: land-rm !important; }
+  @keyframes land-rm { to { transform: scale(1); } }
+}
+</style>
+</head>
+<body class="aura">
+<div class="hero"><h1>Brand Splash</h1><p>The post-login moment. Default is the comet wordmark reveal: first letter pops, three comets launch on orbits with trails, letters reveal as the word re-centres, comets land as the brand sparks, then the app rises in.</p></div>
+<div class="toolbar aura-glass">
+  <button id="replay">Replay</button>
+  <button class="var" data-variant="comet" aria-pressed="true">Comet wordmark</button>
+  <button class="var" data-variant="mark" aria-pressed="false">Mark + sparks</button>
+  <button id="hold" aria-pressed="false">Hold on loop</button>
+  <button id="theme">Dark mode</button>
+  <span class="sep"></span>
+  <button id="white" aria-pressed="true">White background</button>
+  <button id="brand" aria-pressed="false">Brand gradient</button>
+  <button class="col" data-col="var(--aura-tile-500)" aria-pressed="true"><i class="swatch" style="background:#1E6BFF"></i>Blue</button>
+  <button class="col" data-col="#6C4BE0" aria-pressed="false"><i class="swatch" style="background:#6C4BE0"></i>Violet</button>
+  <button class="col" data-col="var(--aura-brand-600)" aria-pressed="false"><i class="swatch" style="background:#B3121F"></i>Crimson</button>
+  <button class="col" data-col="var(--aura-success)" aria-pressed="false"><i class="swatch" style="background:#0E8A4E"></i>Emerald</button>
+</div>
+
+<div class="phone">
+  <div class="app" id="app">
+    <div class="header enter"><h2>Good morning, Elisaya</h2><p>Wednesday, 8 Oct · 3 things need you</p><span class="avatar"></span></div>
+    <div class="panel">
+      <div class="card wide enter"><span class="clock"><span>CLOCK<br/>IN</span></span><div><h3>You're not clocked in</h3><small>Shift 9:30 - 18:30 · Hybrid</small></div></div>
+      <div class="card enter"><div class="ov">Leave balance</div><div class="val">14.5</div><span class="delta">+1.5 accrued</span></div>
+      <div class="card enter"><div class="ov">Hours this week</div><div class="val">31h 20m</div><span class="delta">On track</span></div>
+      <div class="card enter"><div class="ov">Inbox</div><div class="val">3</div><span class="delta" style="background:var(--aura-lilac);color:var(--aura-lilac-ink)">2 approvals</span></div>
+      <div class="card enter"><div class="ov">Next holiday</div><div class="val">24 Dec</div><span class="delta">in 77 days</span></div>
+    </div>
+  </div>
+
+  <div class="splash" id="splash" data-variant="comet">
+    <div class="stack">
+
+      <!-- VARIANT A: comet wordmark -->
+      <div class="variant variant-comet">
+        <div class="scene">
+          <div class="shift">
+            <div class="word" id="word"><span>a</span><span>u</span><span>r</span><span>a</span></div>
+            <svg class="fx" viewBox="0 0 420 200" aria-hidden="true">
+              <path class="trail a" pathLength="1000" d="M165 45 C 120 8, 56 40, 64 100 S 150 182, 232 166 S 338 150, 318 52" />
+              <path class="trail b" pathLength="1000" d="M165 45 C 188 -22, 288 -26, 342 18 S 336 46, 318 50" />
+              <path class="trail c" pathLength="1000" d="M165 48 C 170 112, 238 152, 298 126 S 346 86, 320 50" />
+              <polygon class="comet a" points="0,-7 18,0 0,7" />
+              <polygon class="comet b" points="0,-6 16,0 0,6" />
+              <polygon class="comet c" points="0,-7 18,0 0,7" />
+              <g class="sparks">
+                <polygon class="spark s1" points="306,52 318,44 318,58" />
+                <polygon class="spark s2" points="314,40 326,28 330,44" />
+                <polygon class="spark s3" points="326,50 344,46 336,62" />
+              </g>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- VARIANT B: mark + sparks -->
+      <div class="variant variant-mark">
+        <div class="mark">
+          <span class="glow"></span>
+          <span class="puck"></span>
+          <svg viewBox="0 0 112 112" aria-hidden="true">
+            <path class="letter" d="M30 86 L52 30 L74 86 M38 66 L66 66" />
+            <g>
+              <path class="mspark" d="M84 26 L96 14" />
+              <path class="mspark" d="M86 32 L102 32" />
+              <path class="mspark" d="M80 18 L80 4" />
+            </g>
+          </svg>
+        </div>
+        <div class="wordmark"><span>A</span><span>U</span><span>R</span><span>A</span></div>
+      </div>
+
+      <div class="tagline">Signing you in <span class="dots"><i></i><i></i><i></i></span></div>
+    </div>
+  </div>
+</div>
+
+<p class="notes">Type any wordmark into the <code>.word</code> spans (first span is the anchor letter), keep the three comet paths ending at your spark position, and set <code>--logo</code> to your brand colour. Spec and platform code: <code>motion.md</code> section 8, <code>components.md</code> section 20.</p>
+
+<script>
+(function () {
+  var root = document.documentElement, splash = document.getElementById('splash'), app = document.getElementById('app');
+  var hold = false, timer, MIN = { comet: 3200, mark: 2600 };
+  function play() {
+    clearTimeout(timer);
+    splash.classList.remove('leave', 'play'); app.classList.remove('show');
+    void splash.offsetWidth;
+    splash.classList.add('play');
+    if (!hold) timer = setTimeout(leave, MIN[splash.dataset.variant]);
+  }
+  function leave() { splash.classList.add('leave'); app.classList.add('show'); }
+  function press(group, el) { Array.prototype.forEach.call(document.querySelectorAll(group), function (b) { b.setAttribute('aria-pressed', b === el); }); }
+  document.getElementById('replay').onclick = play;
+  document.getElementById('hold').onclick = function () { hold = !hold; this.setAttribute('aria-pressed', hold); play(); };
+  document.getElementById('white').onclick = function () { splash.classList.remove('brand'); press('#white,#brand', this); play(); };
+  document.getElementById('brand').onclick = function () { splash.classList.add('brand'); press('#white,#brand', this); play(); };
+  Array.prototype.forEach.call(document.querySelectorAll('.var'), function (b) {
+    b.onclick = function () { splash.dataset.variant = b.dataset.variant; press('.var', b); play(); };
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('.col'), function (b) {
+    b.onclick = function () { splash.style.setProperty('--logo', b.dataset.col); splash.classList.remove('brand'); press('#white,#brand', document.getElementById('white')); press('.col', b); play(); };
+  });
+  var dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  function theme() { root.dataset.theme = dark ? 'dark' : 'light'; document.getElementById('theme').textContent = dark ? 'Light mode' : 'Dark mode'; }
+  document.getElementById('theme').onclick = function () { dark = !dark; theme(); };
+  theme();
+  splash.addEventListener('click', function () { if (hold) leave(); });
+  play();
+})();
+</script>
+</body>
+</html>

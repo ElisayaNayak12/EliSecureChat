@@ -1,4 +1,9 @@
-import { BadRequestException, Body, Controller, Get, Inject, Param, Patch, Post } from "@nestjs/common";
+import { BadRequestException, Body, Controller, Get, Inject, Param, Patch, Post, ForbiddenException, NotFoundException } from "@nestjs/common";
+import { CurrentUser, type AuthUser } from "../auth/decorators";
+
+const EDIT_WINDOW_MS = 15 * 60_000;
+/** Encrypted envelopes for large groups can be big, but not unbounded. */
+const MAX_CONTENT = 65536;
 import { randomUUID } from "crypto";
 import { InMemoryStore } from "../store/in-memory.store";
 import { CreateDeleteRequestDto } from "./dto/create-delete-request.dto";
@@ -36,6 +41,10 @@ export class MessagesController {
 
   @Post()
   create(@Body() dto: SendMessageDto) {
+    if (typeof dto.encryptedContent !== "string" || !dto.encryptedContent || dto.encryptedContent.length > MAX_CONTENT) {
+      throw new BadRequestException("INVALID_CONTENT");
+    }
+    if (this.store.isChatBlocked(dto.chatId, dto.senderId)) throw new ForbiddenException("BLOCKED");
     const message = {
       id: randomUUID(),
       chatId: dto.chatId,
@@ -60,11 +69,16 @@ export class MessagesController {
   }
 
   @Patch(":messageId")
-  edit(@Param("messageId") messageId: string, @Body() dto: EditMessageDto) {
+  edit(@Param("messageId") messageId: string, @Body() dto: EditMessageDto, @CurrentUser() me: AuthUser) {
     const message = this.store.messages.find((m) => m.id === messageId);
     if (!message) {
-      return { error: "MESSAGE_NOT_FOUND" };
+      throw new NotFoundException("MESSAGE_NOT_FOUND");
     }
+    // Only the sender may edit, only their own normal messages, and only within 15 minutes.
+    if (message.senderId !== me.userId) throw new ForbiddenException("ONLY_SENDER_CAN_EDIT");
+    if (typeof dto.encryptedContent !== "string" || !dto.encryptedContent || dto.encryptedContent.length > MAX_CONTENT) throw new BadRequestException("INVALID_CONTENT");
+    if (message.messageType === "SYSTEM") throw new ForbiddenException("CANNOT_EDIT_SYSTEM_MESSAGE");
+    if (Date.now() - Date.parse(message.createdAt) > EDIT_WINDOW_MS) throw new ForbiddenException("EDIT_WINDOW_EXPIRED");
 
     message.encryptedContent = dto.encryptedContent;
     message.isEdited = true;
@@ -125,6 +139,9 @@ export class MessagesController {
     }
     if (req.targetUserId && req.targetUserId !== dto.userId) {
       throw new BadRequestException("ONLY_TARGET_CAN_APPROVE");
+    }
+    if (req.requestedBy === dto.userId) {
+      throw new ForbiddenException("CANNOT_APPROVE_OWN_REQUEST");
     }
 
     req.status = "APPROVED";

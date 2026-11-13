@@ -1,4 +1,13 @@
 import { useRef, useEffect, useState, useMemo } from "react";
+import { checkTone } from "../features/tone";
+import { capsuleText, formatOpenDate, parseCapsule } from "../features/capsule";
+import ExpressionPanel, { GifCard } from "../components/ExpressionPanel";
+import { LeafySticker } from "../stickers/leafy";
+import { gifText, parseRich, stickerText, suggestFor } from "../stickers/expressions";
+import type { WallpaperId } from "../types";
+import { WALLPAPERS } from "../theme";
+import VoiceRecorder from "../components/VoiceRecorder";
+import EncryptionInfo from "../e2ee/EncryptionInfo";
 import Avatar from "../components/Avatar";
 import {
   ArrowLeftIcon,
@@ -19,7 +28,13 @@ import {
 } from "../components/Icons";
 import type { ChatSummary, Message, User, DeleteRequest } from "../types";
 
+const MESSAGE_PAGE = 150;
+
 interface ConversationPanelProps {
+  onSendVoice: (file: File) => Promise<void>;
+  onToggleBlock: (peerId: string) => Promise<void>;
+  isPeerBlocked: boolean;
+  chatId?: string | null;
   activeSummary: ChatSummary;
   currentUser: User;
   messages: Message[];
@@ -34,8 +49,8 @@ interface ConversationPanelProps {
   isSendingAttachment: boolean;
   draft: string;
   setDraft: (val: string) => void;
-  chatWallpaperIndex: number;
-  setChatWallpaperIndex: (val: number | ((prev: number) => number)) => void;
+  chatWallpaper: WallpaperId;
+  setChatWallpaper: (val: WallpaperId) => void;
   activeTypingUsers: string[];
   activePeer: User | null;
   activeChatTitle: string;
@@ -46,6 +61,7 @@ interface ConversationPanelProps {
   approveDeleteFromPopup: (id: string) => Promise<void>;
   rejectDeleteFromPopup: (req: DeleteRequest) => Promise<void>;
   onSendMessage: () => Promise<void>;
+  onSendRich: (text: string) => Promise<void>;
   onToggleReaction: (msgId: string, emoji: string) => Promise<void>;
   onPinMessage: (msgId: string) => Promise<void>;
   onUnpinMessage: () => Promise<void>;
@@ -86,10 +102,14 @@ export default function ConversationPanel({
   isSendingAttachment,
   draft,
   setDraft,
-  chatWallpaperIndex,
-  setChatWallpaperIndex,
+  chatWallpaper,
+  setChatWallpaper,
   activeTypingUsers,
   activePeer,
+  chatId,
+  onSendVoice,
+  onToggleBlock,
+  isPeerBlocked,
   activeChatTitle,
   activeChatStatus,
   incomingDeleteRequest,
@@ -98,6 +118,7 @@ export default function ConversationPanel({
   approveDeleteFromPopup,
   rejectDeleteFromPopup,
   onSendMessage,
+  onSendRich,
   onToggleReaction,
   onPinMessage,
   onUnpinMessage,
@@ -121,6 +142,11 @@ export default function ConversationPanel({
   customWallpaper,
 }: ConversationPanelProps) {
   const [chatPanelView, setChatPanelView] = useState<"messages" | "profile">("messages");
+  // Long chats render only the most recent messages; older ones load on request.
+  const [visibleCount, setVisibleCount] = useState(MESSAGE_PAGE);
+  useEffect(() => setVisibleCount(MESSAGE_PAGE), [chatId]);
+  const firstVisible = Math.max(0, decryptedMessages.length - visibleCount);
+  const visibleMessages = firstVisible ? decryptedMessages.slice(firstVisible) : decryptedMessages;
   const [chatMenuOpen, setChatMenuOpen] = useState(false);
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
   const [isScreenHidden, setIsScreenHidden] = useState(false);
@@ -231,8 +257,23 @@ export default function ConversationPanel({
     }
   };
 
+  const suggestions = useMemo(() => suggestFor(draft), [draft]);
+  const tone = useMemo(() => checkTone(draft), [draft]);
+  const [toneDismissed, setToneDismissed] = useState("");
+  const [capsuleOpen, setCapsuleOpen] = useState(false);
+  const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+  const [capsuleDate, setCapsuleDate] = useState(tomorrow);
+  const sendCapsule = async () => {
+    const text = draft.trim();
+    if (!text || capsuleDate < tomorrow) return;
+    setCapsuleOpen(false);
+    await onSendRich(capsuleText(capsuleDate, text));
+    setDraft("");
+  };
+
   const changeWallpaper = () => {
-    setChatWallpaperIndex((prev: number) => (prev + 1) % 4);
+    const i = WALLPAPERS.findIndex((w) => w.id === chatWallpaper);
+    setChatWallpaper(WALLPAPERS[(i + 1) % WALLPAPERS.length].id);
     setChatMenuOpen(false);
   };
 
@@ -272,7 +313,7 @@ export default function ConversationPanel({
           />
           <div className="header-text-details">
             <span className="header-title">{activeChatTitle}</span>
-            <span className="header-subtitle">
+            <span className={`header-subtitle ${activeTypingUsers.length > 0 ? "is-typing" : ""} ${/online/i.test(activeChatStatus) ? "is-online" : ""}`}>
               {activeTypingUsers.length > 0 ? "typing..." : activeChatStatus}
             </span>
           </div>
@@ -309,7 +350,7 @@ export default function ConversationPanel({
               title="More Actions"
               aria-label="More Actions"
             >
-              <span style={{ fontSize: "20px", fontWeight: "bold" }}>⋮</span>
+              <span className="kebab-glyph" aria-hidden="true">⋯</span>
             </button>
 
             {chatMenuOpen && (
@@ -432,7 +473,7 @@ export default function ConversationPanel({
 
           {/* Messages Feed Container */}
           <div
-            className={`chat-scroll-area wallpaper-${chatWallpaperIndex}`}
+            className={`chat-scroll-area wallpaper-${chatWallpaper}`}
             style={customWallpaper ? { backgroundImage: `url(${customWallpaper})`, backgroundSize: "cover", backgroundPosition: "center" } : {}}
           >
             {decryptedMessages.length === 0 ? (
@@ -441,20 +482,27 @@ export default function ConversationPanel({
                   <InfoIcon size={24} />
                 </div>
                 <h3>No messages here yet</h3>
-                <p>Send a message to begin an encrypted conversation.</p>
+                <p>Send a message to start the conversation.</p>
               </div>
             ) : (
               <div className="messages-grid">
-                {decryptedMessages.map((m, index) => {
+                {firstVisible > 0 && (
+                  <button type="button" className="btn btn-ghost btn-xs messages-load-earlier" onClick={() => setVisibleCount((n) => n + MESSAGE_PAGE)}>
+                    Show earlier messages ({firstVisible})
+                  </button>
+                )}
+                {visibleMessages.map((m, index) => {
                   const isMine = m.senderId === currentUser.id;
                   const statusLabel = isMine ? getDeliveryLabel(m, currentUser) : "";
                   const showText = !(m.attachmentUrl && isAutoAttachmentText(m.plainText, m.fileName));
+                  const rich = m.attachmentUrl ? null : parseRich(m.plainText);
+                  const capsule = m.attachmentUrl ? null : parseCapsule(m.plainText);
                   const replied = m.replyToMessageId ? messageMap.get(m.replyToMessageId) : undefined;
 
                   // Render date pill if date changed from previous message
                   const showDatePill =
                     index === 0 ||
-                    formatMessageDay(m.createdAt) !== formatMessageDay(decryptedMessages[index - 1].createdAt);
+                    formatMessageDay(m.createdAt) !== formatMessageDay(visibleMessages[index - 1].createdAt);
 
                   return (
                     <div key={m.id} className="message-row-wrapper">
@@ -465,7 +513,7 @@ export default function ConversationPanel({
                       )}
 
                       <div className={`message-bubble-wrapper ${isMine ? "mine" : "incoming"}`}>
-                        <div className={`message-bubble ${isMine ? "bubble-mine" : "bubble-incoming"}`}>
+                        <div className={`message-bubble ${isMine ? "bubble-mine" : "bubble-incoming"} ${rich ? "bubble-rich" : ""}`}>
                           {/* Replied block */}
                           {replied && (
                             <div className="reply-preview-container">
@@ -481,7 +529,9 @@ export default function ConversationPanel({
                           {/* Media attachments */}
                           {m.attachmentUrl && (
                             <div className="attachment-content-box">
-                              {m.mimeType?.startsWith("image/") ? (
+                              {m.mimeType?.startsWith("audio/") ? (
+                                <audio className="attachment-audio" controls preload="metadata" src={resolveUrl(m.attachmentUrl)} aria-label="Voice message" />
+                              ) : m.mimeType?.startsWith("image/") ? (
                                 <a
                                   href={resolveUrl(m.attachmentUrl)}
                                   target="_blank"
@@ -518,7 +568,25 @@ export default function ConversationPanel({
                           )}
 
                           {/* Message Text */}
-                          {showText && <div className="message-plain-text">{m.plainText}</div>}
+                          {rich?.kind === "sticker" && <div className="message-sticker"><LeafySticker sticker={rich.sticker} size={150} /></div>}
+                          {rich?.kind === "gif" && <div className="message-gif"><GifCard gif={rich.gif} /></div>}
+                          {capsule && !capsule.open && (
+                            <div className="capsule-sealed" role="note">
+                              <span className="capsule-icon" aria-hidden="true">⏳</span>
+                              <span>
+                                <strong>Sealed time capsule</strong>
+                                <small>Opens on {formatOpenDate(capsule.opensOn)}</small>
+                                {isMine && <em>You wrote: “{capsule.text.slice(0, 80)}”</em>}
+                              </span>
+                            </div>
+                          )}
+                          {capsule && capsule.open && (
+                            <>
+                              <span className="capsule-badge">⏳ Time capsule · opened {formatOpenDate(capsule.opensOn)}</span>
+                              <div className="message-plain-text">{capsule.text}</div>
+                            </>
+                          )}
+                          {showText && !rich && !capsule && <div className="message-plain-text">{m.plainText}</div>}
 
                           {/* Reactions */}
                           {m.reactions && m.reactions.length > 0 && (
@@ -643,7 +711,54 @@ export default function ConversationPanel({
               </div>
             )}
 
-            <div className="composer-input-row">
+            {isPeerBlocked && activePeer && (
+              <div className="composer-blocked" role="status">
+                You blocked {activePeer.name}. You can't message or call each other.
+                <button className="btn btn-secondary btn-xs" onClick={() => void onToggleBlock(activePeer.id)}>Unblock</button>
+              </div>
+            )}
+            {tone.harsh && toneDismissed !== draft && !isPeerBlocked && (
+              <div className="tone-check" role="status">
+                <span className="tone-icon" aria-hidden="true">💬</span>
+                <div className="tone-main">
+                  <strong>This may sound harsh</strong>
+                  <span>{tone.reasons.join(" · ")}. Kinder: “{tone.kinder}”</span>
+                </div>
+                <button type="button" className="btn btn-secondary btn-xs" onClick={() => setDraft(tone.kinder)}>Use kinder</button>
+                <button type="button" className="tone-dismiss" onClick={() => setToneDismissed(draft)} aria-label="Keep my words">Keep mine</button>
+              </div>
+            )}
+            {capsuleOpen && (
+              <div className="capsule-popover" role="dialog" aria-label="Time capsule">
+                <strong>⏳ Time capsule</strong>
+                <span>Seal your typed message until a date you choose: a birthday, an anniversary, a new year.</span>
+                <label>Opens on <input type="date" min={tomorrow} value={capsuleDate} onChange={(e) => setCapsuleDate(e.target.value)} aria-label="Opening date" /></label>
+                <div className="capsule-actions">
+                  <button type="button" className="btn btn-secondary btn-sm" onClick={() => setCapsuleOpen(false)}>Cancel</button>
+                  <button type="button" className="btn btn-primary btn-sm" disabled={!draft.trim() || capsuleDate < tomorrow} onClick={() => void sendCapsule()}>Seal and send</button>
+                </div>
+                {!draft.trim() && <small>Type your message first.</small>}
+              </div>
+            )}
+            {suggestions && !isPeerBlocked && (
+              <div className="smart-suggest" aria-label="Suggestions for your message">
+                <span className="smart-suggest-label">Suggested</span>
+                {suggestions.emoji.map((e) => (
+                  <button key={e} type="button" className="ss-emoji" onClick={() => setDraft(draft.trimEnd() + " " + e)} aria-label={`Add ${e}`}>{e}</button>
+                ))}
+                {suggestions.stickers.map((st) => (
+                  <button key={st.id} type="button" className="ss-sticker" onClick={() => void onSendRich(stickerText(st.id))} title={`Send ${st.label} sticker`} aria-label={`Send ${st.label} sticker`}>
+                    <LeafySticker sticker={st} size={44} />
+                  </button>
+                ))}
+                {suggestions.gifs.map((g) => (
+                  <button key={g.id} type="button" className="ss-gif" onClick={() => void onSendRich(gifText(g.id))} title={`Send ${g.label} GIF`} aria-label={`Send ${g.label} GIF`}>
+                    <GifCard gif={g} small />
+                  </button>
+                ))}
+              </div>
+            )}
+            <div className={`composer-input-row ${isPeerBlocked ? "is-blocked" : ""}`}>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -658,43 +773,23 @@ export default function ConversationPanel({
               >
                 <EmojiIcon size={22} />
               </button>
+              <button
+                className="btn-composer-action capsule-btn"
+                onClick={() => setCapsuleOpen((v) => !v)}
+                title="Time capsule"
+                aria-label="Time capsule"
+                disabled={isPeerBlocked}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8" /><path d="M12 9v4l2.5 2.5M9 2h6" /></svg>
+              </button>
 
               {isEmojiPickerOpen && (
-                <div className="simple-emoji-popup animate-slide-up">
-                  {QUICK_REACTIONS.map((e) => (
-                    <button
-                      key={e}
-                      type="button"
-                      className="picker-emoji-item"
-                      onClick={() => {
-                        setDraft(draft + e);
-                        setIsEmojiPickerOpen(false);
-                      }}
-                    >
-                      {e}
-                    </button>
-                  ))}
-                  <button
-                    type="button"
-                    className="picker-emoji-item"
-                    onClick={() => {
-                      setDraft(draft + "🔒");
-                      setIsEmojiPickerOpen(false);
-                    }}
-                  >
-                    🔒
-                  </button>
-                  <button
-                    type="button"
-                    className="picker-emoji-item"
-                    onClick={() => {
-                      setDraft(draft + "🛡️");
-                      setIsEmojiPickerOpen(false);
-                    }}
-                  >
-                    🛡️
-                  </button>
-                </div>
+                <ExpressionPanel
+                  onEmoji={(e) => setDraft(draft + e)}
+                  onSticker={(id) => { setIsEmojiPickerOpen(false); void onSendRich(stickerText(id)); }}
+                  onGif={(id) => { setIsEmojiPickerOpen(false); void onSendRich(gifText(id)); }}
+                  onClose={() => setIsEmojiPickerOpen(false)}
+                />
               )}
 
               <input
@@ -702,8 +797,14 @@ export default function ConversationPanel({
                 value={draft}
                 onChange={handleComposerChange}
                 onKeyDown={handleKeyPress}
-                placeholder="Write an encrypted message..."
+                placeholder="Message"
                 className="composer-input-field"
+              />
+
+              <VoiceRecorder
+                disabled={!backendReady || isSendingAttachment || isPeerBlocked}
+                onRecorded={(f) => onSendVoice(f)}
+                onError={(msg) => window.alert(msg)}
               />
 
               <button
@@ -758,14 +859,19 @@ export default function ConversationPanel({
                 <span className="info-value">{getUsername(activePeer)}</span>
               </div>
               <div className="peer-info-item">
-                <span className="info-label">Encryption Level</span>
-                <span className="info-value text-accent">AES-256 base64 (End-to-End Encrypted)</span>
+                <span className="info-label">Encryption</span>
+                <EncryptionInfo chatId={chatId ?? null} peerId={activePeer?.id} peerName={activePeer?.name} />
               </div>
               <div className="peer-info-item">
                 <span className="info-label">Erasure Status</span>
                 <span className="info-value text-accent">Mutual delete capability enabled</span>
               </div>
             </div>
+            {activePeer && (
+              <button className={`btn btn-sm ${isPeerBlocked ? "btn-secondary" : "btn-danger"} peer-block-btn`} onClick={() => void onToggleBlock(activePeer.id)}>
+                {isPeerBlocked ? `Unblock ${activePeer.name}` : `Block ${activePeer.name}`}
+              </button>
+            )}
           </div>
         </div>
       )}

@@ -126,3 +126,46 @@ export type RecoveryRequest = {
   resolvedAt?: string;
   adminNote?: string;
 };
+
+export type SignVideo = {
+  id: string;
+  signLanguageId: string;
+  unit: "SENTENCE" | "PHRASE" | "SIGN";
+  phraseText: string;
+  gloss: string;
+  meaning: string;
+  signerId: string;
+  region?: string;
+  quality: "LOW" | "MEDIUM" | "HIGH";
+  license: string;
+  provenance: string;
+  consentConfirmed: boolean;
+  verificationStatus: "UNVERIFIED" | "VERIFIED" | "REJECTED";
+  reviewNote?: string;
+  verifiedAt?: string;
+  sha256: string;
+  uploadedBy: string;
+  createdAt: string;
+  url: string;
+};
+
+export type RawFrame = { t: number; hands: { h: "L" | "R"; s: number; p: number[] }[] };
+export type VocabularyEntry = { id: string; language: string; gloss: string; meaning: string; createdAt: string };
+export type DatasetSample = {
+  id: string; consentId: string; signerId: string; language: string; gloss: string; frameCount: number;
+  durationMs: number; handFrameRatio: number; status: "PENDING" | "APPROVED" | "REJECTED"; reviewNote?: string; createdAt: string;
+};
+export type DatasetStats = {
+  language: string;
+  totals: { samples: number; approved: number; pending: number; signers: number; consents: number };
+  glosses: { gloss: string; meaning: string; approved: number; pending: number; signers: number }[];
+};
+export type DatasetExport = { samples: { id: string }[]; signers: { signerId: string }[] } & Record<string, unknown>;
+export type SignModel = {
+  id: string;
+  manifest: {
+    language: string; version: string; architecture: string; labels: { gloss: string; meaning: string }[]; threshold: number;
+    metrics: { testAccuracy: number | null; validationAccuracy: number | null; signerIndependent: boolean; trainSamples: number; testSamples: number; signers: number };
+  };
+  sizeBytes: number; sha256: string; status: "PUBLISHED" | "WITHDRAWN"; uploadedAt: string; note?: string;
+};

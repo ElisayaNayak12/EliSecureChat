@@ -1,4 +1,8 @@
 import { useState } from "react";
+import VaultPanel from "../components/VaultPanel";
+import { hiddenChatIds } from "../features/vault";
+import HomeDashboard from "../components/HomeDashboard";
+import type { Appearance, WallpaperId } from "../types";
 import Avatar from "../components/Avatar";
 import {
   ChatIcon,
@@ -17,20 +21,27 @@ import CommunitiesPanel from "./CommunitiesPanel";
 import SettingsPanel from "./SettingsPanel";
 import ProfilePanel from "./ProfilePanel";
 import ConversationPanel from "./ConversationPanel";
-import type { ChatSummary, Community, DeleteRequest, Message, User } from "../types";
+import TranslatorPanel from "./TranslatorPanel";
+import { e2ee } from "../e2ee/e2ee";
+import { HandIcon } from "../components/Icons";
+import type { ChatSummary, Community, DeleteRequest, Message, User, PreferencesPatch, UserPreferences } from "../types";
 
-type UserTab = "chats" | "contacts" | "communities" | "settings" | "profile";
+type UserTab = "chats" | "contacts" | "communities" | "translator" | "settings" | "profile";
 
 interface MainAppProps {
   currentUser: User;
+  preferences: UserPreferences | null;
+  onUpdatePreferences: (patch: PreferencesPatch) => Promise<void>;
   activeChatId: string | null;
   setActiveChatId: (id: string | null) => void;
   userTab: UserTab;
   setUserTab: (tab: UserTab) => void;
   theme: "light" | "dark";
   onToggleTheme: () => void;
-  chatWallpaperIndex: number;
-  setChatWallpaperIndex: (val: number | ((prev: number) => number)) => void;
+  chatWallpaper: WallpaperId;
+  setChatWallpaper: (val: WallpaperId) => void;
+  appearance: Appearance;
+  onUpdateAppearance: (patch: Partial<Appearance>) => void;
   isMobileChatOpen: boolean;
   setIsMobileChatOpen: (val: boolean) => void;
   onlineUsers: Set<string>;
@@ -58,6 +69,9 @@ interface MainAppProps {
   approveDeleteFromPopup: (id: string) => Promise<void>;
   rejectDeleteFromPopup: (req: DeleteRequest) => Promise<void>;
   onSendMessage: () => Promise<void>;
+  onSendRich: (text: string) => Promise<void>;
+  onSendVoice: (file: File) => Promise<void>;
+  onToggleBlock: (peerId: string) => Promise<void>;
   onToggleReaction: (msgId: string, emoji: string) => Promise<void>;
   onPinMessage: (msgId: string) => Promise<void>;
   onUnpinMessage: () => Promise<void>;
@@ -97,14 +111,18 @@ interface MainAppProps {
 export default function MainApp(props: MainAppProps) {
   const {
     currentUser,
+  preferences,
+  onUpdatePreferences,
     activeChatId,
     setActiveChatId,
     userTab,
     setUserTab,
     theme,
     onToggleTheme,
-    chatWallpaperIndex,
-    setChatWallpaperIndex,
+    chatWallpaper,
+    setChatWallpaper,
+    appearance,
+    onUpdateAppearance,
     onScreenshotAttempt,
     customWallpaper,
     onCustomWallpaperChange,
@@ -134,6 +152,9 @@ export default function MainApp(props: MainAppProps) {
     approveDeleteFromPopup,
     rejectDeleteFromPopup,
     onSendMessage,
+    onSendRich,
+    onSendVoice,
+    onToggleBlock,
     onToggleReaction,
     onPinMessage,
     onUnpinMessage,
@@ -168,14 +189,19 @@ export default function MainApp(props: MainAppProps) {
   } = props;
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [vaultOpen, setVaultOpen] = useState(false);
+  const [vaultTick, setVaultTick] = useState(0);
+  void vaultTick;
+  const vaultHidden = hiddenChatIds(currentUser.id);
+  const visibleSummaries = summaries.filter((s) => !vaultHidden.has(s.chat.id));
 
   // Filters active chat threads based on search input
-  const filteredSummaries = summaries.filter((s) => {
+  const filteredSummaries = visibleSummaries.filter((s) => {
     const needle = searchQuery.trim().toLowerCase();
     if (!needle) return true;
     const title = (s.peer?.name ?? s.chat.title ?? "").toLowerCase();
     const plainPreview = s.lastMessage
-      ? messageSnippet(s.lastMessage.encryptedContent, s.lastMessage.fileName).toLowerCase()
+      ? messageSnippet(e2ee.view(s.lastMessage.encryptedContent).text, s.lastMessage.fileName).toLowerCase()
       : "";
     return title.includes(needle) || plainPreview.includes(needle);
   });
@@ -195,6 +221,7 @@ export default function MainApp(props: MainAppProps) {
             search={searchQuery}
             setSearch={setSearchQuery}
             onOpenChat={onOpenChat}
+            onOpenVault={() => setVaultOpen(true)}
             onStartChat={onStartChat}
             activeChatId={activeChatId}
             onlineUsers={onlineUsers}
@@ -203,13 +230,7 @@ export default function MainApp(props: MainAppProps) {
             resolveUrl={resolveUrl}
             formatChatTime={formatChatTime}
             messageSnippet={messageSnippet}
-            decryptMessage={(content) => {
-              try {
-                return decodeURIComponent(escape(atob(content)));
-              } catch {
-                return "[Encrypted Message]";
-              }
-            }}
+            decryptMessage={(content) => e2ee.view(content).text}
           />
         );
       case "contacts":
@@ -236,12 +257,17 @@ export default function MainApp(props: MainAppProps) {
           <SettingsPanel
             theme={theme}
             onToggleTheme={onToggleTheme}
-            chatWallpaperIndex={chatWallpaperIndex}
-            setChatWallpaperIndex={setChatWallpaperIndex}
+            chatWallpaper={chatWallpaper}
+            setChatWallpaper={setChatWallpaper}
+            appearance={appearance}
+            onUpdateAppearance={onUpdateAppearance}
             onNavigateToProfile={() => setUserTab("profile")}
             customWallpaper={customWallpaper}
             onCustomWallpaperChange={onCustomWallpaperChange}
             onDeleteAccount={onDeleteAccount}
+            preferences={preferences}
+            onUpdatePreferences={onUpdatePreferences}
+            backendReady={backendReady}
           />
         );
       case "profile":
@@ -326,26 +352,22 @@ export default function MainApp(props: MainAppProps) {
         </div>
       ) : null}
 
-      {/* Desktop sidebar navigation */}
-      <nav className="desktop-app-sidebar">
-        <div className="sidebar-avatar-section">
-          <Avatar
-            name={currentUser.name}
-            avatarUrl={currentUser.avatarUrl}
-            size="md"
-            resolveUrl={resolveUrl}
-          />
-          <span className="sidebar-username">{currentUser.name}</span>
+      {/* Desktop sidebar navigation - AURA brand rail */}
+      <nav className="desktop-app-sidebar" aria-label="Primary">
+        <div className="rail-brand" title="ELiSecureChat">
+          <span className="aura-tile aura-tile-sm">
+            <ChatIcon size={22} />
+          </span>
         </div>
 
         <ul className="sidebar-nav-links">
           {(
             [
-              { id: "chats", icon: <ChatIcon size={20} />, label: "Chats" },
-              { id: "contacts", icon: <ContactsIcon size={20} />, label: "Contacts" },
-              { id: "communities", icon: <GroupIcon size={20} />, label: "Communities" },
-              { id: "settings", icon: <SettingsIcon size={20} />, label: "Settings" },
-              { id: "profile", icon: <ProfileIcon size={20} />, label: "Profile" },
+              { id: "chats", icon: <ChatIcon size={22} />, label: "Chats" },
+              { id: "contacts", icon: <ContactsIcon size={22} />, label: "Contacts" },
+              { id: "communities", icon: <GroupIcon size={22} />, label: "Groups" },
+              { id: "translator", icon: <HandIcon size={22} />, label: "Translator" },
+              { id: "settings", icon: <SettingsIcon size={22} />, label: "Settings" },
             ] as const
           ).map((tab) => (
             <li key={tab.id}>
@@ -356,6 +378,7 @@ export default function MainApp(props: MainAppProps) {
                   setIsMobileChatOpen(false);
                 }}
                 title={tab.label}
+                aria-current={userTab === tab.id ? "page" : undefined}
               >
                 {tab.icon}
                 <span className="sidebar-btn-label">{tab.label}</span>
@@ -366,14 +389,33 @@ export default function MainApp(props: MainAppProps) {
 
         <div className="sidebar-footer-links">
           <button className="sidebar-nav-btn text-danger" onClick={onSignOut} title="Sign Out">
-            <LogOutIcon size={20} />
-            <span className="sidebar-btn-label">Sign Out</span>
+            <LogOutIcon size={22} />
+            <span className="sidebar-btn-label">Sign out</span>
+          </button>
+          <button
+            className={`sidebar-avatar-section ${userTab === "profile" ? "active" : ""}`}
+            onClick={() => {
+              setUserTab("profile");
+              setIsMobileChatOpen(false);
+            }}
+            title={`${currentUser.name} - Profile`}
+          >
+            <Avatar
+              name={currentUser.name}
+              avatarUrl={currentUser.avatarUrl}
+              size="md"
+              resolveUrl={resolveUrl}
+            />
+            <span className="sidebar-username">{currentUser.name}</span>
           </button>
         </div>
       </nav>
 
       {/* Main layout container (splits left sidebar vs right conversation) */}
-      <div className={`app-workspace-split ${isMobileChatOpen ? "mobile-chat-active" : ""}`}>
+      <div className={`app-workspace-split ${isMobileChatOpen ? "mobile-chat-active" : ""} ${userTab === "translator" ? "translator-mode" : ""}`}>
+        {userTab === "translator" && (
+          <TranslatorPanel currentUser={currentUser} preferences={preferences} resolveUrl={resolveUrl} />
+        )}
         {/* Left Side Sub Panel */}
         <div className="app-sub-sidebar">{renderLeftPanelContent()}</div>
 
@@ -381,6 +423,10 @@ export default function MainApp(props: MainAppProps) {
         <div className="app-conversation-view">
           {activeChatId && activeSummary ? (
             <ConversationPanel
+              onSendVoice={onSendVoice}
+              onToggleBlock={onToggleBlock}
+              isPeerBlocked={!!activePeer && !!currentUser.blockedUserIds?.includes(activePeer.id)}
+              chatId={activeChatId}
               activeSummary={activeSummary}
               currentUser={currentUser}
               messages={props.messages}
@@ -397,8 +443,8 @@ export default function MainApp(props: MainAppProps) {
               isSendingAttachment={isSendingAttachment}
               draft={draft}
               setDraft={setDraft}
-              chatWallpaperIndex={chatWallpaperIndex}
-              setChatWallpaperIndex={setChatWallpaperIndex}
+              chatWallpaper={chatWallpaper}
+              setChatWallpaper={setChatWallpaper}
               activeTypingUsers={activeTypingUsers}
               activePeer={activePeer}
               activeChatTitle={activeChatTitle}
@@ -409,6 +455,7 @@ export default function MainApp(props: MainAppProps) {
               approveDeleteFromPopup={approveDeleteFromPopup}
               rejectDeleteFromPopup={rejectDeleteFromPopup}
               onSendMessage={onSendMessage}
+              onSendRich={onSendRich}
               onToggleReaction={onToggleReaction}
               onPinMessage={onPinMessage}
               onUnpinMessage={onUnpinMessage}
@@ -430,26 +477,31 @@ export default function MainApp(props: MainAppProps) {
               onSendTypingStop={onSendTypingStop}
             />
           ) : (
-            <div className="conversation-empty-view animate-fade-in">
-              <div className="empty-logo-wrapper">
-                <LockIcon size={44} className="empty-logo-icon" />
-              </div>
-              <h2>ELiSecureChat Redesign</h2>
-              <p>Select a contact or active thread from the left menu to start sending encrypted messages.</p>
-              <div className="empty-metrics-row">
-                <div className="metric-pill">
-                  <span className={`pill-dot ${backendReady ? "online" : "offline"}`} />
-                  <span>API Services: {backendReady ? "Live" : "Offline"}</span>
-                </div>
-                <div className="metric-pill">
-                  <span className={`pill-dot ${socketConnected ? "online" : "offline"}`} />
-                  <span>WebSocket Gateway: {socketConnected ? "Connected" : "Disengaged"}</span>
-                </div>
-              </div>
-            </div>
+            <HomeDashboard
+              currentUser={currentUser}
+              summaries={visibleSummaries}
+              preferences={preferences}
+              backendReady={backendReady}
+              socketConnected={socketConnected}
+              onOpenChat={onOpenChat}
+              goTo={(tab) => { setUserTab(tab); setIsMobileChatOpen(false); }}
+              previewOf={(s) => (s.lastMessage ? messageSnippet(e2ee.view(s.lastMessage.encryptedContent).text, s.lastMessage.fileName) : "No messages yet")}
+              resolveUrl={resolveUrl}
+              onlineUsers={onlineUsers}
+            />
           )}
         </div>
       </div>
+
+      {vaultOpen && (
+        <VaultPanel
+          userId={currentUser.id}
+          summaries={summaries}
+          onOpenChat={onOpenChat}
+          onChanged={() => setVaultTick((t) => t + 1)}
+          onClose={() => setVaultOpen(false)}
+        />
+      )}
 
       {/* Mobile Bottom Navigation Bar */}
       <nav className={`mobile-bottom-tabs ${isMobileChatOpen ? "hidden" : ""}`}>
@@ -458,6 +510,7 @@ export default function MainApp(props: MainAppProps) {
             { id: "chats", icon: <ChatIcon size={20} />, label: "Chats" },
             { id: "contacts", icon: <ContactsIcon size={20} />, label: "Contacts" },
             { id: "communities", icon: <GroupIcon size={20} />, label: "Groups" },
+            { id: "translator", icon: <HandIcon size={20} />, label: "Translate" },
             { id: "settings", icon: <SettingsIcon size={20} />, label: "Settings" },
             { id: "profile", icon: <ProfileIcon size={20} />, label: "Profile" },
           ] as const
