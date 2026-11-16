@@ -43,4 +43,38 @@ for name in ("build.gradle.kts", "build.gradle"):
     g.write_text(t, encoding="utf-8")
     print(f"patched {g.name}")
 
+# ---- App icon (approved "Signing Bubble" logo) ----
+# Legacy icons for old launchers, plus an adaptive icon (gradient background + foreground) with a monochrome
+# layer for Android 13+ themed icons. PNGs are generated from the brand SVGs and kept in tool/android_res.
+import shutil
+res_src = pathlib.Path(__file__).resolve().parent / "android_res"
+res_dst = root / "src" / "main" / "res"
+for d in res_src.iterdir():
+    if d.is_dir():
+        (res_dst / d.name).mkdir(parents=True, exist_ok=True)
+        for f in d.iterdir():
+            shutil.copy2(f, res_dst / d.name / f.name)
+(res_dst / "drawable").mkdir(parents=True, exist_ok=True)
+NL = "\n"
+(res_dst / "drawable" / "ic_launcher_background.xml").write_text(NL.join([
+    '<?xml version="1.0" encoding="utf-8"?>',
+    '<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">',
+    '    <gradient android:angle="315" android:startColor="#4E8150" android:centerColor="#25432D" android:endColor="#12231A" />',
+    '</shape>', '']), encoding="utf-8")
+adaptive = NL.join([
+    '<?xml version="1.0" encoding="utf-8"?>',
+    '<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">',
+    '    <background android:drawable="@drawable/ic_launcher_background" />',
+    '    <foreground android:drawable="@mipmap/ic_launcher_foreground" />',
+    '    <monochrome android:drawable="@mipmap/ic_launcher_monochrome" />',
+    '</adaptive-icon>', ''])
+(res_dst / "mipmap-anydpi-v26").mkdir(parents=True, exist_ok=True)
+for name in ("ic_launcher.xml", "ic_launcher_round.xml"):
+    (res_dst / "mipmap-anydpi-v26" / name).write_text(adaptive, encoding="utf-8")
+m = main.read_text(encoding="utf-8")
+if "android:roundIcon" not in m:
+    m = m.replace('android:icon="@mipmap/ic_launcher"', 'android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round"', 1)
+    main.write_text(m, encoding="utf-8")
+print("installed app icons (legacy, adaptive, themed)")
+
 print("patched AndroidManifest.xml (INTERNET, label) and debug manifest (cleartext for testing)")

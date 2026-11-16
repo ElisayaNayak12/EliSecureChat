@@ -9,6 +9,7 @@ import "./themes.css";
 import "./expressions.css";
 import "./home.css";
 import "./features.css";
+import "./brand.css";
 import "./signconnect.css";
 import "./accessibility.css";
 import { applyCachedAccessibility } from "./preferences";

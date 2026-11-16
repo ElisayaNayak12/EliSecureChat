@@ -1,0 +1,15 @@
+{
+  "name": "EliSecureChat",
+  "short_name": "EliSecureChat",
+  "description": "Private conversations, signed or spoken. End-to-end encrypted chat and calls for Deaf and hearing people.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0F1813",
+  "theme_color": "#0F1813",
+  "icons": [
+    { "src": "/brand/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/brand/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/brand/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

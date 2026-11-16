@@ -1,4 +1,5 @@
 import { useState } from "react";
+import BrandMark from "../components/BrandMark";
 import VaultPanel from "../components/VaultPanel";
 import { hiddenChatIds } from "../features/vault";
 import HomeDashboard from "../components/HomeDashboard";
@@ -354,10 +355,8 @@ export default function MainApp(props: MainAppProps) {
 
       {/* Desktop sidebar navigation - AURA brand rail */}
       <nav className="desktop-app-sidebar" aria-label="Primary">
-        <div className="rail-brand" title="ELiSecureChat">
-          <span className="aura-tile aura-tile-sm">
-            <ChatIcon size={22} />
-          </span>
+        <div className="rail-brand" title="EliSecureChat">
+          <BrandMark size={46} className="rail-brand-mark" />
         </div>
 
         <ul className="sidebar-nav-links">

@@ -1,55 +1,97 @@
 /**
- * Transactional email templates (Verdant brand). Table-based layout with inline styles, so they render the same
- * in Gmail, Outlook, Apple Mail and phone mail apps. Every email also has a plain-text version.
+ * Transactional email templates (approved brand design). Table-based layout with inline styles, so they render the
+ * same in Gmail, Outlook, Apple Mail and phone mail apps. The logo is attached to each email (cid:esc-logo), so it
+ * shows even where outside images are blocked. Every email also has a plain-text version.
  */
 export type Email = { subject: string; html: string; text: string };
 
 const BRAND = "EliSecureChat";
-const C = { canvas: "#ECEFE7", card: "#FFFFFF", brand: "#1A2B1F", cta: "#2F4A34", ink: "#16241A", muted: "#6B796D", line: "#E3E8DD", mint: "#E1EED6", tile: "#A8C596" };
+export const LOGO_CID = "esc-logo";
+const C = {
+  page: "#E8EDE3", card: "#FFFFFF", ink: "#16241A", body: "#33443A", muted: "#6B796D", line: "#DDE5D6", soft: "#F3F6EF",
+  cta: "#2F4A34", accent: "#A8C596", codeBg: "#EEF4E8", codeLine: "#C9DBBB", amberBg: "#FFF4DE", amberInk: "#7A5A12",
+  alert: "#8A2E2E", alertBg: "#FDECEC", alertLine: "#F3C2C2",
+};
+const SANS = "'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
+const SERIF = "Georgia,'Times New Roman',serif";
 
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
+const firstName = (name: string) => name.trim().split(/\s+/)[0] || name;
 
-function layout(opts: { preheader: string; title: string; body: string; footerNote?: string }) {
+/** "13 Nov 2026, 2:14 pm IST" in the server's time zone (EMAIL_TIMEZONE, default India). */
+export function formatWhen(d: Date): string {
+  const timeZone = process.env.EMAIL_TIMEZONE || "Asia/Kolkata";
+  try {
+    return new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit", timeZone, timeZoneName: "short" }).format(d);
+  } catch {
+    return d.toUTCString();
+  }
+}
+
+function layout(opts: { preheader: string; title: string; body: string; alert?: boolean; footerNote?: string }) {
   const year = new Date().getFullYear();
+  const band = opts.alert ? C.alert : "#1F3326";
   return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="color-scheme" content="light only"><title>${esc(opts.title)}</title></head>
-<body style="margin:0;padding:0;background:${C.canvas};-webkit-text-size-adjust:100%;">
+<meta name="color-scheme" content="light only"><meta name="supported-color-schemes" content="light"><title>${esc(opts.title)}</title></head>
+<body style="margin:0;padding:0;background:${C.page};-webkit-text-size-adjust:100%;">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">${esc(opts.preheader)}</div>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${C.canvas};">
-<tr><td align="center" style="padding:32px 16px;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
-    <tr><td align="center" style="padding:0 0 20px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${C.page};">
+<tr><td align="center" style="padding:28px 14px;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:${C.card};border-radius:20px;border:1px solid ${C.line};overflow:hidden;">
+    <tr><td style="background:${band};padding:20px 26px;">
       <table role="presentation" cellpadding="0" cellspacing="0"><tr>
-        <td style="width:40px;height:40px;background:${C.brand};border-radius:12px;text-align:center;vertical-align:middle;font:700 20px/40px Arial,sans-serif;color:${C.tile};">&#128274;</td>
-        <td style="padding-left:10px;font:700 20px/24px 'Segoe UI',Arial,sans-serif;color:${C.ink};">${BRAND}</td>
+        <td style="vertical-align:middle;"><img src="cid:${LOGO_CID}" width="40" height="40" alt="" style="display:block;border:0;"></td>
+        <td style="vertical-align:middle;padding-left:10px;font:700 21px/26px ${SERIF};color:#EEF3EA;">Eli<span style="color:${C.accent};">Secure</span>Chat</td>
       </tr></table>
     </td></tr>
-    <tr><td style="background:${C.card};border-radius:20px;border:1px solid ${C.line};padding:36px 32px;font:400 16px/24px 'Segoe UI',Arial,sans-serif;color:${C.ink};">
+    <tr><td style="padding:26px 26px 22px;font:400 15px/23px ${SANS};color:${C.body};">
+      <h1 style="margin:0 0 10px;font:700 23px/29px ${SERIF};color:${C.ink};">${esc(opts.title)}</h1>
       ${opts.body}
     </td></tr>
-    <tr><td align="center" style="padding:20px 12px 0;font:400 12px/18px 'Segoe UI',Arial,sans-serif;color:${C.muted};">
-      ${opts.footerNote ? `${opts.footerNote}<br><br>` : ""}
-      &#128274; Your messages on ${BRAND} are end-to-end encrypted.<br>
-      This is an automated message; replies are not monitored.<br>&copy; ${year} ${BRAND}
+    <tr><td style="background:${C.soft};padding:14px 26px;font:400 12px/18px ${SANS};color:${C.muted};">
+      ${opts.footerNote ? `${opts.footerNote}<br><br>` : ""}&#128274; Your messages are end-to-end encrypted. We will never ask for your code or password by call, SMS or email.<br>
+      This is an automated message; replies are not monitored. &copy; ${year} ${BRAND}
     </td></tr>
   </table>
 </td></tr></table></body></html>`;
 }
 
-const h1 = (t: string) => `<h1 style="margin:0 0 12px;font:700 24px/30px 'Segoe UI',Arial,sans-serif;color:${C.ink};">${t}</h1>`;
-const p = (t: string) => `<p style="margin:0 0 16px;">${t}</p>`;
-const codeBox = (code: string) => `
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:8px 0 20px;"><tr>
-    <td align="center" style="background:${C.mint};border-radius:14px;padding:18px 8px;font:700 34px/40px 'Consolas','Courier New',monospace;letter-spacing:10px;color:${C.brand};">${esc(code)}</td>
+const p = (t: string) => `<p style="margin:0 0 12px;">${t}</p>`;
+const small = (t: string) => `<p style="margin:12px 0 0;font-size:13px;line-height:19px;color:${C.muted};">${t}</p>`;
+
+function codeBox(code: string, minutes: number) {
+  const cells = code
+    .split("")
+    .map((d) => `<td style="padding:0 3px;"><div style="width:42px;height:52px;border-radius:12px;background:${C.codeBg};border:1.5px solid ${C.codeLine};font:800 26px/52px ${SANS};color:#1A2B1F;text-align:center;">${esc(d)}</div></td>`)
+    .join("");
+  return `
+  <table role="presentation" cellpadding="0" cellspacing="0" align="center" style="margin:14px auto 10px;"><tr>${cells}</tr></table>
+  <table role="presentation" cellpadding="0" cellspacing="0" align="center" style="margin:0 auto 6px;"><tr>
+    <td style="background:${C.amberBg};color:${C.amberInk};border-radius:999px;padding:4px 12px;font:600 12.5px/17px ${SANS};">&#9201; Expires in ${minutes} minutes</td>
   </tr></table>`;
-const button = (label: string, href: string) => `
-  <table role="presentation" cellpadding="0" cellspacing="0" style="margin:8px 0 20px;"><tr>
-    <td style="background:${C.cta};border-radius:12px;"><a href="${esc(href)}" style="display:inline-block;padding:13px 26px;font:600 16px/20px 'Segoe UI',Arial,sans-serif;color:#F2F7EA;text-decoration:none;">${esc(label)}</a></td>
+}
+
+function button(label: string, href: string, color: string = C.cta) {
+  return `
+  <table role="presentation" cellpadding="0" cellspacing="0" style="margin:14px 0 4px;"><tr>
+    <td style="background:${color};border-radius:12px;"><a href="${esc(href)}" style="display:inline-block;padding:12px 22px;font:700 15px/19px ${SANS};color:#F2F7EA;text-decoration:none;">${esc(label)}</a></td>
   </tr></table>`;
-const muted = (t: string) => `<p style="margin:0;font-size:14px;line-height:21px;color:${C.muted};">${t}</p>`;
-const fact = (label: string, value: string) =>
-  `<tr><td style="padding:6px 0;color:${C.muted};font-size:14px;width:110px;vertical-align:top;">${esc(label)}</td><td style="padding:6px 0;font-size:14px;">${esc(value)}</td></tr>`;
+}
+
+function tip(html: string, warn = false) {
+  const [bg, line] = warn ? [C.alertBg, C.alertLine] : [C.soft, C.line];
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:12px 0 0;"><tr>
+    <td style="background:${bg};border:1px solid ${line};border-radius:12px;padding:12px 14px;font:400 13.5px/20px ${SANS};color:#45564A;">${html}</td>
+  </tr></table>`;
+}
+
+function facts(rows: [string, string][]) {
+  const r = rows
+    .map(([a, b]) => `<tr><td style="padding:5px 0;width:84px;color:${C.muted};font-size:13.5px;vertical-align:top;">${esc(a)}</td><td style="padding:5px 0;font-size:13.5px;font-weight:600;color:${C.ink};">${esc(b)}</td></tr>`)
+    .join("");
+  return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:6px 0 4px;">${r}</table>`;
+}
 
 export function verificationEmail(name: string, code: string, minutes: number): Email {
   return {
@@ -57,32 +99,32 @@ export function verificationEmail(name: string, code: string, minutes: number): 
     html: layout({
       preheader: `Your verification code is ${code}. It expires in ${minutes} minutes.`,
       title: "Verify your email",
-      body: `${h1("Verify your email")}${p(`Hi ${esc(name)}, enter this code in ${BRAND} to confirm your email address and finish creating your account:`)}${codeBox(code)}${muted(`The code expires in ${minutes} minutes. Never share it with anyone, not even someone claiming to be from ${BRAND}.`)}`,
-      footerNote: "If you did not try to create an account, you can ignore this email; no account will be created.",
+      body: `${p(`Hi ${esc(firstName(name))}, enter this code in ${BRAND} to confirm your email and finish creating your account.`)}${codeBox(code, minutes)}${tip(`Never share this code, not even with someone who says they are from ${BRAND}.`)}${small("Didn’t try to sign up? Ignore this email and no account will be created.")}`,
     }),
-    text: `Hi ${name},\n\nYour ${BRAND} verification code is: ${code}\n\nIt expires in ${minutes} minutes. Never share it with anyone.\n\nIf you did not try to create an account, ignore this email.`,
+    text: `Hi ${firstName(name)},\n\nYour ${BRAND} verification code is: ${code}\nIt expires in ${minutes} minutes.\n\nNever share this code, not even with someone who says they are from ${BRAND}.\n\nDidn't try to sign up? Ignore this email and no account will be created.`,
   };
 }
 
 export function welcomeEmail(name: string, appUrl: string): Email {
   const item = (icon: string, title: string, desc: string) =>
-    `<tr><td style="width:36px;vertical-align:top;padding:8px 0;font-size:20px;">${icon}</td><td style="padding:8px 0;"><strong>${title}</strong><br><span style="color:${C.muted};font-size:14px;line-height:20px;">${desc}</span></td></tr>`;
+    `<tr><td style="width:34px;vertical-align:top;padding:7px 0;font-size:19px;">${icon}</td><td style="padding:7px 0;font-size:14px;line-height:20px;"><strong style="color:${C.ink};">${title}</strong><br><span style="color:${C.muted};">${desc}</span></td></tr>`;
+  const first = firstName(name);
   return {
-    subject: `Welcome to ${BRAND}, ${name.split(" ")[0]}!`,
+    subject: `Welcome to ${BRAND}, ${first}! 🎉`,
     html: layout({
-      preheader: "Your account is ready. Private, end-to-end encrypted messaging awaits.",
-      title: `Welcome to ${BRAND}`,
-      body: `${h1(`Welcome, ${esc(name.split(" ")[0])}! &#127881;`)}${p("Your account is ready. Here is what you can do:")}
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;">
-          ${item("&#128274;", "Private by design", "Messages are encrypted on your device. Not even our server can read them.")}
-          ${item("&#128249;", "Video and voice calls", "Talk face to face, with live captions when you need them.")}
-          ${item("&#129311;", "Sign language assistance", "Built for Deaf and hearing people to talk together.")}
-          ${item("&#127908;", "Voice messages", "Record and send in one tap.")}
+      preheader: "Your account is ready. Here’s what you can do.",
+      title: `Welcome, ${first}! 🎉`,
+      body: `${p("Your account is ready. Here’s what you can do:")}
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 4px;">
+          ${item("&#128274;", "Private by design", "Only you and the people you talk to can read your chats.")}
+          ${item("&#129311;", "Sign and captions in calls", "Speech becomes signs and captions; signs become text and speech.")}
+          ${item("&#127807;", "Leafy stickers and moods", "25 stickers, mood emoji and GIFs.")}
+          ${item("&#127912;", "Make it yours", "5 designs and 10 wallpapers.")}
         </table>
         ${button(`Open ${BRAND}`, appUrl)}
-        ${muted("Tip: compare the security code with your contacts (chat info, then Verify security code) to be sure nobody is listening in.")}`,
+        ${small("Tip: check the security code with your contacts in chat info, so you know nobody is listening in.")}`,
     }),
-    text: `Welcome to ${BRAND}, ${name}!\n\nYour account is ready.\n- Private by design: end-to-end encrypted messages\n- Video and voice calls with live captions\n- Sign language assistance\n- Voice messages\n\nOpen ${BRAND}: ${appUrl}`,
+    text: `Welcome to ${BRAND}, ${first}!\n\nYour account is ready.\n- Private by design: only you and the people you talk to can read your chats\n- Sign and captions in calls\n- Leafy stickers, mood emoji and GIFs\n- 5 designs and 10 wallpapers\n\nOpen ${BRAND}: ${appUrl}`,
   };
 }
 
@@ -90,42 +132,44 @@ export function resetCodeEmail(name: string, code: string, minutes: number): Ema
   return {
     subject: `${code} is your ${BRAND} password reset code`,
     html: layout({
-      preheader: `Use ${code} to reset your password. It expires in ${minutes} minutes.`,
+      preheader: `Use ${code} to set a new password. It expires in ${minutes} minutes.`,
       title: "Reset your password",
-      body: `${h1("Reset your password")}${p(`Hi ${esc(name)}, we received a request to reset your ${BRAND} password. Enter this code in the app:`)}${codeBox(code)}${muted(`The code expires in ${minutes} minutes. After the reset, you will be signed out on all your devices.`)}`,
-      footerNote: "Did not ask for this? Ignore this email; your password stays the same. Someone may have typed your email or phone number by mistake.",
+      body: `${p(`Hi ${esc(firstName(name))}, we got a request to reset your password. Enter this code in the app:`)}${codeBox(code, minutes)}${tip("After the reset you will be signed out on all your devices, for your safety.")}${small("Didn’t ask for this? Ignore this email. Your password stays the same.")}`,
     }),
-    text: `Hi ${name},\n\nYour ${BRAND} password reset code is: ${code}\n\nIt expires in ${minutes} minutes. After the reset you will be signed out on all devices.\n\nDid not ask for this? Ignore this email; your password stays the same.`,
+    text: `Hi ${firstName(name)},\n\nYour ${BRAND} password reset code is: ${code}\nIt expires in ${minutes} minutes.\n\nAfter the reset you will be signed out on all your devices.\n\nDidn't ask for this? Ignore this email. Your password stays the same.`,
   };
 }
 
-export function passwordChangedEmail(name: string, when: Date, device: string): Email {
-  const at = when.toUTCString();
+export function passwordChangedEmail(name: string, when: Date, device: string, appUrl?: string): Email {
+  const at = formatWhen(when);
+  const secure = appUrl ? `${appUrl.replace(/\/$/, "")}/#forgot` : null;
   return {
     subject: `Your ${BRAND} password was changed`,
     html: layout({
-      preheader: "Your password was just changed. If this was not you, act now.",
-      title: "Password changed",
-      body: `${h1("Your password was changed")}${p(`Hi ${esc(name)}, the password for your ${BRAND} account was just changed and other devices were signed out.`)}
-        <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 20px;">${fact("When", at)}${fact("Device", device)}</table>
-        ${muted(`<strong style="color:${C.ink};">Was this not you?</strong> Reset your password immediately with "Forgot password" on the sign-in screen, and check your signed-in devices in Settings, then Security.`)}`,
+      alert: true,
+      preheader: "Your password was just changed. If this wasn’t you, act now.",
+      title: "Your password was changed",
+      body: `${p(`Hi ${esc(firstName(name))}, your password was just changed and your other devices were signed out.`)}${facts([["When", at], ["Device", device]])}
+        ${tip(`<strong style="color:${C.alert};">Wasn’t you?</strong> Reset your password now with “Forgot password” and check your devices in Settings › Security.`, true)}
+        ${secure ? button("Secure my account", secure, C.alert) : ""}`,
     }),
-    text: `Hi ${name},\n\nYour ${BRAND} password was changed.\nWhen: ${at}\nDevice: ${device}\n\nNot you? Use "Forgot password" on the sign-in screen immediately and review your devices in Settings > Security.`,
+    text: `Hi ${firstName(name)},\n\nYour ${BRAND} password was changed and your other devices were signed out.\nWhen: ${at}\nDevice: ${device}\n\nWasn't you? Reset your password now with "Forgot password"${secure ? ` (${secure})` : ""} and check your devices in Settings > Security.`,
   };
 }
 
-export function newSignInEmail(name: string, when: Date, device: string): Email {
-  const at = when.toUTCString();
+export function newSignInEmail(name: string, when: Date, device: string, appUrl?: string): Email {
+  const at = formatWhen(when);
+  const secure = appUrl ? `${appUrl.replace(/\/$/, "")}/#forgot` : null;
   return {
     subject: `New sign-in to your ${BRAND} account`,
     html: layout({
-      preheader: `New sign-in from ${device}.`,
+      preheader: `${device} signed in just now.`,
       title: "New sign-in",
-      body: `${h1("New sign-in detected")}${p(`Hi ${esc(name)}, your account was just used to sign in on a new device:`)}
-        <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 20px;">${fact("When", at)}${fact("Device", device)}</table>
-        ${muted(`If this was you, there is nothing to do. If not, change your password now and sign that device out in Settings, then Security.`)}`,
+      body: `${p(`Hi ${esc(firstName(name))}, your account was just used to sign in on a new device.`)}${facts([["When", at], ["Device", device]])}
+        ${small("If this was you, there’s nothing to do.")}
+        ${secure ? button("Not me: secure my account", secure, C.alert) : small("If not, change your password now and sign that device out in Settings › Security.")}`,
     }),
-    text: `Hi ${name},\n\nNew sign-in to your ${BRAND} account.\nWhen: ${at}\nDevice: ${device}\n\nNot you? Change your password and sign that device out in Settings > Security.`,
+    text: `Hi ${firstName(name)},\n\nNew sign-in to your ${BRAND} account.\nWhen: ${at}\nDevice: ${device}\n\nIf this was you, there's nothing to do. If not, change your password now${secure ? ` (${secure})` : ""} and sign that device out in Settings > Security.`,
   };
 }
 
@@ -133,6 +177,6 @@ export function newSignInEmail(name: string, when: Date, device: string): Email 
 export const sms = {
   verification: (code: string, minutes: number) => `${code} is your ${BRAND} verification code. Valid ${minutes} min. Do not share it with anyone.`,
   reset: (code: string, minutes: number) => `${code} is your ${BRAND} password reset code. Valid ${minutes} min. Do not share it with anyone.`,
-  welcome: (name: string) => `Welcome to ${BRAND}, ${name.split(" ")[0]}! Your account is ready.`,
+  welcome: (name: string) => `Welcome to ${BRAND}, ${firstName(name)}! Your account is ready.`,
   passwordChanged: () => `Your ${BRAND} password was changed. Not you? Reset it now from the sign-in screen.`,
 };

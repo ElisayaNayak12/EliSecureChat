@@ -256,12 +256,12 @@ export class VerificationService {
   }
 
   async passwordChanged(user: User, device: string) {
-    if (user.email) await this.notify.sendEmail(user.email, T.passwordChangedEmail(user.name, new Date(), device));
+    if (user.email) await this.notify.sendEmail(user.email, T.passwordChangedEmail(user.name, new Date(), device, this.notify.appUrl));
     if (user.phoneVerified && this.notify.smsAvailable) await this.notify.sendSms(this.smsNumber(user.phone), T.sms.passwordChanged());
   }
 
   /** Like Gmail/Telegram: tell the user when their account is used on a device it has not seen before. */
   async newSignIn(user: User, device: string, isFirstOfItsKind: boolean) {
-    if (isFirstOfItsKind && user.email) await this.notify.sendEmail(user.email, T.newSignInEmail(user.name, new Date(), device));
+    if (isFirstOfItsKind && user.email) await this.notify.sendEmail(user.email, T.newSignInEmail(user.name, new Date(), device, this.notify.appUrl));
   }
 }

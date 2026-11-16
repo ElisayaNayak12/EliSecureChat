@@ -149,7 +149,7 @@ export default function RecoveryRequestFlow({
           <div className="recovery-header-icon">🛡️</div>
           <div>
             <h2>Account Recovery</h2>
-            <p>ELiSecureChat Identity Verification</p>
+            <p>EliSecureChat Identity Verification</p>
           </div>
         </div>
 

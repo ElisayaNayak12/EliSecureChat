@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../api/api_client.dart';
-import '../theme.dart';
 import 'verify_screens.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -93,11 +92,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 key: _form,
                 child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                   const SizedBox(height: 12),
-                  CircleAvatar(
-                    radius: 34,
-                    backgroundColor: Verdant.brand700,
-                    child: const Icon(Icons.lock_outline, color: Verdant.tile300, size: 32),
-                  ),
+                  Center(child: Image.asset('assets/brand/mark.png', width: 84, height: 84, semanticLabel: 'EliSecureChat logo')),
                   const SizedBox(height: 16),
                   Text('EliSecureChat', textAlign: TextAlign.center, style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700)),
                   const SizedBox(height: 6),

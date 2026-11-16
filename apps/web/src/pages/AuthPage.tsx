@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
+import BrandMark, { Wordmark } from "../components/BrandMark";
 import type { CountryCode } from "libphonenumber-js/min";
 import { LockIcon, ChatIcon, HandIcon, ShieldIcon } from "../components/Icons";
 import { api, type SignUpPending } from "../api";
@@ -90,6 +91,15 @@ export default function AuthPage({ onSignIn, onSignedUp, backendReady, status }:
       setCode("");
     }
   };
+
+  // "Secure my account" links in security emails open the app at #forgot.
+  useEffect(() => {
+    if (window.location.hash === "#forgot") {
+      go("forgot");
+      history.replaceState(null, "", window.location.pathname + window.location.search);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const resetTarget = () => (resetChannel === "email" ? resetIdentifier.trim() : phoneE164(resetPhone) ?? resetPhone.number.trim());
 
@@ -232,7 +242,7 @@ export default function AuthPage({ onSignIn, onSignedUp, backendReady, status }:
           </div>
           <h2 className="suspended-title">Account Suspended</h2>
           <p className="suspended-subtitle">
-            ELiSecureChat has detected activity that violates our Community Guidelines.
+            EliSecureChat has detected activity that violates our Community Guidelines.
           </p>
 
           <div className="suspended-reason-box">
@@ -274,10 +284,8 @@ export default function AuthPage({ onSignIn, onSignedUp, backendReady, status }:
       {/* AURA cinematic brand hero */}
       <section className="auth-hero" aria-hidden="false">
         <div className="auth-hero-brand">
-          <span className="aura-tile aura-tile-sm">
-            <ChatIcon size={22} />
-          </span>
-          <span className="auth-hero-wordmark">ELiSecureChat</span>
+          <BrandMark size={44} className="brand-mark-hero" />
+          <Wordmark className="auth-hero-wordmark" />
         </div>
 
         <div className="auth-hero-copy">
@@ -322,8 +330,8 @@ export default function AuthPage({ onSignIn, onSignedUp, backendReady, status }:
 
       <div className="auth-card">
         <div className="auth-header">
-          <div className="auth-logo-wrapper">
-            <ChatIcon size={30} className="auth-logo-icon" />
+          <div className="auth-logo-mark">
+            <BrandMark size={60} />
           </div>
           <h1>{title}</h1>
           <p className="auth-tagline">{tagline}</p>

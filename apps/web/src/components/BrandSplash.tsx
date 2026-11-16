@@ -1,67 +1,79 @@
 import { useEffect, useRef, useState } from "react";
+import { BUBBLE_PATH, Hand, Seal, Wordmark } from "./BrandMark";
 
 /**
- * AURA brand splash (Variant B - mark + sparks).
- * Shown after sign-in / cold start. Minimum 2.4s on screen, then exits
- * with a scale-fade so the workspace entrance choreography can run.
+ * Launch animation (approved design): the bubble pops in, the "I love you" hand rises and waves, the gold seal
+ * clicks shut, then the name and promise appear. Under 4 seconds; "Reduce motion" gets a short fade.
  */
 interface BrandSplashProps {
   onDone: () => void;
-  minDuration?: number;
 }
 
-const WORD = "ELiSecureChat";
+const reduceMotion = () =>
+  document.documentElement.dataset.motion === "reduce" || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
-export default function BrandSplash({ onDone, minDuration = 2600 }: BrandSplashProps) {
+/** Plays the full animation on the first open of the day; a quick fade after that. */
+export function splashDuration(): number {
+  if (reduceMotion()) return 700;
+  const today = new Date().toDateString();
+  try {
+    if (localStorage.getItem("splash-day") === today) return 900;
+    localStorage.setItem("splash-day", today);
+  } catch {
+    // storage unavailable: just play it
+  }
+  return 3500;
+}
+
+export default function BrandSplash({ onDone }: BrandSplashProps) {
+  const [duration] = useState(splashDuration);
   const [leaving, setLeaving] = useState(false);
   const onDoneRef = useRef(onDone);
   onDoneRef.current = onDone;
+  const short = duration < 1000;
 
   useEffect(() => {
-    const leaveTimer = window.setTimeout(() => setLeaving(true), minDuration);
-    const doneTimer = window.setTimeout(() => onDoneRef.current(), minDuration + 460);
+    const leaveTimer = window.setTimeout(() => setLeaving(true), duration);
+    const doneTimer = window.setTimeout(() => onDoneRef.current(), duration + 420);
     return () => {
       window.clearTimeout(leaveTimer);
       window.clearTimeout(doneTimer);
     };
-  }, [minDuration]);
+  }, [duration]);
 
   return (
-    <div className={`aura-splash ${leaving ? "leave" : ""}`} role="status" aria-label="Loading your workspace">
-      <div className="aura-splash-stack">
-        <div className="aura-splash-mark">
-          <span className="aura-splash-glow" />
-          <span className="aura-splash-puck" />
-          <svg viewBox="0 0 112 112" aria-hidden="true">
-            {/* chat bubble outline */}
-            <path
-              className="aura-splash-letter"
-              pathLength={1}
-              d="M30 40 a12 12 0 0 1 12 -12 h28 a12 12 0 0 1 12 12 v18 a12 12 0 0 1 -12 12 h-20 l-12 10 v-10 a8 8 0 0 1 -8 -8 z"
-            />
-            {/* lock inside */}
-            <path className="aura-splash-letter lock" pathLength={1} d="M48 52 h16 v10 h-16 z M51 52 v-4 a5 5 0 0 1 10 0 v4" />
-            <g>
-              <path className="aura-splash-spark" d="M86 26 L96 16" />
-              <path className="aura-splash-spark" d="M89 34 L102 33" />
-              <path className="aura-splash-spark" d="M80 20 L81 7" />
+    <div className={`brand-splash ${short ? "short" : ""} ${leaving ? "leave" : ""}`} role="status" aria-label="Opening EliSecureChat">
+      <div className="brand-splash-stack">
+        <svg className="brand-splash-mark" viewBox="0 0 120 120" aria-hidden="true">
+          <defs>
+            <radialGradient id="splashBubble" cx="30%" cy="22%" r="95%">
+              <stop offset="0" stopColor="#7FB069" />
+              <stop offset=".55" stopColor="#2F5A37" />
+              <stop offset="1" stopColor="#15291C" />
+            </radialGradient>
+          </defs>
+          <g className="bs-bubble">
+            <path d={BUBBLE_PATH} fill="url(#splashBubble)" />
+            <path d={BUBBLE_PATH} fill="none" stroke="#FFFFFF" strokeOpacity=".16" strokeWidth="1.5" />
+          </g>
+          <g className="bs-hand">
+            <g className="bs-wave">
+              <Hand />
             </g>
-          </svg>
+          </g>
+          <circle className="bs-ring" cx="95" cy="22" r="13" fill="none" stroke="#E3C27E" strokeWidth="3" />
+          <g className="bs-seal">
+            <Seal />
+          </g>
+        </svg>
+        <div className="bs-word">
+          <Wordmark />
         </div>
-        <div className="aura-splash-word" aria-hidden="true">
-          {WORD.split("").map((ch, i) => (
-            <span key={i} style={{ animationDelay: `${700 + i * 50}ms` }}>
-              {ch}
-            </span>
-          ))}
-        </div>
-        <div className="aura-splash-tagline">
-          Securing your workspace
-          <span className="aura-dots">
-            <i />
-            <i />
-            <i />
-          </span>
+        <div className="bs-tag">Private conversations, signed or spoken.</div>
+        <div className="bs-dots" aria-hidden="true">
+          <i />
+          <i />
+          <i />
         </div>
       </div>
     </div>

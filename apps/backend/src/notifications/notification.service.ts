@@ -1,8 +1,11 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { mkdirSync, writeFileSync } from "fs";
+import { existsSync, mkdirSync, writeFileSync } from "fs";
 import { join, resolve } from "path";
 import { createTransport, type Transporter } from "nodemailer";
-import type { Email } from "./templates";
+import { LOGO_CID, type Email } from "./templates";
+
+/** Brand logo attached to emails (apps/backend/assets, found from src/ and dist/ alike). */
+const EMAIL_LOGO = resolve(__dirname, "..", "..", "assets", "email-logo.png");
 
 export type SentRecord = { channel: "email" | "sms"; to: string; subject?: string; text: string; html?: string; at: string };
 
@@ -70,7 +73,15 @@ export class NotificationService {
           secure: Number(process.env.SMTP_PORT ?? 465) === 465,
           auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
         });
-        await this.mailer.sendMail({ from: process.env.MAIL_FROM ?? `EliSecureChat <${process.env.SMTP_USER}>`, to, subject: email.subject, text: email.text, html: email.html });
+        await this.mailer.sendMail({
+          from: process.env.MAIL_FROM ?? `EliSecureChat <${process.env.SMTP_USER}>`,
+          to,
+          subject: email.subject,
+          text: email.text,
+          html: email.html,
+          // The logo travels inside the email (shown even where outside images are blocked).
+          attachments: email.html.includes(`cid:${LOGO_CID}`) && existsSync(EMAIL_LOGO) ? [{ filename: "elisecurechat.png", path: EMAIL_LOGO, cid: LOGO_CID }] : [],
+        });
         if (!this.production) this.remember(record);
         return true;
       } catch (err) {
@@ -116,7 +127,8 @@ export class NotificationService {
       mkdirSync(this.outboxDir, { recursive: true });
       const stamp = new Date().toISOString().replace(/[:.]/g, "-");
       const base = join(this.outboxDir, `${stamp}-${kind}-${to.replace(/[^a-z0-9+@.]/gi, "_")}`);
-      if (html) writeFileSync(`${base}.html`, html, "utf8");
+      // Local preview: point the attached-logo reference at the file on disk.
+      if (html) writeFileSync(`${base}.html`, html.replaceAll(`cid:${LOGO_CID}`, `file:///${EMAIL_LOGO.replace(/\\/g, "/")}`), "utf8");
       writeFileSync(`${base}.txt`, `To: ${to}\nSubject: ${subject}\n\n${text}\n`, "utf8");
       this.log.warn(`[DEV OUTBOX] ${kind.toUpperCase()} to ${to}: "${subject}" -> ${base}.${html ? "html" : "txt"}`);
       // Codes are also printed so developers can test without opening the file.

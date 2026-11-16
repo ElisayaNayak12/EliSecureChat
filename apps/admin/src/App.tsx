@@ -236,8 +236,8 @@ export function App() {
         <section className="admin-auth">
           <div className="admin-auth-hero">
             <div className="admin-brand">
-              <span className="v-tile v-tile-sm"><ShieldIcon size={20} /></span>
-              <span className="admin-brand-word">ELiSecureChat</span>
+              <img src={`${import.meta.env.BASE_URL}logo.svg`} width={40} height={40} alt="" />
+              <span className="admin-brand-word">EliSecureChat</span>
             </div>
             <div className="admin-auth-copy">
               <span className="v-overline-chip">Restricted access</span>
