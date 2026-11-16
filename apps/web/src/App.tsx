@@ -1054,12 +1054,15 @@ export function App() {
   async function clearChatHistory() {
     if (!ensureBackend()) return;
     if (!currentUser || !activeChatId) return;
-    const confirm = window.confirm("Are you sure you want to clear this chat history? This will permanently wipe all messages.");
+    const peerName = activePeer?.name ?? "the other people in this chat";
+    const confirm = window.confirm(`Clear this chat for you?
+
+The messages will be removed from your screen only. ${peerName} will still have them.`);
     if (!confirm) return;
     try {
       await api.clearChatHistory(activeChatId, currentUser.id);
       setMessages([]);
-      setStatus("Chat history cleared");
+      setStatus("Chat cleared for you. The other person still has their messages.");
       await refreshSummaries(currentUser.id);
     } catch (err) {
       setStatus(`Failed to clear history: ${(err as Error).message}`);

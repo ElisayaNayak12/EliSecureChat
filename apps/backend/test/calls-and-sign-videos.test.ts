@@ -141,6 +141,11 @@ test("full call: invite -> accept -> SDP/ICE relay -> translation relay -> hangu
   assert.equal((await b.emitWithAck("call:profile", { callId: inv.callId, profile: { signLanguage: "isl" } })).ok, true);
   assert.deepEqual((await prof).profile, { signLanguage: "isl" });
   assert.equal((await b.emitWithAck("call:profile", { callId: inv.callId, profile: { signLanguage: "klingon" } })).error, "INVALID_PROFILE");
+  // Call mode (e.g. both Deaf) and medical mode are shared with the other side; unknown values are refused.
+  const prof2 = next(a, "call:profile");
+  assert.equal((await b.emitWithAck("call:profile", { callId: inv.callId, profile: { signLanguage: "asl", mode: "deaf-deaf", medical: true } })).ok, true);
+  assert.deepEqual((await prof2).profile, { signLanguage: "asl", mode: "deaf-deaf", medical: true });
+  assert.equal((await b.emitWithAck("call:profile", { callId: inv.callId, profile: { signLanguage: "asl", mode: "party" } })).error, "INVALID_PROFILE");
   assert.equal((await b.emitWithAck("call:profile", { callId: "not-a-call", profile: { signLanguage: null } })).error, "CALL_NOT_ACTIVE");
 
   const ended = next(b, "call:ended");

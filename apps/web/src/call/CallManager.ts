@@ -8,6 +8,10 @@
  * strict NATs may fail; no group calls; media is protected by WebRTC's DTLS-SRTP transport encryption
  * between the two browsers (no SFU in the path), but there is no additional app-level end-to-end layer.
  */
+
+/** "deaf-deaf": both people sign; "deaf-hearing": one signs, one speaks; "standard": no sign assistance. */
+export type CallMode = "standard" | "deaf-hearing" | "deaf-deaf";
+export type CallProfile = { signLanguage: string | null; mode?: CallMode; medical?: boolean };
 import type { Socket } from "socket.io-client";
 
 export type CallPhase = "outgoing" | "incoming" | "connecting" | "active" | "ended";
@@ -47,7 +51,7 @@ export type CallSnapshot = {
   /** Interim (non-final) captions, keyed by sender, shown live and replaced by the final text. */
   interim: { me?: TranslationPayload; peer?: TranslationPayload };
   /** What the other participant shared when the call connected (their sign language, if they sign). */
-  peerProfile?: { signLanguage: string | null };
+  peerProfile?: CallProfile;
 };
 
 function iceServers(): RTCIceServer[] {
@@ -378,13 +382,13 @@ export class CallManager {
   }
 
   /** Tells the other side which sign language this user reads (null = does not sign). */
-  async sendProfile(profile: { signLanguage: string | null }) {
+  async sendProfile(profile: CallProfile) {
     const s = this.snap;
     if (!s?.callId || s.phase !== "active") return;
     await this.emit("call:profile", { callId: s.callId, profile }).catch(() => undefined);
   }
 
-  private onProfile = ({ callId, profile }: { callId: string; profile: { signLanguage: string | null } }) => {
+  private onProfile = ({ callId, profile }: { callId: string; profile: CallProfile }) => {
     if (!this.snap || this.snap.callId !== callId) return;
     this.set({ peerProfile: profile });
   };

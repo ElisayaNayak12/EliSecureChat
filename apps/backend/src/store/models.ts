@@ -40,6 +40,8 @@ export type Chat = {
   pinnedBy?: string;
   pinnedAt?: string;
   createdAt: string;
+  /** "Clear chat" is per person: messages up to this time are hidden only for that user (userId -> ISO time). */
+  clearedAt?: Record<string, string>;
 };
 
 export type MessageType = "TEXT" | "IMAGE" | "VIDEO" | "AUDIO" | "FILE" | "SYSTEM";

@@ -47,16 +47,31 @@ export function parseSignal(data: unknown): CallSignalData | null {
 }
 
 /** What a participant tells the other side when a call connects: which sign language they read (if any). */
-export type CallProfile = { signLanguage: string | null };
+/** What each side shares when a call connects (and again when they change it). */
+export type CallMode = "standard" | "deaf-hearing" | "deaf-deaf";
+export type CallProfile = { signLanguage: string | null; mode?: CallMode; medical?: boolean };
 
 const SIGN_LANGUAGES = new Set(["isl", "asl", "bsl", "auslan"]);
+const MODES = new Set<CallMode>(["standard", "deaf-hearing", "deaf-deaf"]);
 
 export function parseProfile(data: unknown): CallProfile | null {
   if (typeof data !== "object" || data === null) return null;
-  const v = (data as Record<string, unknown>).signLanguage;
-  if (v === null || v === undefined) return { signLanguage: null };
-  if (typeof v !== "string" || !SIGN_LANGUAGES.has(v)) return null;
-  return { signLanguage: v };
+  const d = data as Record<string, unknown>;
+  const v = d.signLanguage;
+  let signLanguage: string | null;
+  if (v === null || v === undefined) signLanguage = null;
+  else if (typeof v !== "string" || !SIGN_LANGUAGES.has(v)) return null;
+  else signLanguage = v;
+  const out: CallProfile = { signLanguage };
+  if (d.mode !== undefined) {
+    if (typeof d.mode !== "string" || !MODES.has(d.mode as CallMode)) return null;
+    out.mode = d.mode as CallMode;
+  }
+  if (d.medical !== undefined) {
+    if (typeof d.medical !== "boolean") return null;
+    out.medical = d.medical;
+  }
+  return out;
 }
 
 export function parseTranslation(data: unknown): TranslationPayload | null {

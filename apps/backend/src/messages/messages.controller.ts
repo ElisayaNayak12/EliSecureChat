@@ -33,9 +33,11 @@ export class MessagesController {
   }
 
   @Get(":chatId")
-  byChat(@Param("chatId") chatId: string) {
+  byChat(@Param("chatId") chatId: string, @CurrentUser() me: AuthUser) {
+    // Messages I cleared (clear chat is per person) are not returned to me; others still see them.
+    const since = this.store.chats.find((c) => c.id === chatId)?.clearedAt?.[me.userId] ?? "";
     return this.store.messages
-      .filter((m) => m.chatId === chatId)
+      .filter((m) => m.chatId === chatId && m.createdAt > since)
       .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
   }
 

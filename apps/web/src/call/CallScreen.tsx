@@ -13,6 +13,10 @@ import type { SignVideoLookup, UserPreferences } from "../types";
 import { describeEndReason, type CallManager, type CallSnapshot, type TranslationEntry, type TranslationPayload } from "./CallManager";
 import FingerspellPlayer, { type SpellItem } from "../components/FingerspellPlayer";
 import { ALPHABETS, alphabetFor } from "../ai/fingerspell";
+import type { CallMode } from "./CallManager";
+import MedicalBoard from "./MedicalBoard";
+
+const MODE_LABEL: Record<CallMode, string> = { "deaf-deaf": "Deaf ↔ Deaf", "deaf-hearing": "Deaf ↔ Hearing", standard: "Standard" };
 
 type Props = {
   manager: CallManager;
@@ -151,24 +155,78 @@ export default function CallScreen({ manager, snap, currentUserId, preferences, 
   const [fixing, setFixing] = useState(false);
   const [fixText, setFixText] = useState("");
 
+  /* ---- call mode: both Deaf, Deaf + hearing, or standard. Chosen automatically; either person can change it,
+     and the choice is shared so both screens switch together. ---- */
+  const autoMode: CallMode = signLanguage && peerSignLanguage ? "deaf-deaf" : signLanguage || peerSignLanguage ? "deaf-hearing" : "standard";
+  const [modeChoice, setModeChoice] = useState<CallMode | null>(null);
+  const [medical, setMedical] = useState(false);
+  const [modeNotice, setModeNotice] = useState<string | null>(null);
+  const mode: CallMode = modeChoice ?? autoMode;
+  const lastPeer = useRef<{ mode?: CallMode; medical?: boolean }>({});
+
   useEffect(() => {
     if (!active || !snap.callId || profileSent.current === snap.callId) return;
     profileSent.current = snap.callId;
     void manager.sendProfile({ signLanguage });
   }, [active, snap.callId, signLanguage, manager]);
 
+  // The other person changed the mode (or medical mode): follow them and say so.
+  useEffect(() => {
+    const p = snap.peerProfile;
+    if (!p) return;
+    if (p.mode && p.mode !== lastPeer.current.mode) {
+      lastPeer.current.mode = p.mode;
+      setModeChoice(p.mode);
+      setModeNotice(`${snap.peer.name} switched to ${MODE_LABEL[p.mode]} mode`);
+    }
+    // Medical mode starts off; only an actual change is announced (a mode change also carries medical: false).
+    if (p.medical !== undefined && p.medical !== (lastPeer.current.medical ?? false)) {
+      lastPeer.current.medical = p.medical;
+      setMedical(p.medical);
+      setModeNotice(`${snap.peer.name} turned medical mode ${p.medical ? "on" : "off"}`);
+    }
+  }, [snap.peerProfile, snap.peer.name]);
+
+  useEffect(() => {
+    if (!modeNotice) return;
+    const t = window.setTimeout(() => setModeNotice(null), 4000);
+    return () => window.clearTimeout(t);
+  }, [modeNotice]);
+
+  const chooseMode = (m: CallMode) => {
+    setModeChoice(m);
+    lastPeer.current.mode = m; // so our own echo is not shown as "switched"
+    void manager.sendProfile({ signLanguage, mode: m, medical });
+  };
+  const toggleMedical = () => {
+    const next = !medical;
+    setMedical(next);
+    lastPeer.current.medical = next;
+    void manager.sendProfile({ signLanguage, mode, medical: next });
+  };
+
+  // Deaf ↔ Deaf: no microphone captions or reading aloud; signs (and typing) are the conversation.
+  useEffect(() => {
+    if (mode !== "deaf-deaf") return;
+    setCaptionsOn(false);
+    setSpeakIncoming(false);
+    if (signLanguage && isVideo && snap.camOn) setSignOn(true);
+  }, [mode, signLanguage, isVideo, snap.camOn]);
+
   // A hearing person talking to a signer: start captions automatically so their speech can be shown as signs.
   useEffect(() => {
-    if (active && peerSignLanguage && !signLanguage && !captionsAuto.current) {
+    if (active && peerSignLanguage && !signLanguage && mode !== "deaf-deaf" && !captionsAuto.current) {
       captionsAuto.current = true;
       setCaptionsOn(true);
     }
-  }, [active, peerSignLanguage, signLanguage]);
+  }, [active, peerSignLanguage, signLanguage, mode]);
 
+  // When both people sign, the other person's recognised signs are also fingerspelled in MY sign language
+  // (useful when one signs ISL and the other ASL).
   const spokenTo = (from: "me" | "peer"): SpellItem[] =>
-    snap.translations.filter((t) => t.from === from && t.payload.source !== "sign").map((t) => ({ id: t.id, text: t.payload.text }));
-  const incomingToSpell = useMemo(() => spokenTo("peer"), [snap.translations]); // eslint-disable-line react-hooks/exhaustive-deps
-  const outgoingPreview = useMemo(() => spokenTo("me"), [snap.translations]); // eslint-disable-line react-hooks/exhaustive-deps
+    snap.translations.filter((t) => t.from === from && (t.payload.source !== "sign" || mode === "deaf-deaf")).map((t) => ({ id: t.id, text: t.payload.text }));
+  const incomingToSpell = useMemo(() => spokenTo("peer"), [snap.translations, mode]); // eslint-disable-line react-hooks/exhaustive-deps
+  const outgoingPreview = useMemo(() => spokenTo("me"), [snap.translations, mode]); // eslint-disable-line react-hooks/exhaustive-deps
   const lastSpoken = [...snap.translations].reverse().find((t) => t.from === "me" && t.payload.source !== "sign");
 
   const resendFixed = () => {
@@ -384,6 +442,10 @@ export default function CallScreen({ manager, snap, currentUserId, preferences, 
     setSuggestion(null);
   };
 
+  const sendMedical = (text: string) => {
+    void send({ source: "typed", text, final: true, confidence: null, language: spokenLang, engine: "medical-phrase" });
+  };
+
   const sendTyped = () => {
     const text = typed.trim();
     if (!text) return;
@@ -441,7 +503,8 @@ export default function CallScreen({ manager, snap, currentUserId, preferences, 
   );
 
   return (
-    <div className={`call-screen premium ${panelOpen ? "with-panel" : ""}`} data-phase={snap.phase}>
+    <div className={`call-screen premium mode-${mode} ${medical ? "medical-on" : ""} ${panelOpen ? "with-panel" : ""}`} data-phase={snap.phase}>
+      {modeNotice && <div className="call-mode-notice" role="status">{modeNotice}</div>}
       <header className="call-topbar">
         <div className="call-peer">
           <Avatar name={snap.peer.name} avatarUrl={snap.peer.avatarUrl} size="sm" resolveUrl={resolveUrl} />
@@ -491,6 +554,26 @@ export default function CallScreen({ manager, snap, currentUserId, preferences, 
         {panelOpen && (
           <aside className="call-panel" aria-label="Translation">
             <div className="call-panel-pinned">
+              <section className="cp-mode" aria-label="Call mode">
+                <div className="cp-mode-row" role="radiogroup" aria-label="Call mode">
+                  {(["deaf-deaf", "deaf-hearing", "standard"] as CallMode[]).map((m) => (
+                    <button key={m} type="button" role="radio" aria-checked={mode === m} className={mode === m ? "on" : ""} disabled={!active} onClick={() => chooseMode(m)}>
+                      {MODE_LABEL[m]}
+                    </button>
+                  ))}
+                  <button type="button" role="switch" aria-checked={medical} className={`cp-med-toggle ${medical ? "on" : ""}`} disabled={!active} onClick={toggleMedical} aria-label="Medical mode">
+                    ⚕️ Medical
+                  </button>
+                </div>
+                <p className="cp-mode-help">
+                  {mode === "deaf-deaf"
+                    ? `You both sign: videos are large, sign detection is on, and signs or typed words are fingerspelled in each person's own sign language.`
+                    : mode === "deaf-hearing"
+                      ? "Speech becomes captions and signs for the Deaf person; signs become text and speech for the hearing person."
+                      : "A normal call. Turn on captions or sign detection below if you need them."}
+                </p>
+              </section>
+              {medical && <MedicalBoard onSend={sendMedical} disabled={!active} />}
               {myAlphabet && (
                 <section className="cp-sign-stage" aria-label="Speech to sign">
                   <FingerspellPlayer
@@ -512,7 +595,13 @@ export default function CallScreen({ manager, snap, currentUserId, preferences, 
                     items={outgoingPreview}
                     alphabet={peerAlphabet}
                     title={`What ${snap.peer.name} sees`}
-                    emptyText={captionsOn ? `Speak: your words are shown to ${snap.peer.name} as ${ALPHABETS[peerAlphabet].short} fingerspelling.` : "Turn on speech captions so your words can be shown as signs."}
+                    emptyText={
+                      mode === "deaf-deaf"
+                        ? `Sign, or type below: your words are shown to ${snap.peer.name} as ${ALPHABETS[peerAlphabet].short} fingerspelling.`
+                        : captionsOn
+                          ? `Speak: your words are shown to ${snap.peer.name} as ${ALPHABETS[peerAlphabet].short} fingerspelling.`
+                          : "Turn on speech captions so your words can be shown as signs."
+                    }
                   />
                   {lastSpoken && !fixing && (
                     <div className="cp-heard">

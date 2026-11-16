@@ -16,8 +16,9 @@ export class ChatsController {
     const chats = this.store.chats.filter((c) => c.memberIds.includes(userId));
     return chats
       .map((chat) => {
+        const since = chat.clearedAt?.[userId] ?? "";
         const chatMessages = this.store.messages
-          .filter((m) => m.chatId === chat.id)
+          .filter((m) => m.chatId === chat.id && m.createdAt > since)
           .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
         const lastMessage = chatMessages[0];
         const unreadCount = chatMessages.filter(
@@ -78,12 +79,14 @@ export class ChatsController {
       throw new BadRequestException("USER_NOT_IN_CHAT");
     }
 
-    const before = this.store.messages.length;
-    this.store.messages = this.store.messages.filter((m) => m.chatId !== chatId);
-    this.store.deleteRequests = this.store.deleteRequests.filter((r) => r.chatId !== chatId);
+    // Clear for ME only (like WhatsApp "Clear chat"): the other person keeps their full history.
+    // Erasing for both people is a separate, mutual request (delete requests).
+    const now = new Date().toISOString();
+    const hidden = this.store.messages.filter((m) => m.chatId === chatId && m.createdAt <= now && m.createdAt > (chat.clearedAt?.[dto.userId] ?? "")).length;
+    chat.clearedAt = { ...(chat.clearedAt ?? {}), [dto.userId]: now };
     this.store.persist();
 
-    return { chatId, clearedMessages: before - this.store.messages.length };
+    return { chatId, clearedMessages: hidden, scope: "me" };
   }
 
   @Delete(":chatId")

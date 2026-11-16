@@ -383,7 +383,7 @@ export default function ConversationPanel({
                     setChatMenuOpen(false);
                   }}
                 >
-                  🧹 Clear Chat History
+                  🧹 Clear chat (only for me)
                 </button>
                 {activePeer && (
                   <button

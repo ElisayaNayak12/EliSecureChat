@@ -668,3 +668,54 @@
 .fs-repeat { position: absolute; left: 58px; top: 14px; padding: 4px 10px; border-radius: 10px; background: #D8B878; color: #10261D; font: 800 12px/16px var(--aura-font-sans); letter-spacing: 0.04em; text-transform: uppercase; animation: fs-in 160ms ease-out both; }
 .fs-player.compact .fs-repeat { left: 46px; top: 10px; }
 @media (max-height: 760px) { .fs-stage { height: 170px; } .fs-player.compact .fs-stage { height: 110px; } }
+
+/* ---- Call modes ---- */
+/* Deaf <-> Deaf: both videos large, side by side, so each person's whole signing space is visible. */
+.call-screen.premium.mode-deaf-deaf .call-stage { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
+.call-screen.premium.mode-deaf-deaf .call-stage > .call-tile:first-child,
+.call-screen.premium.mode-deaf-deaf .call-stage > .call-tile:nth-child(2) {
+  position: relative; inset: auto; right: auto; top: auto; width: auto; height: 100%; min-height: 280px; aspect-ratio: auto;
+  border-radius: 20px; border: 1.5px solid rgba(216, 184, 120, 0.35); box-shadow: none; background: #13201A;
+}
+.call-screen.premium.mode-deaf-deaf .call-tile-video { object-fit: contain; background: #0C1510; }
+.call-screen.premium.mode-deaf-deaf .call-live-caption { grid-column: 1 / -1; position: static; margin: 0 auto; }
+@media (max-width: 760px) {
+  .call-screen.premium.mode-deaf-deaf .call-stage { grid-template-columns: 1fr; grid-auto-rows: minmax(200px, 1fr); }
+}
+
+.call-mode-notice {
+  position: fixed; top: 18px; left: 50%; transform: translateX(-50%); z-index: 50; padding: 10px 18px; border-radius: 999px;
+  background: rgba(10, 18, 14, 0.9); color: #F1DDAC; font: 700 14px/18px var(--aura-font-sans); box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(216, 184, 120, 0.4); animation: fs-in 200ms ease-out both;
+}
+.cp-mode { display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: 18px; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(216, 184, 120, 0.18); }
+.cp-mode-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.cp-mode-row button {
+  border: 1px solid rgba(216, 184, 120, 0.25); background: transparent; color: #E9E2CF; padding: 7px 12px; border-radius: 999px;
+  font: 700 12.5px/16px var(--aura-font-sans); cursor: pointer;
+}
+.cp-mode-row button.on { background: #D8B878; color: #10261D; border-color: #D8B878; }
+.cp-mode-row button:disabled { opacity: 0.5; cursor: default; }
+.cp-mode-row .cp-med-toggle { margin-left: auto; }
+.cp-mode-row .cp-med-toggle.on { background: #C0392B; border-color: #C0392B; color: #FFFFFF; }
+.cp-mode-help { margin: 0; font: 400 12.5px/18px var(--aura-font-sans); color: #BFB8A6; }
+
+/* Medical phrase board */
+.med-board { display: flex; flex-direction: column; gap: 10px; padding: 12px; border-radius: 18px; background: rgba(192, 57, 43, 0.08); border: 1px solid rgba(192, 57, 43, 0.4); }
+.med-safety { margin: 0; font: 600 12px/17px var(--aura-font-sans); color: #F4C7C1; }
+.med-pain { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.med-pain-label { font: 700 12px/16px var(--aura-font-sans); color: #E9E2CF; margin-right: 4px; }
+.med-pain button { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 44px; padding: 6px 4px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.14); background: rgba(255, 255, 255, 0.05); color: #FFFFFF; cursor: pointer; }
+.med-pain button span { font-size: 22px; line-height: 24px; }
+.med-pain button b { font: 800 12px/14px var(--aura-font-sans); }
+.med-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+.med-tabs button { border: 0; background: rgba(255, 255, 255, 0.06); color: #E9E2CF; padding: 6px 11px; border-radius: 999px; font: 700 12px/16px var(--aura-font-sans); cursor: pointer; }
+.med-tabs button.on { background: #E9E2CF; color: #10261D; }
+.med-phrases { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+.med-phrases button {
+  display: flex; align-items: center; gap: 8px; text-align: left; padding: 10px; border-radius: 12px; cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.05); color: #FFFFFF; font: 600 13px/17px var(--aura-font-sans);
+}
+.med-phrases button span { font-size: 20px; flex: none; }
+.med-phrases button.urgent { border-color: rgba(231, 76, 60, 0.6); background: rgba(231, 76, 60, 0.16); }
+.med-phrases button:disabled, .med-pain button:disabled { opacity: 0.5; cursor: default; }
