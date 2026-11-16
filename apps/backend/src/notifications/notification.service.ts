@@ -1,6 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { existsSync, mkdirSync, writeFileSync } from "fs";
 import { join, resolve } from "path";
+import { lookup } from "dns/promises";
 import { createTransport, type Transporter } from "nodemailer";
 import { LOGO_CID, type Email } from "./templates";
 
@@ -63,16 +64,35 @@ export class NotificationService {
     if (this.sent.length > 50) this.sent.shift();
   }
 
+  /**
+   * Nodemailer resolves the SMTP host with its own DNS client, which times out on some networks (VPNs, office or
+   * home routers) even though normal lookups work. Resolve with the system resolver instead and connect to that
+   * address, keeping the real host name for the TLS certificate check.
+   */
+  private async createMailer(): Promise<Transporter> {
+    const host = (process.env.SMTP_HOST ?? "smtp.gmail.com").trim();
+    const port = Number(process.env.SMTP_PORT ?? 465);
+    let address = host;
+    try {
+      address = (await lookup(host, { family: 4 })).address;
+    } catch (err) {
+      this.log.warn(`Could not look up ${host} (${(err as Error).message}); trying the name directly.`);
+    }
+    return createTransport({
+      host: address,
+      port,
+      secure: port === 465,
+      tls: { servername: host },
+      connectionTimeout: 20000,
+      auth: { user: process.env.SMTP_USER?.trim(), pass: process.env.SMTP_PASS?.replace(/\s+/g, "") },
+    });
+  }
+
   async sendEmail(to: string, email: Email): Promise<boolean> {
     const record: SentRecord = { channel: "email", to, subject: email.subject, text: email.text, html: email.html, at: new Date().toISOString() };
     if (this.smtpConfigured) {
       try {
-        this.mailer ??= createTransport({
-          host: process.env.SMTP_HOST,
-          port: Number(process.env.SMTP_PORT ?? 465),
-          secure: Number(process.env.SMTP_PORT ?? 465) === 465,
-          auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-        });
+        this.mailer ??= await this.createMailer();
         await this.mailer.sendMail({
           from: process.env.MAIL_FROM ?? `EliSecureChat <${process.env.SMTP_USER}>`,
           to,
@@ -86,6 +106,7 @@ export class NotificationService {
         return true;
       } catch (err) {
         this.log.error(`Email to ${to.replace(/(.{2}).*@/, "$1***@")} failed: ${(err as Error).message}`);
+        this.mailer = null; // reconnect (and look the server up again) on the next email
         return false;
       }
     }
