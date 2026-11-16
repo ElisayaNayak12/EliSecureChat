@@ -78,7 +78,7 @@ try {
   await page.click("button[type=submit]");
   await page.waitForTimeout(1200);
   check("A wrong code is rejected with a clear message", /not correct/i.test(await page.locator(".field-error").allInnerTexts().then((t) => t.join(" "))));
-  for (let i = 5; i >= 0; i--) await page.fill(`#email-code-${i}`, "");
+  await page.fill("#email-code-0", "");
   await page.fill("#email-code-0", mail.code);
   await page.click("button[type=submit]");
   const inApp = await page.waitForSelector(".desktop-app-sidebar", { timeout: 15000 }).then(() => true).catch(() => false);

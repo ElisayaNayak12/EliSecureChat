@@ -523,8 +523,24 @@
 .pw-label { margin: 6px 2px 0; font: 600 12.5px/16px var(--aura-font-sans); color: var(--aura-ink-500); }
 .pw-rules { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 2px; font: 400 12.5px/18px var(--aura-font-sans); color: var(--aura-ink-500); }
 .pw-rules li.ok { color: var(--aura-success); }
-.otp-boxes { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; max-width: 360px; }
-.input-group .otp-boxes input.otp-box { height: 56px; padding: 0; text-align: center; font: 700 24px/1 var(--aura-font-mono, ui-monospace, monospace); letter-spacing: 0; }
+.otp-boxes { position: relative; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; max-width: 360px; cursor: text; }
+.otp-boxes.is-disabled { opacity: 0.55; cursor: default; }
+/* The one real input covers all six boxes: invisible, but it receives taps, typing, paste and autofill. */
+.input-group .otp-boxes input.otp-real-input {
+  position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; padding: 0; border: 0; outline: none;
+  background: transparent; color: transparent; caret-color: transparent; box-shadow: none;
+  font-size: 16px; letter-spacing: 0; opacity: 0.01; z-index: 2; cursor: text;
+}
+.otp-box {
+  height: 56px; display: flex; align-items: center; justify-content: center; border-radius: 14px;
+  background: var(--input-bg, rgba(255, 255, 255, 0.05)); box-shadow: inset 0 0 0 1px var(--aura-glass-border, rgba(255, 255, 255, 0.14));
+  font: 700 24px/1 var(--aura-font-mono, ui-monospace, monospace); color: var(--aura-ink-900);
+  transition: box-shadow 120ms ease, background 120ms ease;
+}
+.otp-box.filled { background: var(--aura-active-fill, rgba(191, 212, 167, 0.12)); }
+.otp-box.active { box-shadow: inset 0 0 0 2px var(--aura-tile-500), var(--aura-focus-ring, 0 0 0 3px rgba(191, 212, 167, 0.32)); }
+.otp-box.active:not(.filled)::after { content: ""; width: 2px; height: 26px; background: var(--aura-tile-500); animation: otp-caret 1s steps(1) infinite; }
+@keyframes otp-caret { 50% { opacity: 0; } }
 .auth-verify-lead { margin: 0; font: 400 14.5px/21px var(--aura-font-sans); color: var(--aura-ink-700); }
 .auth-resend-row { display: flex; justify-content: flex-end; margin-top: -6px; }
 .auth-link-btn:disabled { color: var(--aura-ink-300); cursor: default; text-decoration: none; }

@@ -156,55 +156,47 @@ export function PasswordField({
 /* ------------------------------------------------------------- one-time code ------------------------------------------------------------- */
 
 /** Six boxes; paste of a whole code fills all of them; works with SMS autofill (autocomplete="one-time-code"). */
+/**
+ * 6-digit code entry. One real input sits over six boxes, so typing, deleting, pasting and the phone's
+ * "fill code from SMS/email" all go into a single field: no focus jumping between boxes (which used to
+ * bounce the cursor back and scramble the code).
+ */
 export function OtpInput({ id, value, onChange, label, autoFocus, disabled }: { id: string; value: string; onChange: (v: string) => void; label: string; autoFocus?: boolean; disabled?: boolean }) {
-  const refs = useRef<Array<HTMLInputElement | null>>([]);
+  const ref = useRef<HTMLInputElement | null>(null);
+  const [focused, setFocused] = useState(false);
   useEffect(() => {
-    if (autoFocus) refs.current[0]?.focus();
+    if (autoFocus) ref.current?.focus();
   }, [autoFocus]);
-  // Digits fill left to right (like WhatsApp): typing into a later empty box writes at the first empty position.
-  const set = (i: number, d: string) => {
-    if (!d) {
-      onChange(value.slice(0, i) + value.slice(i + 1));
-      return;
-    }
-    const pos = Math.min(i, value.length);
-    onChange((value.slice(0, pos) + d + value.slice(pos + 1)).slice(0, 6));
-    refs.current[Math.min(5, pos + 1)]?.focus();
-  };
+  const digits = value.replace(/\D/g, "").slice(0, 6);
+  const active = Math.min(digits.length, 5);
   return (
     <div className="input-group">
       <label htmlFor={`${id}-0`}>{label}</label>
-      <div className="otp-boxes" role="group" aria-label={label}>
+      <div className={`otp-boxes ${disabled ? "is-disabled" : ""}`} onClick={() => ref.current?.focus()}>
+        <input
+          id={`${id}-0`}
+          ref={ref}
+          className="otp-real-input"
+          value={digits}
+          inputMode="numeric"
+          pattern="[0-9]*"
+          autoComplete="one-time-code"
+          maxLength={6}
+          disabled={disabled}
+          aria-label={label}
+          onChange={(e) => onChange(e.target.value.replace(/\D/g, "").slice(0, 6))}
+          onFocus={(e) => {
+            setFocused(true);
+            // keep the caret at the end so new digits always go into the next empty box
+            const el = e.currentTarget;
+            requestAnimationFrame(() => el.setSelectionRange(el.value.length, el.value.length));
+          }}
+          onBlur={() => setFocused(false)}
+        />
         {Array.from({ length: 6 }, (_, i) => (
-          <input
-            key={i}
-            id={`${id}-${i}`}
-            ref={(el) => {
-              refs.current[i] = el;
-            }}
-            className="otp-box"
-            value={value[i] ?? ""}
-            inputMode="numeric"
-            autoComplete={i === 0 ? "one-time-code" : "off"}
-            maxLength={6}
-            disabled={disabled}
-            aria-label={`Digit ${i + 1}`}
-            onChange={(e) => {
-              const digits = e.target.value.replace(/\D/g, "");
-              if (digits.length > 1) {
-                onChange(digits.slice(0, 6)); // pasted or autofilled the whole code
-                refs.current[Math.min(5, digits.length - 1)]?.focus();
-                return;
-              }
-              set(i, digits);
-            }}
-            onFocus={() => {
-              if (i > value.length) refs.current[value.length]?.focus();
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Backspace" && !value[i] && i > 0) refs.current[i - 1]?.focus();
-            }}
-          />
+          <div key={i} className={`otp-box ${digits[i] ? "filled" : ""} ${focused && i === active ? "active" : ""}`} aria-hidden="true">
+            {digits[i] ?? ""}
+          </div>
         ))}
       </div>
     </div>
