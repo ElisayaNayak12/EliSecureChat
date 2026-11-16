@@ -20,6 +20,9 @@ if not main.exists():
 m = main.read_text(encoding="utf-8")
 if "android.permission.INTERNET" not in m:
     m = m.replace("<application", '<uses-permission android:name="android.permission.INTERNET" />\n    <application', 1)
+# Read contacts only after the person taps "Find friends" and allows it, to show who uses EliSecureChat.
+if "android.permission.READ_CONTACTS" not in m:
+    m = m.replace("<application", '<uses-permission android:name="android.permission.READ_CONTACTS" />\n    <application', 1)
 m = re.sub(r'android:label="[^"]*"', 'android:label="EliSecureChat"', m, count=1)
 main.write_text(m, encoding="utf-8")
 

@@ -23,6 +23,8 @@ export type User = {
   preferences?: UserPreferences;
   /** Users this person has blocked. A block stops messages and calls in both directions. */
   blockedUserIds?: string[];
+  /** People this user has in their contacts (found from their address book or added by number/email). */
+  contactIds?: string[];
 };
 
 export type PublicUser = Omit<User, "passwordHash">;

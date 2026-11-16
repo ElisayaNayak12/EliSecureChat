@@ -7,6 +7,7 @@ import '../models.dart';
 import '../theme.dart';
 import '../widgets/avatar.dart';
 import 'chat_screen.dart';
+import 'new_chat_sheet.dart';
 import '../rich_text.dart';
 import 'settings_screen.dart';
 
@@ -92,7 +93,7 @@ class _ChatsScreenState extends State<ChatsScreen> {
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
-      builder: (_) => _UserSearchSheet(services: s),
+      builder: (_) => NewChatSheet(services: s),
     );
     if (peer == null || !mounted) return;
     final me = s.api.currentUser!;
@@ -180,86 +181,6 @@ class _ChatsScreenState extends State<ChatsScreen> {
                           );
                         },
                       ),
-      ),
-    );
-  }
-}
-
-class _UserSearchSheet extends StatefulWidget {
-  const _UserSearchSheet({required this.services});
-  final AppServices services;
-
-  @override
-  State<_UserSearchSheet> createState() => _UserSearchSheetState();
-}
-
-class _UserSearchSheetState extends State<_UserSearchSheet> {
-  List<AppUser> _results = const [];
-  bool _busy = false;
-  Timer? _debounce;
-
-  @override
-  void initState() {
-    super.initState();
-    _search('');
-  }
-
-  @override
-  void dispose() {
-    _debounce?.cancel();
-    super.dispose();
-  }
-
-  Future<void> _search(String q) async {
-    setState(() => _busy = true);
-    try {
-      final me = widget.services.api.currentUser?.id;
-      final list = ((await widget.services.api.get('/users/search?q=${Uri.encodeQueryComponent(q)}')) as List)
-          .map((e) => AppUser.fromJson(e as Map<String, dynamic>))
-          .where((u) => u.id != me)
-          .toList();
-      if (mounted) setState(() => _results = list);
-    } catch (_) {
-      if (mounted) setState(() => _results = const []);
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-      child: SizedBox(
-        height: MediaQuery.of(context).size.height * 0.7,
-        child: Column(children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-            child: TextField(
-              autofocus: true,
-              decoration: const InputDecoration(hintText: 'Search by name or phone', prefixIcon: Icon(Icons.search)),
-              onChanged: (q) {
-                _debounce?.cancel();
-                _debounce = Timer(const Duration(milliseconds: 300), () => _search(q.trim()));
-              },
-            ),
-          ),
-          if (_busy) const LinearProgressIndicator(minHeight: 2),
-          Expanded(
-            child: ListView.builder(
-              itemCount: _results.length,
-              itemBuilder: (context, i) {
-                final u = _results[i];
-                return ListTile(
-                  leading: UserAvatar(api: widget.services.api, user: u, radius: 20),
-                  title: Text(u.name),
-                  subtitle: u.phone != null ? Text(u.phone!) : null,
-                  onTap: () => Navigator.of(context).pop(u),
-                );
-              },
-            ),
-          ),
-        ]),
       ),
     );
   }

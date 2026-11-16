@@ -107,6 +107,14 @@ export const api = {
   changePassword: (currentPassword: string, newPassword: string) =>
     request<{ ok: boolean }>("/auth/change-password", { method: "POST", body: JSON.stringify({ currentPassword, newPassword }) }),
   searchUsers: (q: string) => request<User[]>(`/users/search?q=${encodeURIComponent(q)}`),
+  /** My contacts on EliSecureChat (people from my address book or added by number/email). */
+  listContacts: (userId: string) => request<User[]>(`/users/${userId}/contacts`),
+  /** Check address-book entries (phones/emails): who is on EliSecureChat, and who to invite. Not stored. */
+  discoverContacts: (userId: string, entries: string[]) =>
+    request<{ checked: number; matches: User[]; notOnApp: string[] }>(`/users/${userId}/contacts/discover`, { method: "POST", body: JSON.stringify({ entries }) }),
+  addContact: (userId: string, identifier: string) =>
+    request<User>(`/users/${userId}/contacts`, { method: "POST", body: JSON.stringify({ identifier }) }),
+  removeContact: (userId: string, contactId: string) => request<{ ok: boolean }>(`/users/${userId}/contacts/${contactId}`, { method: "DELETE" }),
   getUser: (userId: string) => request<User>(`/users/${userId}`),
   updateProfile: (userId: string, payload: { name?: string; email?: string; avatarUrl?: string }) =>
     request<User>(`/users/${userId}`, {

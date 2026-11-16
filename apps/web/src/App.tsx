@@ -711,7 +711,8 @@ export function App() {
 
   async function refreshContacts(userId: string) {
     if (!ensureBackend()) return;
-    const users = await api.searchUsers("");
+    // Only my own contacts (WhatsApp-style); the server never lists all users.
+    const users = await api.listContacts(userId);
     setContacts(users.filter((u) => u.id !== userId));
   }
 

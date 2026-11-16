@@ -237,6 +237,7 @@ export default function MainApp(props: MainAppProps) {
       case "contacts":
         return (
           <ContactsPanel
+            currentUserId={currentUser.id}
             contacts={contacts}
             onStartChat={onStartChat}
             onRefresh={onRefreshContacts}
