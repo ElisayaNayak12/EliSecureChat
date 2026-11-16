@@ -1,5 +1,30 @@
 # Changelog — SignConnect AI
 
+## 2026-11-16 — Brand: logo, app icons, launch animation, emails
+
+### Added
+- **Logo "Signing Bubble"** (concept A, approved):
+  - A chat bubble holding the "I love you" sign, with a gold privacy seal.
+  - It appears on the sign-in page, the left rail, the admin console, the emails and the Android sign-in screen.
+- **Icons:**
+  - Favicon (SVG and 32 px).
+  - A web app manifest with 192, 512 and maskable icons, plus an Apple touch icon.
+  - Android legacy, adaptive and themed (monochrome) launcher icons, installed by `tool/patch_android.py`.
+- **Launch animation after sign-in:**
+  - The bubble pops in, the hand waves, then the seal clicks shut, followed by the name and the promise.
+  - The full version plays on the first open of the day. Later opens, and "Reduce motion", get a short fade.
+  - The sign-in page also has an entrance animation.
+- **Redesigned emails:**
+  - The logo is attached inside each email (cid), so it shows even where outside images are blocked.
+  - Codes are shown as separate digits with an expiry label.
+  - Security alerts use a red style and show the time in India time (`EMAIL_TIMEZONE`).
+  - "Secure my account" opens Forgot password (`/#forgot`).
+- **Tests:** `email-templates.test.ts` (backend total 76).
+
+### Notes
+- Security emails show the time and device, not the city, so no location database is needed.
+- The new sign-in email does not have a "Yes, it was me" button. It shows the text "If this was you, there's nothing to do" instead, so there is no button that does nothing.
+
 ## 2026-11-13 — Approved app redesign: themes, stickers, home, unique features
 
 ### Added
