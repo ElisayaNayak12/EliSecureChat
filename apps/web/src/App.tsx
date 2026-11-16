@@ -14,6 +14,7 @@ import MainApp from "./pages/MainApp";
 import Avatar from "./components/Avatar";
 import { LockIcon } from "./components/Icons";
 import BrandSplash from "./components/BrandSplash";
+import ScreenShield from "./components/ScreenShield";
 import { CallManager, type CallSnapshot } from "./call/CallManager";
 import CallScreen from "./call/CallScreen";
 
@@ -1255,6 +1256,7 @@ The messages will be removed from your screen only. ${peerName} will still have 
       {currentUser && (
         <CallLayer manager={callManager} currentUserId={currentUser.id} preferences={preferences} resolveUrl={resolveAttachmentUrl} />
       )}
+      {currentUser && <ScreenShield viewerLabel={`${currentUser.name} · ${currentUser.phone}`} />}
     </main>
   );
 }

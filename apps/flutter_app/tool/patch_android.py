@@ -52,11 +52,11 @@ for name in ("build.gradle.kts", "build.gradle"):
 import shutil
 res_src = pathlib.Path(__file__).resolve().parent / "android_res"
 res_dst = root / "src" / "main" / "res"
-for d in res_src.iterdir():
-    if d.is_dir():
-        (res_dst / d.name).mkdir(parents=True, exist_ok=True)
-        for f in d.iterdir():
-            shutil.copy2(f, res_dst / d.name / f.name)
+for res_dir in res_src.iterdir():
+    if res_dir.is_dir():
+        (res_dst / res_dir.name).mkdir(parents=True, exist_ok=True)
+        for f in res_dir.iterdir():
+            shutil.copy2(f, res_dst / res_dir.name / f.name)
 (res_dst / "drawable").mkdir(parents=True, exist_ok=True)
 NL = "\n"
 (res_dst / "drawable" / "ic_launcher_background.xml").write_text(NL.join([
@@ -79,5 +79,28 @@ if "android:roundIcon" not in m:
     m = m.replace('android:icon="@mipmap/ic_launcher"', 'android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round"', 1)
     main.write_text(m, encoding="utf-8")
 print("installed app icons (legacy, adaptive, themed)")
+
+# ---- Screenshot and screen-recording protection (FLAG_SECURE) ----
+# Android shows a black screen in screenshots, screen recordings, casting and the recent-apps preview.
+kt_dir = root / "src" / "main" / "kotlin"
+for activity in kt_dir.rglob("MainActivity.kt"):
+    text = activity.read_text(encoding="utf-8")
+    if "FLAG_SECURE" not in text:
+        pkg = re.search(r"^package\s+([\w.]+)", text, re.M)
+        activity.write_text(
+            (f"package {pkg.group(1)}\n\n" if pkg else "")
+            + "import android.os.Bundle\n"
+            + "import android.view.WindowManager\n"
+            + "import io.flutter.embedding.android.FlutterActivity\n\n"
+            + "class MainActivity : FlutterActivity() {\n"
+            + "    override fun onCreate(savedInstanceState: Bundle?) {\n"
+            + "        super.onCreate(savedInstanceState)\n"
+            + "        // Block screenshots and screen recording of the app (they come out black).\n"
+            + "        window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)\n"
+            + "    }\n"
+            + "}\n",
+            encoding="utf-8",
+        )
+        print(f"enabled FLAG_SECURE in {activity.name}")
 
 print("patched AndroidManifest.xml (INTERNET, label) and debug manifest (cleartext for testing)")

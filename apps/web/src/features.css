@@ -78,3 +78,25 @@
 .contact-card-header { position: relative; }
 .contact-remove { margin-left: auto; border: 0; background: transparent; color: var(--aura-ink-500); cursor: pointer; padding: 4px; border-radius: 8px; }
 .contact-remove:hover { background: var(--aura-active-fill); color: var(--aura-ink-900); }
+
+/* ---- Screen shield: watermark + cover (see components/ScreenShield.tsx) ---- */
+.screen-watermark {
+  position: fixed; inset: -20%; z-index: 1500; pointer-events: none; user-select: none;
+  display: grid; grid-template-columns: repeat(4, 1fr); align-content: space-around; justify-items: center; row-gap: 90px;
+  transform: rotate(-24deg); opacity: 0.07;
+  font: 700 15px/1 var(--aura-font-sans, Inter, sans-serif); color: var(--aura-ink-900, #fff); white-space: nowrap;
+}
+html[data-theme="light"] .screen-watermark { opacity: 0.06; }
+.screen-shield-cover {
+  position: fixed; inset: 0; z-index: 2500; display: grid; place-items: center; cursor: pointer;
+  background: rgba(8, 14, 11, 0.94); -webkit-backdrop-filter: blur(30px); backdrop-filter: blur(30px);
+}
+.screen-shield-cover > div { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; color: #EEF3EA; padding: 16px; }
+.screen-shield-cover strong { font: 700 22px/28px var(--aura-font-display, Georgia, serif); }
+.screen-shield-cover span { font: 500 15px/22px var(--aura-font-sans, Inter, sans-serif); color: #C8D3C3; }
+.screen-shield-cover small { font: 400 12.5px/18px var(--aura-font-sans, Inter, sans-serif); color: #94A492; }
+/* Printing / "Save as PDF": show nothing but a notice. */
+@media print {
+  body * { visibility: hidden !important; }
+  body::after { content: "Printing is disabled in EliSecureChat to protect private conversations."; visibility: visible; position: fixed; top: 40%; left: 0; right: 0; text-align: center; font: 600 18px sans-serif; color: #000; }
+}
