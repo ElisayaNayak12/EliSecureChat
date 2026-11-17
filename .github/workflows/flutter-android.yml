@@ -20,7 +20,7 @@ on:
         default: ""
 
 permissions:
-  contents: read
+  contents: write # publishes the "android-latest" download (phones must use the app)
 
 jobs:
   android:
@@ -94,3 +94,18 @@ jobs:
             apps/flutter_app/build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
           retention-days: 30
+
+      # Phone browsers send users to /api/app/android, which downloads this file.
+      - name: Publish the latest Android app download
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp build/app/outputs/flutter-apk/app-release.apk EliSecureChat.apk
+          notes="Latest EliSecureChat Android app (${GITHUB_SHA::7}, branch ${GITHUB_REF_NAME}). Blocks screenshots and screen recording."
+          if gh release view android-latest >/dev/null 2>&1; then
+            gh release upload android-latest EliSecureChat.apk --clobber
+            gh release edit android-latest --notes "$notes"
+          else
+            gh release create android-latest EliSecureChat.apk --prerelease --title "EliSecureChat Android (latest)" --notes "$notes" --target "$GITHUB_SHA"
+          fi

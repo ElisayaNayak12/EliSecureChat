@@ -65,3 +65,12 @@ html[data-motion="reduce"] .brand-splash *, html[data-motion="reduce"] .auth-spl
 @media (prefers-reduced-motion: reduce) {
   .brand-splash *, .auth-split .auth-hero, .auth-split .auth-card { animation: none !important; }
 }
+
+/* ---- Phone gate: phones use the app, never the browser (components/PhoneGate.tsx) ---- */
+.phone-gate { min-height: 100dvh; display: grid; place-items: center; padding: 24px 16px; background: var(--aura-canvas, #0B1410); color: var(--aura-ink-900, #EEF3EA); }
+.phone-gate-card { width: 100%; max-width: 420px; display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center; }
+.phone-gate-card h1 { margin: 6px 0 0; font: 700 24px/30px var(--aura-font-display, Georgia, serif); }
+.phone-gate-card p { margin: 0; font: 400 15px/22px var(--aura-font-sans, Inter, sans-serif); color: var(--aura-ink-600, #C8D3C3); }
+.phone-gate-btn { display: block; width: 100%; padding: 14px 18px; border-radius: 14px; background: var(--aura-accent, #2F8F5B); color: #fff; font: 600 16px/20px var(--aura-font-sans, Inter, sans-serif); text-decoration: none; }
+.phone-gate-card ol { margin: 4px 0 0; padding-left: 20px; text-align: left; font: 400 14px/22px var(--aura-font-sans, Inter, sans-serif); color: var(--aura-ink-600, #C8D3C3); }
+.phone-gate-note { padding: 12px 14px; border-radius: 12px; background: rgba(255,255,255,0.06); }

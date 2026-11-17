@@ -6,6 +6,7 @@ import { AuthModule } from "./auth/auth.module";
 import { ChatsModule } from "./chats/chats.module";
 import { CommunitiesModule } from "./communities/communities.module";
 import { HealthController } from "./health.controller";
+import { AppDownloadController } from "./app-download.controller";
 import { LanguagesModule } from "./languages/languages.module";
 import { SignVideosModule } from "./sign-videos/sign-videos.module";
 import { DatasetModule } from "./dataset/dataset.module";
@@ -18,7 +19,7 @@ import { ChatGateway } from "./websocket/chat.gateway";
 
 @Module({
   imports: [StoreModule, AuthModule, UsersModule, ChatsModule, MessagesModule, CommunitiesModule, AdminModule, UploadsModule, LanguagesModule, SignVideosModule, DatasetModule, KeysModule],
-  controllers: [HealthController],
+  controllers: [HealthController, AppDownloadController],
   providers: [
     ChatGateway,
     // Order matters: authenticate first, then object-level authorisation.
