@@ -1,4 +1,4 @@
-import { IsIn, IsNumber, IsOptional, IsString, MinLength } from "class-validator";
+import { MaxLength, IsIn, IsNumber, IsOptional, IsString, MinLength } from "class-validator";
 
 export class SendMessageDto {
   @IsString()
@@ -9,6 +9,7 @@ export class SendMessageDto {
 
   @IsString()
   @MinLength(1)
+  @MaxLength(65536)
   encryptedContent!: string;
 
   @IsString()

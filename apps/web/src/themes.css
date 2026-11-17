@@ -1,0 +1,350 @@
+/* ==========================================================================
+   App designs (Settings > Appearance). Loaded after verdant.css.
+   <html data-design="..."> picks one of 5 designs; data-theme picks light/dark;
+   data-accent overrides the bubble/highlight colour; data-bubbles sets bubble shape.
+   Verdant is the default and needs no overrides (verdant.css).
+   Each rule is written for <html> and for the .app-shell (which also carries data-theme).
+   ========================================================================== */
+
+/* ---------------- Indigo Calm ---------------- */
+[data-design="indigo"][data-theme="light"], [data-design="indigo"] [data-theme="light"] {
+  --aura-brand-900: #14163A; --aura-brand-700: #1F2257; --aura-brand-600: #2D3178; --aura-brand-400: #5D63C9; --aura-brand-100: #E6E7FA;
+  --aura-cta-400: #6E74F0; --aura-cta-500: #4F46E5; --aura-cta-600: #3F37C9; --aura-cta-rgb: 79, 70, 229; --aura-on-cta: #FFFFFF;
+  --aura-tile-300: #A5A9F7; --aura-tile-500: #5B61E8; --aura-tile-700: #3730A3; --aura-tile-100: #E7E8FC; --aura-tile-rgb: 91, 97, 232;
+  --aura-canvas: #EEF0FA; --aura-surface: #FFFFFF; --aura-surface-2: #F3F4FC;
+  --aura-ink-900: #171A3A; --aura-ink-700: #383C63; --aura-ink-500: #6B6F92; --aura-ink-300: #B7B9D3;
+  --aura-line: rgba(23, 26, 58, 0.09); --aura-active-fill: rgba(91, 97, 232, 0.11);
+  --aura-glass: rgba(255, 255, 255, 0.66); --aura-glass-strong: rgba(255, 255, 255, 0.85);
+  --aura-mint: #E7E8FC; --aura-mint-ink: #4338CA; --aura-sky: #EAEBFB;
+  --aura-gradient-header: linear-gradient(160deg, #2D3178 0%, #1F2257 52%, #14163A 100%);
+  --aura-gradient-tile: radial-gradient(120% 100% at 30% 15%, #A5A9F7 0%, #5B61E8 48%, #3730A3 100%);
+  --aura-gradient-bubble: linear-gradient(160deg, #7C83F2 -20%, #5148E0 58%, #3B33B8 130%);
+  --aura-gradient-sky: linear-gradient(180deg, #E1E3FA 0%, #EEF0FA 100%);
+  --aura-shadow-bubble: 0 8px 22px -10px rgba(63, 55, 201, 0.5);
+  --aura-shadow-cta: 0 14px 30px -12px rgba(63, 55, 201, 0.5);
+  --aura-focus-ring: 0 0 0 3px rgba(91, 97, 232, 0.35);
+  --verdant-backdrop: radial-gradient(60% 50% at 85% 0%, rgba(165, 169, 247, 0.38), transparent 70%), radial-gradient(50% 50% at 0% 100%, rgba(196, 181, 253, 0.30), transparent 70%), linear-gradient(170deg, #F3F4FC 0%, #E7E9F8 100%);
+  --bubble-text-out: #FFFFFF;
+}
+[data-design="indigo"][data-theme="dark"], [data-design="indigo"] [data-theme="dark"] {
+  --aura-cta-400: #C7CAFD; --aura-cta-500: #A5A9F7; --aura-cta-600: #8287EE; --aura-cta-rgb: 165, 169, 247; --aura-on-cta: #14163A;
+  --aura-tile-300: #C7CAFD; --aura-tile-500: #A5A9F7; --aura-tile-700: #6366F1; --aura-tile-100: rgba(165, 169, 247, 0.15); --aura-tile-rgb: 165, 169, 247;
+  --aura-canvas: #0F1024; --aura-surface: #171936; --aura-surface-2: #1F2244;
+  --aura-ink-900: #ECEDFB; --aura-ink-700: #C5C7EA; --aura-ink-500: #9093BD; --aura-ink-300: #535783;
+  --aura-line: rgba(199, 202, 253, 0.11); --aura-active-fill: rgba(165, 169, 247, 0.13);
+  --aura-glass: rgba(31, 34, 68, 0.55); --aura-glass-strong: rgba(23, 25, 54, 0.78); --aura-glass-border: rgba(199, 202, 253, 0.15);
+  --aura-mint: rgba(165, 169, 247, 0.16); --aura-mint-ink: #C7CAFD; --aura-sky: rgba(165, 169, 247, 0.12);
+  --aura-gradient-tile: radial-gradient(120% 100% at 30% 15%, rgba(199, 202, 253, 0.36) 0%, rgba(99, 102, 241, 0.22) 52%, rgba(55, 48, 163, 0.36) 100%);
+  --aura-gradient-bubble: linear-gradient(160deg, #7479E8 -20%, #4F4CC2 56%, #3A3794 130%);
+  --aura-gradient-sky: linear-gradient(180deg, #1C1E40 0%, #0F1024 100%);
+  --aura-shadow-cta: 0 14px 32px -12px rgba(165, 169, 247, 0.32);
+  --aura-focus-ring: 0 0 0 3px rgba(165, 169, 247, 0.32);
+  --verdant-backdrop: radial-gradient(55% 45% at 82% 6%, rgba(99, 102, 241, 0.26), transparent 70%), radial-gradient(50% 50% at 0% 100%, rgba(139, 92, 246, 0.20), transparent 70%), linear-gradient(160deg, #1A1C3C 0%, #10112A 55%, #0A0B1C 100%);
+  --accent-light: var(--aura-tile-300);
+}
+
+/* ---------------- Classic Emerald ---------------- */
+[data-design="emerald"][data-theme="light"], [data-design="emerald"] [data-theme="light"] {
+  --aura-brand-900: #062720; --aura-brand-700: #0B3D33; --aura-brand-600: #0F5546; --aura-brand-400: #2F8C74; --aura-brand-100: #DDF2EA;
+  --aura-cta-400: #19A07F; --aura-cta-500: #0F8A6A; --aura-cta-600: #0B7058; --aura-cta-rgb: 15, 138, 106; --aura-on-cta: #FFFFFF;
+  --aura-tile-300: #7FD8BD; --aura-tile-500: #14A07E; --aura-tile-700: #0B6B55; --aura-tile-100: #DCF3EA; --aura-tile-rgb: 20, 160, 126;
+  --aura-canvas: #EDF2EF; --aura-surface: #FFFFFF; --aura-surface-2: #F2F6F4;
+  --aura-ink-900: #10231E; --aura-ink-700: #30443E; --aura-ink-500: #667A73; --aura-ink-300: #B3C1BC;
+  --aura-line: rgba(16, 35, 30, 0.09); --aura-active-fill: rgba(20, 160, 126, 0.11);
+  --aura-glass: rgba(255, 255, 255, 0.68); --aura-glass-strong: rgba(255, 255, 255, 0.86);
+  --aura-mint: #DCF3EA; --aura-mint-ink: #0B7058; --aura-sky: #E3F2EC;
+  --aura-gradient-header: linear-gradient(160deg, #0F5546 0%, #0B3D33 52%, #062720 100%);
+  --aura-gradient-tile: radial-gradient(120% 100% at 30% 15%, #7FD8BD 0%, #14A07E 48%, #0B6B55 100%);
+  --aura-gradient-bubble: linear-gradient(160deg, #22B48F -20%, #0F8A6A 58%, #0A6A52 130%);
+  --aura-gradient-sky: linear-gradient(180deg, #DCEDE5 0%, #EDF2EF 100%);
+  --aura-shadow-bubble: 0 8px 22px -10px rgba(11, 112, 88, 0.5);
+  --aura-shadow-cta: 0 14px 30px -12px rgba(11, 112, 88, 0.5);
+  --aura-focus-ring: 0 0 0 3px rgba(20, 160, 126, 0.35);
+  --verdant-backdrop: radial-gradient(60% 50% at 85% 0%, rgba(127, 216, 189, 0.32), transparent 70%), linear-gradient(170deg, #F2F6F4 0%, #E4ECE8 100%);
+  --bubble-text-out: #FFFFFF;
+}
+[data-design="emerald"][data-theme="dark"], [data-design="emerald"] [data-theme="dark"] {
+  --aura-cta-400: #8BE3C7; --aura-cta-500: #3FC7A0; --aura-cta-600: #22A783; --aura-cta-rgb: 63, 199, 160; --aura-on-cta: #062720;
+  --aura-tile-300: #A3EBD3; --aura-tile-500: #4FD1AA; --aura-tile-700: #14A07E; --aura-tile-100: rgba(79, 209, 170, 0.14); --aura-tile-rgb: 79, 209, 170;
+  --aura-canvas: #0B1714; --aura-surface: #12211D; --aura-surface-2: #182B26;
+  --aura-ink-900: #E9F4F0; --aura-ink-700: #C1D5CE; --aura-ink-500: #8AA49B; --aura-ink-300: #4C635C;
+  --aura-line: rgba(163, 235, 211, 0.10); --aura-active-fill: rgba(79, 209, 170, 0.12);
+  --aura-glass: rgba(24, 43, 38, 0.55); --aura-glass-strong: rgba(18, 33, 29, 0.78); --aura-glass-border: rgba(163, 235, 211, 0.14);
+  --aura-mint: rgba(79, 209, 170, 0.15); --aura-mint-ink: #A3EBD3; --aura-sky: rgba(79, 209, 170, 0.11);
+  --aura-gradient-tile: radial-gradient(120% 100% at 30% 15%, rgba(163, 235, 211, 0.34) 0%, rgba(20, 160, 126, 0.22) 52%, rgba(11, 107, 85, 0.36) 100%);
+  --aura-gradient-bubble: linear-gradient(160deg, #1E9C7B -20%, #0F7A5F 56%, #0A5C48 130%);
+  --aura-gradient-sky: linear-gradient(180deg, #13261F 0%, #0B1714 100%);
+  --aura-shadow-cta: 0 14px 32px -12px rgba(63, 199, 160, 0.3);
+  --aura-focus-ring: 0 0 0 3px rgba(79, 209, 170, 0.3);
+  --verdant-backdrop: radial-gradient(55% 45% at 82% 6%, rgba(20, 160, 126, 0.22), transparent 70%), linear-gradient(160deg, #10221D 0%, #0B1714 55%, #07100E 100%);
+  --accent-light: var(--aura-tile-300);
+}
+
+/* ---------------- Ocean Breeze ---------------- */
+[data-design="ocean"][data-theme="light"], [data-design="ocean"] [data-theme="light"] {
+  --aura-brand-900: #061C2E; --aura-brand-700: #0B2E4A; --aura-brand-600: #114268; --aura-brand-400: #3B7FB0; --aura-brand-100: #DEEDF8;
+  --aura-cta-400: #2E9BE0; --aura-cta-500: #0E7CC4; --aura-cta-600: #0B65A0; --aura-cta-rgb: 14, 124, 196; --aura-on-cta: #FFFFFF;
+  --aura-tile-300: #8CCAF0; --aura-tile-500: #2B8FD0; --aura-tile-700: #0B5E94; --aura-tile-100: #DDEEF9; --aura-tile-rgb: 43, 143, 208;
+  --aura-canvas: #EDF4F9; --aura-surface: #FFFFFF; --aura-surface-2: #F1F7FB;
+  --aura-ink-900: #0F2233; --aura-ink-700: #2F4558; --aura-ink-500: #657A8C; --aura-ink-300: #B2C2CF;
+  --aura-line: rgba(15, 34, 51, 0.09); --aura-active-fill: rgba(43, 143, 208, 0.11);
+  --aura-glass: rgba(255, 255, 255, 0.68); --aura-glass-strong: rgba(255, 255, 255, 0.86);
+  --aura-mint: #DDEEF9; --aura-mint-ink: #0B65A0; --aura-sky: #E2F0F9; --aura-lilac: #F6EEDD; --aura-lilac-ink: #8A6A2E;
+  --aura-gradient-header: linear-gradient(160deg, #114268 0%, #0B2E4A 52%, #061C2E 100%);
+  --aura-gradient-tile: radial-gradient(120% 100% at 30% 15%, #8CCAF0 0%, #2B8FD0 48%, #0B5E94 100%);
+  --aura-gradient-bubble: linear-gradient(160deg, #3FA8E8 -20%, #1580C6 58%, #0D62A0 130%);
+  --aura-gradient-sky: linear-gradient(180deg, #D9EAF6 0%, #EDF4F9 100%);
+  --aura-shadow-bubble: 0 8px 22px -10px rgba(11, 101, 160, 0.5);
+  --aura-shadow-cta: 0 14px 30px -12px rgba(11, 101, 160, 0.5);
+  --aura-focus-ring: 0 0 0 3px rgba(43, 143, 208, 0.35);
+  --verdant-backdrop: radial-gradient(60% 50% at 85% 0%, rgba(140, 202, 240, 0.40), transparent 70%), radial-gradient(50% 45% at 0% 100%, rgba(246, 225, 190, 0.45), transparent 70%), linear-gradient(170deg, #F2F8FC 0%, #E3EEF6 100%);
+  --bubble-text-out: #FFFFFF;
+}
+[data-design="ocean"][data-theme="dark"], [data-design="ocean"] [data-theme="dark"] {
+  --aura-cta-400: #A9DBF7; --aura-cta-500: #6CC0F0; --aura-cta-600: #3FA4E2; --aura-cta-rgb: 108, 192, 240; --aura-on-cta: #061C2E;
+  --aura-tile-300: #B5E0F8; --aura-tile-500: #6CC0F0; --aura-tile-700: #2B8FD0; --aura-tile-100: rgba(108, 192, 240, 0.14); --aura-tile-rgb: 108, 192, 240;
+  --aura-canvas: #0A1620; --aura-surface: #10202E; --aura-surface-2: #162A3B;
+  --aura-ink-900: #E8F2F9; --aura-ink-700: #BFD2E0; --aura-ink-500: #87A0B4; --aura-ink-300: #4B6275;
+  --aura-line: rgba(181, 224, 248, 0.10); --aura-active-fill: rgba(108, 192, 240, 0.12);
+  --aura-glass: rgba(22, 42, 59, 0.55); --aura-glass-strong: rgba(16, 32, 46, 0.78); --aura-glass-border: rgba(181, 224, 248, 0.14);
+  --aura-mint: rgba(108, 192, 240, 0.15); --aura-mint-ink: #B5E0F8; --aura-sky: rgba(108, 192, 240, 0.11);
+  --aura-gradient-tile: radial-gradient(120% 100% at 30% 15%, rgba(181, 224, 248, 0.34) 0%, rgba(43, 143, 208, 0.22) 52%, rgba(11, 94, 148, 0.36) 100%);
+  --aura-gradient-bubble: linear-gradient(160deg, #2B8FD0 -20%, #146EAA 56%, #0D5283 130%);
+  --aura-gradient-sky: linear-gradient(180deg, #122838 0%, #0A1620 100%);
+  --aura-shadow-cta: 0 14px 32px -12px rgba(108, 192, 240, 0.3);
+  --aura-focus-ring: 0 0 0 3px rgba(108, 192, 240, 0.3);
+  --verdant-backdrop: radial-gradient(55% 45% at 82% 6%, rgba(43, 143, 208, 0.24), transparent 70%), radial-gradient(50% 50% at 0% 100%, rgba(20, 184, 166, 0.14), transparent 70%), linear-gradient(160deg, #0F2232 0%, #0A1620 55%, #060E15 100%);
+  --accent-light: var(--aura-tile-300);
+}
+
+/* ---------------- Midnight (night with gold light) ---------------- */
+[data-design="midnight"][data-theme="light"], [data-design="midnight"] [data-theme="light"] {
+  --aura-brand-900: #0B0D17; --aura-brand-700: #161927; --aura-brand-600: #23273B; --aura-brand-400: #535A7D; --aura-brand-100: #ECEBF2;
+  --aura-cta-400: #3A3F5C; --aura-cta-500: #23273B; --aura-cta-600: #161927; --aura-cta-rgb: 35, 39, 59; --aura-on-cta: #F4E7C8;
+  --aura-tile-300: #E6CF9F; --aura-tile-500: #B8924A; --aura-tile-700: #7D6230; --aura-tile-100: #F3EBDB; --aura-tile-rgb: 184, 146, 74;
+  --aura-canvas: #F1F0F4; --aura-surface: #FFFFFF; --aura-surface-2: #F5F4F8;
+  --aura-ink-900: #15172A; --aura-ink-700: #383B52; --aura-ink-500: #6C6F87; --aura-ink-300: #B9BACB;
+  --aura-line: rgba(21, 23, 42, 0.09); --aura-active-fill: rgba(184, 146, 74, 0.13);
+  --aura-glass: rgba(255, 255, 255, 0.68); --aura-glass-strong: rgba(255, 255, 255, 0.86);
+  --aura-mint: #F3EBDB; --aura-mint-ink: #7D6230; --aura-sky: #EEEDF4;
+  --aura-gradient-header: linear-gradient(160deg, #23273B 0%, #161927 52%, #0B0D17 100%);
+  --aura-gradient-tile: radial-gradient(120% 100% at 30% 15%, #E6CF9F 0%, #B8924A 48%, #7D6230 100%);
+  --aura-gradient-bubble: linear-gradient(160deg, #3A3F5C -20%, #23273B 58%, #15172A 130%);
+  --aura-gradient-sky: linear-gradient(180deg, #E6E4EE 0%, #F1F0F4 100%);
+  --aura-shadow-bubble: 0 8px 22px -10px rgba(21, 23, 42, 0.5);
+  --aura-shadow-cta: 0 14px 30px -12px rgba(21, 23, 42, 0.5);
+  --aura-focus-ring: 0 0 0 3px rgba(184, 146, 74, 0.35);
+  --verdant-backdrop: radial-gradient(60% 50% at 85% 0%, rgba(230, 207, 159, 0.30), transparent 70%), linear-gradient(170deg, #F5F4F8 0%, #E7E6EE 100%);
+  --bubble-text-out: #F7EFDC;
+}
+[data-design="midnight"][data-theme="dark"], [data-design="midnight"] [data-theme="dark"] {
+  --aura-cta-400: #F0DDB3; --aura-cta-500: #D8B878; --aura-cta-600: #BB9A58; --aura-cta-rgb: 216, 184, 120; --aura-on-cta: #15172A;
+  --aura-tile-300: #F0DDB3; --aura-tile-500: #D8B878; --aura-tile-700: #9C7D40; --aura-tile-100: rgba(216, 184, 120, 0.14); --aura-tile-rgb: 216, 184, 120;
+  --aura-canvas: #0B0D17; --aura-surface: #141726; --aura-surface-2: #1B1F33;
+  --aura-ink-900: #EEEDF5; --aura-ink-700: #C8C8DA; --aura-ink-500: #9193AD; --aura-ink-300: #50536D;
+  --aura-line: rgba(240, 221, 179, 0.10); --aura-active-fill: rgba(216, 184, 120, 0.12);
+  --aura-glass: rgba(27, 31, 51, 0.55); --aura-glass-strong: rgba(20, 23, 38, 0.80); --aura-glass-border: rgba(240, 221, 179, 0.13);
+  --aura-mint: rgba(216, 184, 120, 0.14); --aura-mint-ink: #F0DDB3; --aura-sky: rgba(216, 184, 120, 0.10);
+  --aura-gradient-tile: radial-gradient(120% 100% at 30% 15%, rgba(240, 221, 179, 0.32) 0%, rgba(184, 146, 74, 0.20) 52%, rgba(90, 70, 30, 0.36) 100%);
+  --aura-gradient-bubble: linear-gradient(160deg, #3B4062 -20%, #2A2E4A 56%, #1D2036 130%);
+  --aura-gradient-sky: linear-gradient(180deg, #161a2c 0%, #0B0D17 100%);
+  --aura-shadow-cta: 0 14px 32px -12px rgba(216, 184, 120, 0.3);
+  --aura-focus-ring: 0 0 0 3px rgba(216, 184, 120, 0.3);
+  --verdant-backdrop: radial-gradient(45% 35% at 85% 4%, rgba(216, 184, 120, 0.16), transparent 70%), radial-gradient(55% 50% at 0% 100%, rgba(83, 90, 160, 0.20), transparent 70%), linear-gradient(160deg, #15182A 0%, #0B0D17 55%, #07080F 100%);
+  --bubble-text-out: #F7EFDC;
+  --accent-light: var(--aura-tile-300);
+}
+
+/* ---------------- Accent override (bubbles, highlights) ---------------- */
+html[data-accent="leaf"][data-theme], html[data-accent="leaf"] [data-theme] {
+  --aura-tile-300: #B5D3A5; --aura-tile-500: #6E9A63; --aura-tile-700: #3F6345; --aura-tile-rgb: 110, 154, 99; --aura-tile-100: rgba(110, 154, 99, 0.15);
+  --aura-gradient-bubble: linear-gradient(160deg, #7FA874 -20%, #4E7550 58%, #36553A 130%);
+}
+html[data-accent="indigo"][data-theme], html[data-accent="indigo"] [data-theme] {
+  --aura-tile-300: #A5A9F7; --aura-tile-500: #6366F1; --aura-tile-700: #4338CA; --aura-tile-rgb: 99, 102, 241; --aura-tile-100: rgba(99, 102, 241, 0.15);
+  --aura-gradient-bubble: linear-gradient(160deg, #7C83F2 -20%, #5148E0 58%, #3B33B8 130%);
+}
+html[data-accent="clay"][data-theme], html[data-accent="clay"] [data-theme] {
+  --aura-tile-300: #EBB49A; --aura-tile-500: #C46A45; --aura-tile-700: #8E4529; --aura-tile-rgb: 196, 106, 69; --aura-tile-100: rgba(196, 106, 69, 0.15);
+  --aura-gradient-bubble: linear-gradient(160deg, #D4805B -20%, #B25A37 58%, #8A4227 130%);
+}
+html[data-accent="ocean"][data-theme], html[data-accent="ocean"] [data-theme] {
+  --aura-tile-300: #8CCAF0; --aura-tile-500: #2B8FD0; --aura-tile-700: #0B5E94; --aura-tile-rgb: 43, 143, 208; --aura-tile-100: rgba(43, 143, 208, 0.15);
+  --aura-gradient-bubble: linear-gradient(160deg, #3FA8E8 -20%, #1580C6 58%, #0D62A0 130%);
+}
+html[data-accent="rose"][data-theme], html[data-accent="rose"] [data-theme] {
+  --aura-tile-300: #F2A9C0; --aura-tile-500: #D2577E; --aura-tile-700: #9C3557; --aura-tile-rgb: 210, 87, 126; --aura-tile-100: rgba(210, 87, 126, 0.15);
+  --aura-gradient-bubble: linear-gradient(160deg, #E0739A -20%, #C0466E 58%, #963255 130%);
+}
+html[data-accent][data-theme] .bubble-mine, html[data-accent] [data-theme] .bubble-mine { color: #FFFFFF; }
+html[data-accent][data-theme], html[data-accent] [data-theme] { --aura-active-fill: rgba(var(--aura-tile-rgb), 0.13); --aura-focus-ring: 0 0 0 3px rgba(var(--aura-tile-rgb), 0.35); }
+
+/* ---------------- Bubble style ---------------- */
+html[data-bubbles="compact"] .message-bubble { padding: 6px 11px 5px; border-radius: 12px; }
+html[data-bubbles="compact"] .bubble-mine { border-bottom-right-radius: 4px; }
+html[data-bubbles="compact"] .bubble-incoming { border-bottom-left-radius: 4px; }
+html[data-bubbles="compact"] .message-plain-text { font-size: 14px; line-height: 20px; }
+
+/* ==========================================================================
+   Chat wallpapers: 10 smooth styles (no dot patterns). Used by the chat area,
+   the settings thumbnails and the live preview.
+   ========================================================================== */
+.wallpaper-botanical {
+  background:
+    var(--verdant-leaves-pale) center / cover no-repeat,
+    radial-gradient(60% 50% at 100% 0%, rgba(var(--aura-tile-rgb), 0.14), transparent 70%),
+    radial-gradient(50% 40% at 0% 100%, rgba(var(--aura-cta-rgb), 0.10), transparent 70%),
+    var(--aura-canvas);
+}
+[data-theme="dark"] .wallpaper-botanical {
+  background:
+    var(--verdant-leaves) center / cover no-repeat,
+    radial-gradient(60% 50% at 100% 0%, rgba(var(--aura-tile-rgb), 0.12), transparent 70%),
+    var(--aura-canvas);
+}
+.wallpaper-aurora {
+  background:
+    radial-gradient(70% 55% at 15% 0%, rgba(110, 231, 183, 0.40), transparent 70%),
+    radial-gradient(60% 50% at 85% 10%, rgba(129, 140, 248, 0.38), transparent 70%),
+    radial-gradient(70% 60% at 60% 100%, rgba(244, 114, 182, 0.26), transparent 70%),
+    #F4F6FB;
+}
+[data-theme="dark"] .wallpaper-aurora {
+  background:
+    radial-gradient(70% 55% at 15% 0%, rgba(52, 211, 153, 0.26), transparent 70%),
+    radial-gradient(60% 50% at 85% 10%, rgba(99, 102, 241, 0.30), transparent 70%),
+    radial-gradient(70% 60% at 60% 100%, rgba(236, 72, 153, 0.18), transparent 70%),
+    #0B1020;
+}
+.wallpaper-marble {
+  background:
+    linear-gradient(115deg, transparent 0 38%, rgba(160, 150, 135, 0.16) 40%, transparent 44% 100%),
+    linear-gradient(62deg, transparent 0 58%, rgba(160, 150, 135, 0.12) 60%, transparent 63% 100%),
+    linear-gradient(150deg, transparent 0 18%, rgba(160, 150, 135, 0.10) 20%, transparent 22% 100%),
+    radial-gradient(120% 90% at 30% 20%, #FBFAF7 0%, #EFECE6 100%);
+}
+[data-theme="dark"] .wallpaper-marble {
+  background:
+    linear-gradient(115deg, transparent 0 38%, rgba(220, 205, 170, 0.10) 40%, transparent 44% 100%),
+    linear-gradient(62deg, transparent 0 58%, rgba(220, 205, 170, 0.08) 60%, transparent 63% 100%),
+    radial-gradient(120% 90% at 30% 20%, #23232A 0%, #131317 100%);
+}
+.wallpaper-sunset {
+  background:
+    radial-gradient(80% 60% at 50% 110%, rgba(251, 146, 60, 0.45), transparent 70%),
+    radial-gradient(60% 50% at 90% 0%, rgba(244, 114, 182, 0.30), transparent 70%),
+    linear-gradient(180deg, #FFF1E6 0%, #FFE3D3 55%, #FBD3C4 100%);
+}
+[data-theme="dark"] .wallpaper-sunset {
+  background:
+    radial-gradient(80% 60% at 50% 110%, rgba(234, 88, 12, 0.36), transparent 70%),
+    radial-gradient(60% 50% at 90% 0%, rgba(190, 24, 93, 0.26), transparent 70%),
+    linear-gradient(180deg, #1D1124 0%, #2A1420 60%, #34161A 100%);
+}
+.wallpaper-midnight-glow,
+[data-theme="dark"] .wallpaper-midnight-glow {
+  background:
+    radial-gradient(45% 35% at 80% 8%, rgba(216, 184, 120, 0.22), transparent 70%),
+    radial-gradient(60% 50% at 10% 100%, rgba(99, 102, 241, 0.22), transparent 70%),
+    linear-gradient(180deg, #13182E 0%, #0B0E1C 60%, #070912 100%);
+}
+.wallpaper-linen {
+  background:
+    repeating-linear-gradient(0deg, rgba(120, 100, 70, 0.035) 0 1px, transparent 1px 4px),
+    repeating-linear-gradient(90deg, rgba(120, 100, 70, 0.035) 0 1px, transparent 1px 4px),
+    linear-gradient(180deg, #F7F3EA 0%, #EFE8DA 100%);
+}
+[data-theme="dark"] .wallpaper-linen {
+  background:
+    repeating-linear-gradient(0deg, rgba(255, 240, 210, 0.03) 0 1px, transparent 1px 4px),
+    repeating-linear-gradient(90deg, rgba(255, 240, 210, 0.03) 0 1px, transparent 1px 4px),
+    linear-gradient(180deg, #1E1B16 0%, #15130F 100%);
+}
+.wallpaper-waves {
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 800' preserveAspectRatio='none'%3E%3Cpath d='M0 520C200 460 400 600 600 540S1000 440 1200 500V800H0Z' fill='%232B8FD0' fill-opacity='.10'/%3E%3Cpath d='M0 620C220 560 420 690 640 630S1000 560 1200 610V800H0Z' fill='%2314A07E' fill-opacity='.10'/%3E%3Cpath d='M0 700C240 660 460 760 700 720S1020 670 1200 700V800H0Z' fill='%232B8FD0' fill-opacity='.12'/%3E%3C/svg%3E") bottom / 100% 70% no-repeat,
+    linear-gradient(180deg, #F0F7FC 0%, #E4F0F8 100%);
+}
+[data-theme="dark"] .wallpaper-waves {
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 800' preserveAspectRatio='none'%3E%3Cpath d='M0 520C200 460 400 600 600 540S1000 440 1200 500V800H0Z' fill='%236CC0F0' fill-opacity='.08'/%3E%3Cpath d='M0 620C220 560 420 690 640 630S1000 560 1200 610V800H0Z' fill='%234FD1AA' fill-opacity='.07'/%3E%3Cpath d='M0 700C240 660 460 760 700 720S1020 670 1200 700V800H0Z' fill='%236CC0F0' fill-opacity='.09'/%3E%3C/svg%3E") bottom / 100% 70% no-repeat,
+    linear-gradient(180deg, #0D1C28 0%, #0A1620 100%);
+}
+.wallpaper-indigo-mesh {
+  background:
+    radial-gradient(50% 45% at 20% 20%, rgba(129, 140, 248, 0.40), transparent 70%),
+    radial-gradient(45% 40% at 80% 30%, rgba(167, 139, 250, 0.34), transparent 70%),
+    radial-gradient(55% 50% at 50% 90%, rgba(96, 165, 250, 0.30), transparent 70%),
+    #EEF0FB;
+}
+[data-theme="dark"] .wallpaper-indigo-mesh {
+  background:
+    radial-gradient(50% 45% at 20% 20%, rgba(99, 102, 241, 0.34), transparent 70%),
+    radial-gradient(45% 40% at 80% 30%, rgba(139, 92, 246, 0.28), transparent 70%),
+    radial-gradient(55% 50% at 50% 90%, rgba(59, 130, 246, 0.22), transparent 70%),
+    #0E1026;
+}
+.wallpaper-rose-silk {
+  background:
+    linear-gradient(125deg, rgba(255, 255, 255, 0.0) 20%, rgba(255, 255, 255, 0.55) 35%, rgba(255, 255, 255, 0) 50%),
+    linear-gradient(125deg, rgba(255, 255, 255, 0.0) 55%, rgba(255, 255, 255, 0.40) 68%, rgba(255, 255, 255, 0) 80%),
+    linear-gradient(160deg, #FBE4EA 0%, #F4D3DD 50%, #EBC6D3 100%);
+}
+[data-theme="dark"] .wallpaper-rose-silk {
+  background:
+    linear-gradient(125deg, rgba(255, 255, 255, 0) 20%, rgba(255, 220, 230, 0.08) 35%, rgba(255, 255, 255, 0) 50%),
+    linear-gradient(125deg, rgba(255, 255, 255, 0) 55%, rgba(255, 220, 230, 0.06) 68%, rgba(255, 255, 255, 0) 80%),
+    linear-gradient(160deg, #2A1520 0%, #22111B 50%, #1A0D15 100%);
+}
+.wallpaper-minimal { background: var(--aura-canvas); }
+
+/* chat area keeps its padding with any wallpaper */
+.chat-scroll-area[class*="wallpaper-"] { background-attachment: local; }
+
+/* ---------------- Settings > Appearance ---------------- */
+.appearance-section .settings-card { display: flex; flex-direction: column; gap: 18px; }
+.appearance-preview {
+  display: flex; flex-direction: column; gap: 8px; padding: 18px; border-radius: var(--aura-r-lg, 16px);
+  box-shadow: inset 0 0 0 1px var(--aura-line); min-height: 120px; justify-content: flex-end;
+}
+.appearance-preview .message-bubble { max-width: 75%; display: inline-flex; }
+.appearance-preview .bubble-incoming { align-self: flex-start; }
+.appearance-preview .bubble-mine { align-self: flex-end; color: var(--bubble-text-out, #fff); }
+.appearance-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+.appearance-block { display: flex; flex-direction: column; gap: 10px; }
+.seg { display: inline-flex; padding: 3px; border-radius: 999px; background: var(--aura-surface-2); box-shadow: inset 0 0 0 1px var(--aura-line); }
+.seg button { border: 0; background: transparent; color: var(--aura-ink-700); padding: 7px 16px; border-radius: 999px; font: 600 13px/16px var(--aura-font-sans); cursor: pointer; }
+.seg button.on { background: var(--aura-gradient-cta); color: var(--aura-on-cta); box-shadow: var(--aura-shadow-sm); }
+.design-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 10px; }
+.design-card {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 10px; text-align: left; cursor: pointer;
+  border: 0; border-radius: 14px; background: var(--aura-surface); color: var(--aura-ink-900);
+  box-shadow: var(--aura-shadow-sm), inset 0 0 0 1px var(--aura-line);
+  transition: transform 140ms ease, box-shadow 140ms ease;
+}
+.design-card:hover { transform: translateY(-2px); }
+.design-card.active { box-shadow: 0 0 0 2px var(--aura-surface), 0 0 0 4px var(--aura-tile-500); }
+.design-swatch { width: 100%; height: 46px; border-radius: 10px; margin-bottom: 4px; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06); }
+.design-card strong { font: 600 13px/17px var(--aura-font-sans); }
+.design-card small { font: 400 11px/14px var(--aura-font-sans); color: var(--aura-ink-500); }
+.accent-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.accent-dot { width: 30px; height: 30px; border-radius: 50%; border: 0; cursor: pointer; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1); }
+.accent-dot.active { box-shadow: 0 0 0 2px var(--aura-surface), 0 0 0 4px var(--aura-ink-700); }
+.accent-auto { width: auto; padding: 0 12px; border-radius: 999px; background: var(--aura-surface-2); color: var(--aura-ink-700); font: 600 12px/30px var(--aura-font-sans); }
+.wallpaper-selectors-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 10px; }
+.wallpaper-selectors-grid .wallpaper-select-btn {
+  width: auto; height: 84px; position: relative; display: flex; align-items: flex-end; justify-content: center; padding: 6px; cursor: pointer; overflow: hidden;
+}
+.wallpaper-select-btn span {
+  font: 600 10px/13px var(--aura-font-sans); padding: 2px 7px; border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82); color: #1d2430; white-space: nowrap;
+}
+.wallpaper-upload { background: var(--aura-surface-2); align-items: center !important; box-shadow: inset 0 0 0 1px var(--aura-ink-300) !important; }
+.wallpaper-upload span { background: transparent; color: var(--aura-ink-700); font-size: 12px; }
+
+/* Leaf artwork belongs to Verdant only (the Botanical wallpaper keeps it in every design) */
+html:not([data-design="verdant"]) .desktop-app-sidebar,
+html:not([data-design="verdant"]) .auth-hero,
+html:not([data-design="verdant"]) .app-sub-sidebar { --verdant-leaves: none; --verdant-leaves-pale: none; }
+html:not([data-design="verdant"])[data-theme="light"] .app-sub-sidebar { background: var(--aura-glass-strong); }
+html:not([data-design="verdant"]) .desktop-app-sidebar { border-right-color: var(--aura-line); }

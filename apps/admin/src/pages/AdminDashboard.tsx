@@ -1,5 +1,11 @@
-import { useState } from "react";
-import { InfoIcon, ShieldIcon, RefreshIcon, LogOutIcon } from "../components/Icons";
+import { useState, type ReactNode } from "react";
+import {
+  ChatIcon, GridIcon, ContactsIcon, GroupIcon, InfoIcon, LockIcon, LogOutIcon,
+  HandIcon, MoonIcon, RefreshIcon, SendIcon, ShieldIcon, SunIcon, TrashIcon,
+} from "../components/Icons";
+import SignVideosReview from "./SignVideosReview";
+import DatasetAdmin from "./DatasetAdmin";
+import ModelsAdmin from "./ModelsAdmin";
 import type { AdminOverview, Chat, Community, DeleteRequest, RecoveryRequest, User, Message } from "../types";
 
 interface AdminDashboardProps {
@@ -23,9 +29,11 @@ interface AdminDashboardProps {
   resolveUserName: (userId?: string) => string;
   formatLastSeen: (time?: string) => string;
   backendReady: boolean;
+  theme: "light" | "dark";
+  onToggleTheme: () => void;
 }
 
-type AdminTab = "overview" | "users" | "chats" | "messages" | "communities" | "delete-requests" | "recovery";
+type AdminTab = "overview" | "users" | "chats" | "messages" | "communities" | "delete-requests" | "recovery" | "sign-videos" | "dataset" | "models";
 
 type ConfirmState = {
   type: "delete" | "suspend" | "restore" | "approve-recovery" | "reject-recovery";
@@ -35,6 +43,7 @@ type ConfirmState = {
 } | null;
 
 export default function AdminDashboard({
+  adminToken,
   adminOverview,
   adminUsers,
   adminChats,
@@ -51,6 +60,9 @@ export default function AdminDashboard({
   onRejectRecovery,
   resolveUserName,
   formatLastSeen,
+  backendReady,
+  theme,
+  onToggleTheme,
 }: AdminDashboardProps) {
   const [adminTab, setAdminTab] = useState<AdminTab>("overview");
   const [loading, setLoading] = useState(false);
@@ -86,65 +98,134 @@ export default function AdminDashboard({
     (r) => r.status === "PENDING_ADMIN" || r.status === "PENDING"
   );
 
+  const pendingErasures = adminDeleteRequests.filter((r) => r.status === "PENDING").length;
+  const totalUsers = adminOverview?.users ?? adminUsers.length;
+  const activeUsers = adminOverview?.activeUsers ?? 0;
+  const suspendedUsers = adminOverview?.suspendedUsers ?? 0;
+  const activeShare = totalUsers > 0 ? Math.round((activeUsers / totalUsers) * 100) : 0;
+
+  const tabs: { id: AdminTab; label: string; icon: ReactNode; count?: number; desc: string }[] = [
+    { id: "overview", label: "Overview", icon: <GridIcon size={19} />, desc: "A calm read on the health of your workspace." },
+    { id: "users", label: "Users", icon: <ContactsIcon size={19} />, count: adminUsers.length, desc: "Every registered account, with moderation controls." },
+    { id: "chats", label: "Chat threads", icon: <ChatIcon size={19} />, count: adminChats.length, desc: "Direct and group conversations on the platform." },
+    { id: "messages", label: "Messages", icon: <SendIcon size={19} />, count: adminMessages.length, desc: "Metadata audit of sent messages. Content stays private." },
+    { id: "communities", label: "Communities", icon: <GroupIcon size={19} />, count: adminCommunities.length, desc: "Public and private communities and their invite codes." },
+    { id: "delete-requests", label: "Erasure", icon: <TrashIcon size={19} />, count: pendingErasures || undefined, desc: "Mutual chat-erasure requests between members." },
+    { id: "dataset", label: "Sign dataset", icon: <GridIcon size={19} />, count: undefined, desc: "Consent-based sign recordings (landmarks only): review, vocabulary and export for training." },
+    { id: "models", label: "Sign models", icon: <ShieldIcon size={19} />, desc: "Trained sign-recognition models: publish, roll back and withdraw." },
+    { id: "sign-videos", label: "Sign videos", icon: <HandIcon size={19} />, desc: "Review contributed human signing videos. Only verified videos are used in calls." },
+    { id: "recovery", label: "Recovery", icon: <LockIcon size={19} />, count: pendingRecoveries.length || undefined, desc: "Account recovery requests with AI verification results." },
+  ];
+  const current = tabs.find((t) => t.id === adminTab)!;
+  const today = new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
+
   return (
     <div className="admin-dashboard-container animate-fade-in">
-      {/* Header */}
-      <div className="admin-header-row">
-        <div className="admin-title-col">
-          <ShieldIcon size={28} className="text-accent" />
-          <h1>Admin Management</h1>
+      {/* Rail */}
+      <aside className="admin-rail">
+        <div className="admin-brand">
+          <span className="v-tile v-tile-sm"><ShieldIcon size={20} /></span>
+          <div className="admin-brand-text">
+            <span className="admin-brand-word">ELiSecureChat</span>
+            <span className="admin-brand-sub">Admin console</span>
+          </div>
         </div>
-        <div className="admin-actions-col">
-          <button className="btn btn-secondary btn-sm btn-icon-label" onClick={handleRefresh} disabled={loading}>
-            <RefreshIcon size={14} className={loading ? "animate-spin" : ""} /> Refresh
-          </button>
-          <button className="btn btn-danger btn-sm btn-icon-label" onClick={onSignOut}>
-            <LogOutIcon size={14} /> Close Admin Mode
-          </button>
-        </div>
-      </div>
 
-      {/* Tabs */}
-      <div className="admin-nav-tabs">
-        {([
-          { id: "overview", label: "Stats Overview" },
-          { id: "users", label: "Registered Users" },
-          { id: "chats", label: "Chat Threads" },
-          { id: "messages", label: "Messages Audit" },
-          { id: "communities", label: "Communities List" },
-          { id: "delete-requests", label: "Erasure Requests" },
-          { id: "recovery", label: `Account Recovery${pendingRecoveries.length > 0 ? ` (${pendingRecoveries.length})` : ""}` },
-        ] as const).map((t) => (
-          <button
-            key={t.id}
-            className={`admin-tab-btn ${adminTab === t.id ? "active" : ""} ${t.id === "recovery" && pendingRecoveries.length > 0 ? "has-badge" : ""}`}
-            onClick={() => setAdminTab(t.id)}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
+        <nav className="admin-nav-tabs" aria-label="Admin sections">
+          {tabs.map((t, i) => (
+            <button
+              key={t.id}
+              className={`admin-tab-btn ${adminTab === t.id ? "active" : ""}`}
+              style={{ animationDelay: `${i * 40}ms` }}
+              aria-current={adminTab === t.id ? "page" : undefined}
+              onClick={() => setAdminTab(t.id)}
+            >
+              <span className="admin-tab-icon">{t.icon}</span>
+              <span className="admin-tab-label">{t.label}</span>
+              {t.count !== undefined && (
+                <span className={`admin-tab-count ${t.id === "recovery" || t.id === "delete-requests" ? "is-alert" : ""}`}>{t.count}</span>
+              )}
+            </button>
+          ))}
+        </nav>
+
+        <div className="admin-rail-footer">
+          <div className="admin-conn-pill">
+            <span className={`v-dot ${backendReady ? "on" : "off"}`} />
+            {backendReady ? "Backend live" : "Backend offline"}
+          </div>
+          <div className="admin-rail-actions">
+            <button className="btn-icon" onClick={onToggleTheme} aria-label="Toggle theme" title="Toggle theme">
+              {theme === "dark" ? <SunIcon size={18} /> : <MoonIcon size={18} />}
+            </button>
+            <button className="btn btn-secondary btn-sm admin-signout" onClick={onSignOut} aria-label="Sign out" title="Sign out">
+              <LogOutIcon size={15} /> <span className="admin-signout-text">Sign out</span>
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      {/* Main */}
+      <section className="admin-main">
+        <header className="admin-header-row">
+          <div className="admin-title-col">
+            <span className="admin-overline">{today}</span>
+            <h1 key={current.id}>{current.label}</h1>
+            <p>{current.desc}</p>
+          </div>
+          <div className="admin-actions-col">
+            <button className="btn btn-secondary btn-sm btn-icon-label" onClick={handleRefresh} disabled={loading}>
+              <RefreshIcon size={15} className={loading ? "animate-spin" : ""} /> Refresh
+            </button>
+          </div>
+        </header>
 
       {/* Body */}
       <div className="admin-dashboard-scroll-body scroll-container">
 
         {/* Overview */}
         {adminTab === "overview" && (
-          <div className="admin-stats-grid">
-            {[
-              { label: "Total Users", value: adminOverview?.users ?? 0, color: undefined },
-              { label: "Active Users", value: adminOverview?.activeUsers ?? 0, color: "var(--color-success,#22c55e)" },
-              { label: "Suspended", value: adminOverview?.suspendedUsers ?? 0, color: "var(--color-danger,#ef4444)" },
-              { label: "Chat Threads", value: adminOverview?.chats ?? 0, color: undefined },
-              { label: "Messages", value: adminOverview?.messages ?? 0, color: undefined },
-              { label: "Communities", value: adminOverview?.communities ?? 0, color: undefined },
-              { label: "Pending Recoveries", value: adminOverview?.pendingRecoveries ?? 0, color: (adminOverview?.pendingRecoveries ?? 0) > 0 ? "#f59e0b" : undefined },
-            ].map((s, i) => (
-              <div key={s.label} className="admin-stat-card animate-slide-up" style={{ animationDelay: `${i * 0.04}s` }}>
-                <span className="stat-label">{s.label}</span>
-                <strong className="stat-value" style={s.color ? { color: s.color } : undefined}>{s.value}</strong>
+          <div className="admin-overview">
+            <div className="admin-hero-card animate-slide-up">
+              <div className="admin-hero-copy">
+                <span className="v-overline-chip">Workspace health</span>
+                <h2>{activeShare}% of accounts are active</h2>
+                <p>{activeUsers} active · {suspendedUsers} suspended · {totalUsers} registered</p>
+                <div className="admin-health-bar" role="img" aria-label={`${activeShare}% active`}>
+                  <span style={{ width: `${activeShare}%` }} />
+                </div>
               </div>
-            ))}
+              <div className="admin-hero-attention">
+                <button className="admin-attention-item" onClick={() => setAdminTab("recovery")}>
+                  <span className="v-tile v-tile-sm"><LockIcon size={18} /></span>
+                  <span className="txt"><strong>{adminOverview?.pendingRecoveries ?? pendingRecoveries.length}</strong> recoveries awaiting review</span>
+                  <span className="arrow">→</span>
+                </button>
+                <button className="admin-attention-item" onClick={() => setAdminTab("delete-requests")}>
+                  <span className="v-tile v-tile-sm"><TrashIcon size={18} /></span>
+                  <span className="txt"><strong>{pendingErasures}</strong> erasure requests pending</span>
+                  <span className="arrow">→</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="admin-stats-grid">
+              {[
+                { label: "Total users", value: totalUsers, icon: <ContactsIcon size={20} />, tone: "" },
+                { label: "Active users", value: activeUsers, icon: <ShieldIcon size={20} />, tone: "good" },
+                { label: "Suspended", value: suspendedUsers, icon: <LockIcon size={20} />, tone: suspendedUsers > 0 ? "bad" : "" },
+                { label: "Chat threads", value: adminOverview?.chats ?? 0, icon: <ChatIcon size={20} />, tone: "" },
+                { label: "Messages", value: adminOverview?.messages ?? 0, icon: <SendIcon size={20} />, tone: "" },
+                { label: "Communities", value: adminOverview?.communities ?? 0, icon: <GroupIcon size={20} />, tone: "" },
+                { label: "Pending recoveries", value: adminOverview?.pendingRecoveries ?? 0, icon: <InfoIcon size={20} />, tone: (adminOverview?.pendingRecoveries ?? 0) > 0 ? "warn" : "" },
+              ].map((s, i) => (
+                <div key={s.label} className={`admin-stat-card animate-slide-up ${s.tone ? `tone-${s.tone}` : ""}`} style={{ animationDelay: `${80 + i * 40}ms` }}>
+                  <span className="v-tile v-tile-sm">{s.icon}</span>
+                  <strong className="stat-value">{s.value.toLocaleString()}</strong>
+                  <span className="stat-label">{s.label}</span>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
@@ -170,7 +251,7 @@ export default function AdminDashboard({
                       <td>{u.email ?? "—"}</td>
                       <td>
                         <span className={`status-badge ${isSuspended ? "suspended" : "active"}`}>
-                          {isSuspended ? "🔴 Suspended" : "🟢 Active"}
+                          {isSuspended ? "Suspended" : "Active"}
                         </span>
                       </td>
                       <td><small>{formatLastSeen(u.lastSeenAt)}</small></td>
@@ -182,7 +263,7 @@ export default function AdminDashboard({
                               disabled={isActing}
                               onClick={() => setConfirm({ type: "restore", userId: u.id, userName: u.name })}
                             >
-                              {isActing ? "…" : "✅ Restore"}
+                              {isActing ? "…" : "Restore"}
                             </button>
                           ) : (
                             <button
@@ -190,7 +271,7 @@ export default function AdminDashboard({
                               disabled={isActing}
                               onClick={() => { setSuspendReason("Violation of ELiSecureChat Community Guidelines and Terms of Service."); setConfirm({ type: "suspend", userId: u.id, userName: u.name }); }}
                             >
-                              {isActing ? "…" : "🚫 Suspend"}
+                              {isActing ? "…" : "Suspend"}
                             </button>
                           )}
                           <button
@@ -198,7 +279,7 @@ export default function AdminDashboard({
                             disabled={isActing}
                             onClick={() => setConfirm({ type: "delete", userId: u.id, userName: u.name })}
                           >
-                            {isActing ? "…" : "🗑 Delete"}
+                            {isActing ? "…" : "Delete"}
                           </button>
                         </div>
                       </td>
@@ -294,6 +375,10 @@ export default function AdminDashboard({
           </div>
         )}
 
+        {adminTab === "sign-videos" && <SignVideosReview adminToken={adminToken} />}
+        {adminTab === "dataset" && <DatasetAdmin adminToken={adminToken} />}
+        {adminTab === "models" && <ModelsAdmin adminToken={adminToken} />}
+
         {/* Account Recovery */}
         {adminTab === "recovery" && (
           <div className="admin-table-wrapper animate-slide-up">
@@ -324,8 +409,8 @@ export default function AdminDashboard({
                             {r.reason.slice(0, 80)}{r.reason.length > 80 ? "…" : ""}
                           </div>
                           <div className="recovery-evidence-tags">
-                            {r.hasDocument && <span className="evidence-tag doc">📄 Doc</span>}
-                            {r.hasVideo && <span className="evidence-tag vid">🎥 Video</span>}
+                            {r.hasDocument && <span className="evidence-tag doc">Document</span>}
+                            {r.hasVideo && <span className="evidence-tag vid">Video</span>}
                           </div>
                         </td>
                         <td>
@@ -333,32 +418,32 @@ export default function AdminDashboard({
                             {ai.status === "COMPLETED" ? (
                               <>
                                 <div className={`ai-auth-badge ${ai.isAuthorized ? "authorized" : "failed"}`}>
-                                  {ai.isAuthorized ? "✅ AUTHORIZED" : "❌ NOT AUTH"}
+                                  {ai.isAuthorized ? "Authorized" : "Not authorized"}
                                 </div>
                                 {ai.faceMatchScore !== undefined && (
                                   <div className="ai-mini-metric">
                                     Face: <strong>{ai.faceMatchScore}%</strong>
                                     <div className="ai-mini-bar">
-                                      <div className="ai-mini-fill" style={{ width: `${ai.faceMatchScore}%`, background: ai.faceMatchScore >= 78 ? "#22c55e" : "#ef4444" }} />
+                                      <div className="ai-mini-fill" style={{ width: `${ai.faceMatchScore}%`, background: ai.faceMatchScore >= 78 ? "var(--v-good)" : "var(--v-bad)" }} />
                                     </div>
                                   </div>
                                 )}
                                 <div className="ai-mini-checks">
-                                  <span>{ai.documentAuthentic ? "✅" : "❌"} Doc</span>
-                                  <span>{ai.nameMatch ? "✅" : "❌"} Name</span>
+                                  <span className={ai.documentAuthentic ? "ok" : "no"}>Doc</span>
+                                  <span className={ai.nameMatch ? "ok" : "no"}>Name</span>
                                 </div>
                               </>
                             ) : (
-                              <span className="status-badge">⏳ {ai.status}</span>
+                              <span className="status-badge pending">{ai.status}</span>
                             )}
                           </div>
                         </td>
                         <td>
                           <span className={`status-badge recovery-status-${r.status.toLowerCase().replace(/_/g, "-")}`}>
-                            {r.status === "PENDING_ADMIN" ? "⏳ Awaiting Admin" :
-                             r.status === "APPROVED" ? "✅ Approved" :
-                             r.status === "REJECTED" ? "❌ Rejected" :
-                             r.status === "AI_PROCESSING" ? "🤖 AI Processing" : "⏳ Pending"}
+                            {r.status === "PENDING_ADMIN" ? "Awaiting admin" :
+                             r.status === "APPROVED" ? "Approved" :
+                             r.status === "REJECTED" ? "Rejected" :
+                             r.status === "AI_PROCESSING" ? "AI processing" : "Pending"}
                           </span>
                           {r.adminNote && <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4 }}>Note: {r.adminNote}</div>}
                         </td>
@@ -371,19 +456,19 @@ export default function AdminDashboard({
                                 disabled={isActing}
                                 onClick={() => setConfirm({ type: "approve-recovery", requestId: r.id, userName: r.userName })}
                               >
-                                {isActing ? "…" : "✅ Approve"}
+                                {isActing ? "…" : "Approve"}
                               </button>
                               <button
                                 className="btn btn-danger btn-xs"
                                 disabled={isActing}
                                 onClick={() => { setRejectNote(""); setConfirm({ type: "reject-recovery", requestId: r.id, userName: r.userName }); }}
                               >
-                                {isActing ? "…" : "❌ Reject"}
+                                {isActing ? "…" : "Reject"}
                               </button>
                             </div>
                           ) : (
                             <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
-                              {r.status === "APPROVED" ? "Restored ✅" : "Closed"}
+                              {r.status === "APPROVED" ? "Restored" : "Closed"}
                             </span>
                           )}
                         </td>
@@ -396,6 +481,7 @@ export default function AdminDashboard({
           </div>
         )}
       </div>
+      </section>
 
       {/* ── Inline Confirmation Modal (no window.confirm) ── */}
       {confirm && (
@@ -404,7 +490,7 @@ export default function AdminDashboard({
 
             {confirm.type === "delete" && (
               <>
-                <h3>🗑 Permanently Delete Account</h3>
+                <h3>Delete account permanently</h3>
                 <p>This will <strong>hard-delete all data</strong> for <strong>"{confirm.userName}"</strong> — messages, chats, profile, and recovery data. This <strong>cannot be undone</strong>.</p>
                 <div className="modal-actions">
                   <button className="btn btn-secondary" onClick={() => setConfirm(null)}>Cancel</button>
@@ -415,7 +501,7 @@ export default function AdminDashboard({
 
             {confirm.type === "restore" && (
               <>
-                <h3>✅ Restore Account</h3>
+                <h3>Restore account</h3>
                 <p>Restore account for <strong>"{confirm.userName}"</strong>? They will be able to sign in again immediately.</p>
                 <div className="modal-actions">
                   <button className="btn btn-secondary" onClick={() => setConfirm(null)}>Cancel</button>
@@ -426,7 +512,7 @@ export default function AdminDashboard({
 
             {confirm.type === "suspend" && (
               <>
-                <h3>🚫 Suspend Account</h3>
+                <h3>Suspend account</h3>
                 <p>Choose a reason for suspending <strong>"{confirm.userName}"</strong>. They will see this message when they try to sign in.</p>
                 <select
                   className="suspend-reason-select"
@@ -457,7 +543,7 @@ export default function AdminDashboard({
 
             {confirm.type === "approve-recovery" && (
               <>
-                <h3>✅ Approve Account Recovery</h3>
+                <h3>Approve account recovery</h3>
                 <p>Approve the recovery request for <strong>"{confirm.userName}"</strong>? Their account will be restored and they can sign in immediately.</p>
                 <div className="modal-actions">
                   <button className="btn btn-secondary" onClick={() => setConfirm(null)}>Cancel</button>
@@ -468,7 +554,7 @@ export default function AdminDashboard({
 
             {confirm.type === "reject-recovery" && (
               <>
-                <h3>❌ Reject Recovery Request</h3>
+                <h3>Reject recovery request</h3>
                 <p>Reject the account recovery for <strong>"{confirm.userName}"</strong>. Optionally provide a reason.</p>
                 <textarea
                   className="recovery-textarea"

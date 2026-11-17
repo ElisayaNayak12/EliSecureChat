@@ -1,0 +1,76 @@
+/* Brand (approved concept A "Signing Bubble"): wordmark, logo placements, launch animation, sign-in entrance */
+
+.brand-wordmark { font-family: "Fraunces", Georgia, serif; font-weight: 700; letter-spacing: -0.02em; white-space: nowrap; }
+.brand-wordmark-accent { color: var(--aura-tile-500); }
+.auth-hero .brand-wordmark-accent, .brand-splash .brand-wordmark-accent { color: #A8C596; }
+
+/* logo placements */
+.auth-hero-brand .brand-mark-hero { flex: none; filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.28)); }
+.auth-logo-mark { display: flex; justify-content: flex-start; margin-bottom: 4px; }
+.auth-logo-mark svg { filter: drop-shadow(0 8px 18px rgba(20, 40, 26, 0.28)); }
+.rail-brand .rail-brand-mark { display: block; filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.3)); transition: transform 200ms ease; }
+.rail-brand:hover .rail-brand-mark { transform: scale(1.06) rotate(-4deg); }
+
+/* ---- launch animation ---- */
+.brand-splash {
+  position: fixed; inset: 0; z-index: 2000; display: grid; place-items: center;
+  background: radial-gradient(70% 50% at 80% 0%, rgba(127, 176, 105, 0.28), transparent 70%), linear-gradient(170deg, #182A1F 0%, #0E1712 100%);
+  transition: opacity 420ms ease, transform 420ms ease;
+}
+.brand-splash.leave { opacity: 0; transform: scale(1.04); pointer-events: none; }
+.brand-splash-stack { display: flex; flex-direction: column; align-items: center; gap: 18px; text-align: center; padding: 16px; }
+.brand-splash-mark { width: 132px; height: 132px; overflow: visible; }
+.bs-word { font-size: 30px; color: #EEF3EA; }
+.bs-tag { font: 400 15px/22px var(--aura-font-sans, Inter, sans-serif); color: #B9CBB6; }
+.bs-dots { height: 14px; margin-top: 10px; }
+.bs-dots i { display: inline-block; width: 7px; height: 7px; margin: 0 3px; border-radius: 50%; background: #A8C596; animation: bs-dot 1s ease-in-out infinite; }
+.bs-dots i:nth-child(2) { animation-delay: 0.15s; }
+.bs-dots i:nth-child(3) { animation-delay: 0.3s; }
+
+.bs-bubble, .bs-hand, .bs-wave, .bs-seal, .bs-ring, .bs-word, .bs-tag, .bs-dots {
+  animation-duration: 3.4s; animation-fill-mode: both; animation-timing-function: cubic-bezier(.2, .8, .2, 1);
+}
+.bs-bubble { animation-name: bs-bubble; transform-box: fill-box; transform-origin: 50% 60%; }
+.bs-hand { animation-name: bs-hand; }
+.bs-wave { animation-name: bs-wave; transform-box: fill-box; transform-origin: 50% 100%; }
+.bs-seal { animation-name: bs-seal; transform-box: fill-box; transform-origin: center; }
+.bs-ring { animation-name: bs-ring; transform-box: fill-box; transform-origin: center; }
+.bs-word { animation-name: bs-word; }
+.bs-tag { animation-name: bs-tag; }
+.bs-dots { animation-name: bs-fadein; }
+
+@keyframes bs-bubble { 0%, 3% { transform: scale(.2); opacity: 0 } 18% { transform: scale(1.08); opacity: 1 } 25%, 100% { transform: scale(1); opacity: 1 } }
+@keyframes bs-hand { 0%, 18% { transform: translateY(26px); opacity: 0 } 36% { transform: translateY(-3px); opacity: 1 } 42%, 100% { transform: translateY(0); opacity: 1 } }
+@keyframes bs-wave { 0%, 42% { transform: rotate(0) } 49% { transform: rotate(-9deg) } 56% { transform: rotate(7deg) } 63%, 100% { transform: rotate(0) } }
+@keyframes bs-seal { 0%, 60% { transform: scale(0) rotate(-40deg); opacity: 0 } 70% { transform: scale(1.25) rotate(8deg); opacity: 1 } 77%, 100% { transform: scale(1) rotate(0); opacity: 1 } }
+@keyframes bs-ring { 0%, 68% { transform: scale(.6); opacity: 0 } 72% { opacity: .55 } 92%, 100% { transform: scale(1.9); opacity: 0 } }
+@keyframes bs-word { 0%, 70% { transform: translateY(12px); opacity: 0 } 84%, 100% { transform: translateY(0); opacity: 1 } }
+@keyframes bs-tag { 0%, 80% { opacity: 0 } 92%, 100% { opacity: 1 } }
+@keyframes bs-fadein { 0%, 90% { opacity: 0 } 100% { opacity: 1 } }
+@keyframes bs-dot { 0%, 100% { transform: translateY(0); opacity: .4 } 50% { transform: translateY(-5px); opacity: 1 } }
+
+/* later opens the same day, or "Reduce motion": everything visible at once, only a fade */
+.brand-splash.short .bs-bubble, .brand-splash.short .bs-hand, .brand-splash.short .bs-wave, .brand-splash.short .bs-seal,
+.brand-splash.short .bs-word, .brand-splash.short .bs-tag, .brand-splash.short .bs-dots { animation: bs-quick 500ms ease both; }
+.brand-splash.short .bs-ring { display: none; }
+@keyframes bs-quick { from { opacity: 0 } to { opacity: 1 } }
+
+/* ---- sign-in page entrance ---- */
+.auth-split .auth-hero { animation: si-hero 700ms cubic-bezier(.2, .8, .2, 1) both; }
+.auth-split .auth-card { animation: si-card 700ms cubic-bezier(.2, .8, .2, 1) 150ms both; }
+@keyframes si-hero { from { opacity: 0; transform: translateX(-24px) } to { opacity: 1; transform: none } }
+@keyframes si-card { from { opacity: 0; transform: translateY(24px) scale(.98) } to { opacity: 1; transform: none } }
+
+html[data-motion="reduce"] .brand-splash *, html[data-motion="reduce"] .auth-split .auth-hero, html[data-motion="reduce"] .auth-split .auth-card { animation: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  .brand-splash *, .auth-split .auth-hero, .auth-split .auth-card { animation: none !important; }
+}
+
+/* ---- Phone gate: phones use the app, never the browser (components/PhoneGate.tsx) ---- */
+.phone-gate { min-height: 100dvh; display: grid; place-items: center; padding: 24px 16px; background: var(--aura-canvas, #0B1410); color: var(--aura-ink-900, #EEF3EA); }
+.phone-gate-card { width: 100%; max-width: 420px; display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center; }
+.phone-gate-card h1 { margin: 6px 0 0; font: 700 24px/30px var(--aura-font-display, Georgia, serif); }
+.phone-gate-card p { margin: 0; font: 400 15px/22px var(--aura-font-sans, Inter, sans-serif); color: var(--aura-ink-600, #C8D3C3); }
+.phone-gate-btn { display: block; width: 100%; padding: 14px 18px; border-radius: 14px; background: var(--aura-accent, #2F8F5B); color: #fff; font: 600 16px/20px var(--aura-font-sans, Inter, sans-serif); text-decoration: none; }
+.phone-gate-card ol { margin: 4px 0 0; padding-left: 20px; text-align: left; font: 400 14px/22px var(--aura-font-sans, Inter, sans-serif); color: var(--aura-ink-600, #C8D3C3); }
+.phone-gate-note { padding: 12px 14px; border-radius: 12px; background: rgba(255,255,255,0.06); }

@@ -1,0 +1,127 @@
+# CI/CD for EliSecureChat
+#  - CI (every push and pull request): install, run backend + web tests, type-check and build the hosted app.
+#  - CD (push to the deploy branch, after CI passes): update the free Oracle server over SSH, then check the
+#    public URL answers. The server rolls back to the previous version by itself if the new one fails.
+#
+# One-time setup (see docs/DEPLOYMENT.md, "CI/CD and the public URL"):
+#   Settings > Secrets and variables > Actions
+#     Secrets:   DEPLOY_HOST (server IP or name), DEPLOY_USER (usually "ubuntu"), DEPLOY_SSH_KEY (private key)
+#     Variables: SERVER_URL (your fixed public address, e.g. https://elisecurechat.duckdns.org)
+#                DEPLOY_BRANCH (optional, default "main")
+# Until the secrets exist, the deploy job is skipped and CI still runs.
+name: CI/CD
+
+on:
+  push:
+    paths-ignore:
+      - "apps/flutter_app/**"
+      - "**/*.md"
+  pull_request:
+    paths-ignore:
+      - "apps/flutter_app/**"
+      - "**/*.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-cd-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-and-build:
+    name: Test and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install (server parts only)
+        run: >
+          npm ci --no-audit --no-fund --include-workspace-root
+          -w @secure-chat/backend -w @secure-chat/web -w @secure-chat/admin -w @secure-chat/shared
+
+      - name: Backend tests
+        run: npm --workspace @secure-chat/backend test
+
+      - name: Web tests
+        run: npm --workspace @secure-chat/web test
+
+      - name: Type-check and build (web + admin + backend)
+        run: npm run build:hosted
+
+      - name: Smoke test the built server
+        run: |
+          mkdir -p /tmp/sc-data
+          NODE_ENV=production PORT=3000 JWT_SECRET=ci-only-secret-0123456789abcdef ADMIN_PASSWORD=ci-only-admin \
+            STORE_FILE=/tmp/sc-data/store.json UPLOADS_DIR=/tmp/sc-data/uploads DATASET_DIR=/tmp/sc-data/dataset \
+            OUTBOX_DIR=/tmp/sc-data/outbox SIGN_VIDEO_DIR=/tmp/sc-data/sign-videos \
+            WEB_DIST_DIR=apps/web/dist ADMIN_DIST_DIR=apps/admin/dist \
+            node apps/backend/dist/main.js > /tmp/server.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl -fs http://127.0.0.1:3000/api/health >/dev/null; then break; fi
+            sleep 1
+          done
+          curl -fs http://127.0.0.1:3000/api/health
+          curl -fs http://127.0.0.1:3000/ | grep -qi "<html" && echo "Web app is served"
+          curl -fs -o /dev/null http://127.0.0.1:3000/admin/ && echo "Admin app is served"
+      - name: Server log (on failure)
+        if: failure()
+        run: cat /tmp/server.log || true
+
+  deploy:
+    name: Deploy to the public server
+    needs: test-and-build
+    if: github.event_name != 'pull_request' && github.ref_name == (vars.DEPLOY_BRANCH || 'main')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment:
+      name: production
+      url: ${{ vars.SERVER_URL }}
+    steps:
+      - name: Check deploy settings
+        id: cfg
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+        run: |
+          if [ -z "$HOST" ] || [ -z "$KEY" ]; then
+            echo "Deploy secrets are not set yet: skipping deploy (see docs/DEPLOYMENT.md)."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Update the server over SSH
+        if: steps.cfg.outputs.ready == 'true'
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          USER_NAME: ${{ secrets.DEPLOY_USER || 'ubuntu' }}
+          KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          BRANCH: ${{ github.ref_name }}
+          SHA: ${{ github.sha }}
+          REPO: ${{ github.repository }}
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$KEY" > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -T 15 -H "$HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          # Fetch the update script of exactly this commit, then run it (it rolls back on failure).
+          ssh -i ~/.ssh/deploy_key -o ServerAliveInterval=30 "$USER_NAME@$HOST" \
+            "curl -fsSL https://raw.githubusercontent.com/$REPO/$SHA/scripts/deploy/update.sh -o /tmp/elichat-update.sh && sudo BRANCH='$BRANCH' COMMIT='$SHA' bash /tmp/elichat-update.sh"
+
+      - name: Check the public URL
+        if: steps.cfg.outputs.ready == 'true' && vars.SERVER_URL != ''
+        env:
+          URL: ${{ vars.SERVER_URL }}
+        run: |
+          for i in $(seq 1 20); do
+            if curl -fsS "$URL/api/health"; then echo; echo "Live at $URL"; exit 0; fi
+            sleep 6
+          done
+          echo "The public URL did not answer: $URL" && exit 1

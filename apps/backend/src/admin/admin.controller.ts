@@ -11,7 +11,10 @@ import {
   UnauthorizedException,
 } from "@nestjs/common";
 import { InMemoryStore } from "../store/in-memory.store";
+import { Public } from "../auth/decorators";
 
+/** Admin routes use x-admin-token (checked in every handler), not user sessions. */
+@Public()
 @Controller("admin")
 export class AdminController {
   constructor(@Inject(InMemoryStore) private readonly store: InMemoryStore) {}

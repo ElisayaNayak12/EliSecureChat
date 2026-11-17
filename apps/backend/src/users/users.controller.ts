@@ -1,10 +1,13 @@
 import {
+  BadRequestException,
   Body,
   ConflictException,
   Controller,
   Delete,
   Get,
   HttpCode,
+  HttpException,
+  HttpStatus,
   Inject,
   NotFoundException,
   Param,
@@ -14,39 +17,147 @@ import {
 } from "@nestjs/common";
 import { InMemoryStore } from "../store/in-memory.store";
 import { UpdateProfileDto } from "./dto/update-profile.dto";
+import { PreferencesValidationError, applyPreferencesPatch, resolvePreferences } from "./preferences";
+import { AllowOtherUser, CurrentUser, Public, type AuthUser } from "../auth/decorators";
+import type { User } from "../store/models";
+import { DiscoveryBudget, MAX_ENTRIES_PER_REQUEST, contactKey, matchContacts } from "./contacts";
+
+/** What other people may see about a user. Email, preferences and moderation details stay private. */
+export function publicProfile(u: User) {
+  return { id: u.id, name: u.name, phone: u.phone, avatarUrl: u.avatarUrl, lastSeenAt: u.lastSeenAt, createdAt: u.createdAt, status: u.status ?? "ACTIVE" };
+}
 
 @Controller("users")
 export class UsersController {
   constructor(@Inject(InMemoryStore) private readonly store: InMemoryStore) {}
 
-  @Get("search")
-  search(@Query("q") q = "") {
-    const needle = q.toLowerCase().trim();
-    const users = (!needle ? this.store.users : this.store.users
-      .filter((u) => {
-        return (
-          (u.status ?? "ACTIVE") === "ACTIVE" &&
-          (
-            u.name.toLowerCase().includes(needle) ||
-            u.phone.includes(needle) ||
-            (u.email ?? "").toLowerCase().includes(needle)
-          )
-        );
-      })
-    )
-      .slice(0, 20);
+  private readonly budget = new DiscoveryBudget();
 
-    return users.map(({ passwordHash: _passwordHash, ...safeUser }) => safeUser);
+  /** People I may see without knowing their exact number: my contacts and the people I already chat with. */
+  private knownPeople(meId: string): User[] {
+    const me = this.store.users.find((u) => u.id === meId);
+    const ids = new Set<string>(me?.contactIds ?? []);
+    for (const c of this.store.chats) if (c.memberIds.includes(meId)) c.memberIds.forEach((id) => ids.add(id));
+    ids.delete(meId);
+    return this.store.users.filter((u) => ids.has(u.id) && (u.status ?? "ACTIVE") === "ACTIVE");
   }
 
+  /**
+   * Search, privately: names and numbers of my contacts and chat partners, plus an EXACT phone number or email
+   * (like typing a number into WhatsApp). There is no list of all users and no partial matching of strangers.
+   */
+  @Get("search")
+  search(@Query("q") q = "", @CurrentUser() me: AuthUser) {
+    const needle = q.toLowerCase().trim();
+    if (!needle) return [];
+    const digits = needle.replace(/[^\d]/g, "");
+    const known = this.knownPeople(me.userId).filter(
+      (u) => u.name.toLowerCase().includes(needle) || (digits.length >= 3 && u.phone.replace(/[^\d]/g, "").includes(digits)),
+    );
+    // Exact number/email lookups count against the daily limit, so search can't be used to scan numbers.
+    const isIdentifier = !!contactKey(q);
+    if (isIdentifier && !this.budget.take(me.userId, 1)) throw new HttpException("DAILY_CONTACT_CHECK_LIMIT", HttpStatus.TOO_MANY_REQUESTS);
+    const exact = isIdentifier ? matchContacts(this.store.users, me.userId, [q]).matches : [];
+    const self = this.store.users.find((u) => u.id === me.userId);
+    const selfHit = self && contactKey(q) && matchContacts([self], "", [q]).matches.length ? [self] : [];
+    const all = new Map<string, User>();
+    for (const u of [...exact, ...known, ...selfHit]) all.set(u.id, u);
+    return [...all.values()].slice(0, 20).map((u) => (u.id === me.userId ? this.selfProfile(u) : publicProfile(u)));
+  }
+
+  /** My contacts on EliSecureChat. */
+  @Get(":userId/contacts")
+  listContacts(@Param("userId") userId: string) {
+    const me = this.store.users.find((u) => u.id === userId);
+    if (!me) throw new NotFoundException("USER_NOT_FOUND");
+    return (me.contactIds ?? [])
+      .map((id) => this.store.users.find((u) => u.id === id))
+      .filter((u): u is User => !!u && (u.status ?? "ACTIVE") === "ACTIVE")
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map(publicProfile);
+  }
+
+  /**
+   * Check my address book: returns who is on EliSecureChat (saved as my contacts) and which entries are not
+   * (so the app can offer "Invite"). The list itself is not stored.
+   */
+  @Post(":userId/contacts/discover")
+  @HttpCode(200)
+  discover(@Param("userId") userId: string, @Body() body: { entries?: unknown }) {
+    const me = this.store.users.find((u) => u.id === userId);
+    if (!me) throw new NotFoundException("USER_NOT_FOUND");
+    const entries = Array.isArray(body?.entries) ? body.entries : null;
+    if (!entries) throw new BadRequestException("ENTRIES_REQUIRED");
+    if (entries.length > MAX_ENTRIES_PER_REQUEST) throw new BadRequestException(`TOO_MANY_ENTRIES (max ${MAX_ENTRIES_PER_REQUEST})`);
+    const distinct = new Set(entries.map(contactKey).filter(Boolean)).size;
+    if (!this.budget.take(userId, distinct)) throw new HttpException("DAILY_CONTACT_CHECK_LIMIT", HttpStatus.TOO_MANY_REQUESTS);
+    const result = matchContacts(this.store.users, userId, entries);
+    me.contactIds = [...new Set([...(me.contactIds ?? []), ...result.matches.map((u) => u.id)])];
+    this.store.persist();
+    return { checked: result.checked, matches: result.matches.map(publicProfile), notOnApp: result.notOnApp };
+  }
+
+  /** Add one contact by exact phone number or email. 404 = not on EliSecureChat yet (offer an invite). */
+  @Post(":userId/contacts")
+  @HttpCode(200)
+  addContact(@Param("userId") userId: string, @Body() body: { identifier?: unknown }) {
+    const me = this.store.users.find((u) => u.id === userId);
+    if (!me) throw new NotFoundException("USER_NOT_FOUND");
+    if (!contactKey(body?.identifier)) throw new BadRequestException("Enter a valid phone number or email.");
+    if (!this.budget.take(userId, 1)) throw new HttpException("DAILY_CONTACT_CHECK_LIMIT", HttpStatus.TOO_MANY_REQUESTS);
+    const [match] = matchContacts(this.store.users, userId, [body.identifier]).matches;
+    if (!match) throw new NotFoundException("NOT_ON_ELISECURECHAT");
+    me.contactIds = [...new Set([...(me.contactIds ?? []), match.id])];
+    this.store.persist();
+    return publicProfile(match);
+  }
+
+  @Delete(":userId/contacts/:contactId")
+  removeContact(@Param("userId") userId: string, @Param("contactId") contactId: string) {
+    const me = this.store.users.find((u) => u.id === userId);
+    if (!me) throw new NotFoundException("USER_NOT_FOUND");
+    me.contactIds = (me.contactIds ?? []).filter((id) => id !== contactId);
+    this.store.persist();
+    return { ok: true };
+  }
+
+  private selfProfile(user: User) {
+    const { passwordHash: _passwordHash, ...rest } = user;
+    return rest;
+  }
+
+  @AllowOtherUser()
   @Get(":userId")
-  getUser(@Param("userId") userId: string) {
+  getUser(@Param("userId") userId: string, @CurrentUser() me: AuthUser) {
     const user = this.store.users.find((u) => u.id === userId);
     if (!user) {
       throw new NotFoundException("USER_NOT_FOUND");
     }
-    const { passwordHash: _passwordHash, ...safeUser } = user;
-    return safeUser;
+    return user.id === me.userId ? this.selfProfile(user) : publicProfile(user);
+  }
+
+  /** Language, accessibility and voice preferences (SignConnect Phase 1a). */
+  @Get(":userId/preferences")
+  getPreferences(@Param("userId") userId: string) {
+    const user = this.store.users.find((u) => u.id === userId);
+    if (!user) throw new NotFoundException("USER_NOT_FOUND");
+    return resolvePreferences(user.preferences);
+  }
+
+  @Patch(":userId/preferences")
+  updatePreferences(@Param("userId") userId: string, @Body() body: unknown) {
+    const user = this.store.users.find((u) => u.id === userId);
+    if (!user) throw new NotFoundException("USER_NOT_FOUND");
+    try {
+      user.preferences = applyPreferencesPatch(resolvePreferences(user.preferences), body);
+    } catch (err) {
+      if (err instanceof PreferencesValidationError) {
+        throw new BadRequestException({ error: "INVALID_PREFERENCES", issues: err.issues });
+      }
+      throw err;
+    }
+    this.store.persist();
+    return user.preferences;
   }
 
   @Patch(":userId")
@@ -72,6 +183,36 @@ export class UsersController {
     return safeUser;
   }
 
+  /* ---------------- blocking ---------------- */
+
+  @Get(":userId/blocks")
+  listBlocks(@Param("userId") userId: string) {
+    const me = this.store.users.find((u) => u.id === userId);
+    if (!me) throw new NotFoundException("USER_NOT_FOUND");
+    return (me.blockedUserIds ?? []).map((id) => this.store.users.find((u) => u.id === id)).filter((u): u is User => !!u).map(publicProfile);
+  }
+
+  @Post(":userId/blocks")
+  @HttpCode(200)
+  block(@Param("userId") userId: string, @Body() body: { targetId?: string }) {
+    const me = this.store.users.find((u) => u.id === userId);
+    if (!me) throw new NotFoundException("USER_NOT_FOUND");
+    const target = typeof body?.targetId === "string" ? this.store.users.find((u) => u.id === body.targetId) : undefined;
+    if (!target || target.id === me.id) throw new BadRequestException("INVALID_TARGET");
+    me.blockedUserIds = [...new Set([...(me.blockedUserIds ?? []), target.id])];
+    this.store.persist();
+    return { ok: true, blocked: me.blockedUserIds };
+  }
+
+  @Delete(":userId/blocks/:targetId")
+  unblock(@Param("userId") userId: string, @Param("targetId") targetId: string) {
+    const me = this.store.users.find((u) => u.id === userId);
+    if (!me) throw new NotFoundException("USER_NOT_FOUND");
+    me.blockedUserIds = (me.blockedUserIds ?? []).filter((id) => id !== targetId);
+    this.store.persist();
+    return { ok: true, blocked: me.blockedUserIds };
+  }
+
   /** Self-delete: suspends account (preserves data for recovery) */
   @Delete(":userId")
   @HttpCode(200)
@@ -89,6 +230,7 @@ export class UsersController {
   }
 
   /** Submit an account recovery request */
+  @Public()
   @Post("recovery-request")
   @HttpCode(201)
   submitRecoveryRequest(
@@ -125,6 +267,7 @@ export class UsersController {
   }
 
   /** Get recovery request status for a user */
+  @Public()
   @Get(":userId/recovery-status")
   getRecoveryStatus(@Param("userId") userId: string) {
     const requests = this.store.recoveryRequests

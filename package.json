@@ -21,6 +21,8 @@
     "admin:build": "npm --workspace @secure-chat/admin run build",
     "admin:preview": "npm --workspace @secure-chat/admin run preview",
     "smoke:test": "powershell -ExecutionPolicy Bypass -File ./scripts/smoke-test.ps1",
-    "realtime:test": "node ./scripts/two-user-realtime-test.mjs"
+    "realtime:test": "node ./scripts/two-user-realtime-test.mjs",
+    "build:hosted": "npm run web:build && npm --workspace @secure-chat/admin run build:hosted && npm run backend:build",
+    "start:hosted": "node apps/backend/dist/main.js"
   }
 }

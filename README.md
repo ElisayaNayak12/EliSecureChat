@@ -1,5 +1,7 @@
 # EliSecureChat App (Runnable Full Stack)
 
+[![CI/CD](https://github.com/ElisayaNayak12/EliSecureChat/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/ElisayaNayak12/EliSecureChat/actions/workflows/ci-cd.yml) · Hosting and the public URL: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md#cicd-and-the-fixed-public-url)
+
 This workspace is now fully runnable on desktop with:
 
 - React web client (`apps/web`) for complete end-to-end testing

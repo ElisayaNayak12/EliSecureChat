@@ -1,4 +1,6 @@
-import { BadRequestException, Body, Controller, Delete, Get, Inject, Param, Post, Query } from "@nestjs/common";
+import { BadRequestException, Body, Controller, Delete, ForbiddenException, Get, Inject, Param, Post, Query } from "@nestjs/common";
+import { CurrentUser, type AuthUser } from "../auth/decorators";
+import { publicProfile } from "../users/users.controller";
 import { randomUUID } from "crypto";
 import { InMemoryStore } from "../store/in-memory.store";
 import { ChatActionDto } from "./dto/chat-action.dto";
@@ -14,8 +16,9 @@ export class ChatsController {
     const chats = this.store.chats.filter((c) => c.memberIds.includes(userId));
     return chats
       .map((chat) => {
+        const since = chat.clearedAt?.[userId] ?? "";
         const chatMessages = this.store.messages
-          .filter((m) => m.chatId === chat.id)
+          .filter((m) => m.chatId === chat.id && m.createdAt > since)
           .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
         const lastMessage = chatMessages[0];
         const unreadCount = chatMessages.filter(
@@ -26,15 +29,7 @@ export class ChatsController {
           ? this.store.users.find((u) => u.id === peerId)
           : undefined;
         const peerSafe = peer
-          ? {
-              id: peer.id,
-              name: peer.name,
-              phone: peer.phone,
-              email: peer.email,
-              avatarUrl: peer.avatarUrl,
-              lastSeenAt: peer.lastSeenAt,
-              createdAt: peer.createdAt,
-            }
+          ? publicProfile(peer)
           : undefined;
         return {
           chat,
@@ -48,13 +43,16 @@ export class ChatsController {
   }
 
   @Get()
-  list(@Query("userId") userId: string) {
-    if (!userId) return this.store.chats;
-    return this.store.chats.filter((c) => c.memberIds.includes(userId));
+  list(@CurrentUser() me: AuthUser) {
+    // Only the caller's chats (previously, omitting userId returned every chat in the system).
+    return this.store.chats.filter((c) => c.memberIds.includes(me.userId));
   }
 
   @Post()
-  create(@Body() dto: CreateChatDto) {
+  create(@Body() dto: CreateChatDto, @CurrentUser() me: AuthUser) {
+    if (!Array.isArray(dto.memberIds) || !dto.memberIds.includes(me.userId)) throw new ForbiddenException("You can only create chats you are a member of.");
+    const unknown = dto.memberIds.filter((id) => !this.store.users.some((u) => u.id === id));
+    if (unknown.length) throw new BadRequestException("UNKNOWN_MEMBER");
     if (dto.type === "ONE_TO_ONE" && dto.memberIds.length === 2) {
       return this.store.createOneToOneChat(dto.memberIds[0], dto.memberIds[1]);
     }
@@ -81,12 +79,14 @@ export class ChatsController {
       throw new BadRequestException("USER_NOT_IN_CHAT");
     }
 
-    const before = this.store.messages.length;
-    this.store.messages = this.store.messages.filter((m) => m.chatId !== chatId);
-    this.store.deleteRequests = this.store.deleteRequests.filter((r) => r.chatId !== chatId);
+    // Clear for ME only (like WhatsApp "Clear chat"): the other person keeps their full history.
+    // Erasing for both people is a separate, mutual request (delete requests).
+    const now = new Date().toISOString();
+    const hidden = this.store.messages.filter((m) => m.chatId === chatId && m.createdAt <= now && m.createdAt > (chat.clearedAt?.[dto.userId] ?? "")).length;
+    chat.clearedAt = { ...(chat.clearedAt ?? {}), [dto.userId]: now };
     this.store.persist();
 
-    return { chatId, clearedMessages: before - this.store.messages.length };
+    return { chatId, clearedMessages: hidden, scope: "me" };
   }
 
   @Delete(":chatId")

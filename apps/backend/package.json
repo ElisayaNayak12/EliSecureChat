@@ -3,9 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "start:dev": "tsx watch src/main.ts",
+    "start:dev": "tsc -p tsconfig.build.json && concurrently -k -n tsc,api -c gray,green \"tsc -p tsconfig.build.json --watch --preserveWatchOutput\" \"node --watch dist/main.js\"",
     "build": "tsc -p tsconfig.build.json",
-    "start": "node dist/main.js"
+    "start": "node dist/main.js",
+    "test": "node --import tsx --test --test-concurrency=1 \"test/**/*.test.ts\"",
+    "start:dev:fast": "tsx watch src/main.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.8",
@@ -15,7 +17,9 @@
     "@nestjs/websockets": "^11.1.8",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
+    "libphonenumber-js": "^1.13.15",
     "multer": "^2.1.1",
+    "nodemailer": "^10.2.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
     "socket.io": "^4.8.1",

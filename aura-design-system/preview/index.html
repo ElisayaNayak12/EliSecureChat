@@ -1,0 +1,862 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AURA Premium UI</title>
+<meta name="description" content="Live preview of the AURA premium design system: cinematic header, bento cards, glossy tiles, glass tab bar and spring motion." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<style>
+/* ==========================================================================
+   AURA Premium UI - Design Tokens (CSS)
+   Paste this file into your project and reference ONLY these variables.
+   Light theme is default. Dark theme applies via prefers-color-scheme or
+   <html data-theme="dark">. Force light with <html data-theme="light">.
+   ========================================================================== */
+
+:root {
+  /* ---------- Fonts ---------- */
+  --aura-font-display: "Fraunces", "New York", "Playfair Display", Georgia, serif;
+  --aura-font-sans: "Inter", -apple-system, "SF Pro Text", "Roboto", system-ui, sans-serif;
+  --aura-font-mono: "JetBrains Mono", "SF Mono", ui-monospace, monospace;
+
+  /* ---------- Type scale (size / line-height) ---------- */
+  --aura-text-display-xl: 700 40px/44px var(--aura-font-display);
+  --aura-text-display-lg: 700 32px/36px var(--aura-font-display);
+  --aura-text-display-md: 600 26px/30px var(--aura-font-display);
+  --aura-text-title-lg: 600 22px/28px var(--aura-font-sans);
+  --aura-text-title-md: 600 18px/24px var(--aura-font-sans);
+  --aura-text-body-lg: 500 17px/24px var(--aura-font-sans);
+  --aura-text-body-md: 400 15px/22px var(--aura-font-sans);
+  --aura-text-label-md: 500 14px/18px var(--aura-font-sans);
+  --aura-text-label-sm: 500 13px/16px var(--aura-font-sans);
+  --aura-text-overline: 600 12px/16px var(--aura-font-sans);
+  --aura-tracking-display: -0.02em;
+  --aura-tracking-overline: 0.06em;
+
+  /* ---------- Brand hue (swap these 4 to re-brand) ---------- */
+  --aura-brand-900: #6E0A12;
+  --aura-brand-600: #B3121F;
+  --aura-cta-500: #F26A1B;
+  --aura-tile-500: #1E6BFF;
+
+  /* derived brand ramps */
+  --aura-brand-700: #8F0E19;
+  --aura-brand-400: #D93A47;
+  --aura-brand-100: #FDE8EA;
+  --aura-cta-600: #E85D12;
+  --aura-cta-400: #F7931E;
+  --aura-tile-700: #0A3FCC;
+  --aura-tile-300: #6FA3FF;
+  --aura-tile-100: #E3EDFF;
+
+  /* ---------- Semantic ---------- */
+  --aura-success: #0E8A4E;
+  --aura-warning: #D97706;
+  --aura-danger: #DC2626;
+  --aura-info: #1E6BFF;
+  --aura-mint: #D8F5E6;
+  --aura-mint-ink: #0E8A4E;
+  --aura-lilac: #EBDDFB;
+  --aura-lilac-ink: #6A1FB8;
+  --aura-sky: #E6F3FF;
+  --aura-gold: #F2B134;
+
+  /* ---------- Canvas & ink (light) ---------- */
+  --aura-canvas: #F5F6FA;
+  --aura-surface: #FFFFFF;
+  --aura-surface-2: #F0F2F7;
+  --aura-ink-900: #0B1220;
+  --aura-ink-700: #2A3242;
+  --aura-ink-500: #6B7385;
+  --aura-ink-300: #B9BFCC;
+  --aura-line: rgba(11, 18, 32, 0.08);
+  --aura-on-brand: #FFFFFF;
+
+  /* ---------- Glass ---------- */
+  --aura-glass: rgba(255, 255, 255, 0.62);
+  --aura-glass-strong: rgba(255, 255, 255, 0.82);
+  --aura-glass-border: rgba(255, 255, 255, 0.75);
+  --aura-glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  --aura-glass-blur: blur(24px) saturate(160%);
+
+  /* ---------- Gradients ---------- */
+  --aura-gradient-header: linear-gradient(180deg, var(--aura-brand-600) 0%, var(--aura-brand-700) 55%, var(--aura-brand-900) 100%);
+  --aura-gradient-header-vignette: radial-gradient(120% 80% at 50% -20%, rgba(255,255,255,0.18), transparent 60%);
+  --aura-gradient-cta: linear-gradient(180deg, var(--aura-cta-400) 0%, var(--aura-cta-500) 100%);
+  --aura-gradient-tile: radial-gradient(120% 100% at 30% 15%, var(--aura-tile-300) 0%, var(--aura-tile-500) 45%, var(--aura-tile-700) 100%);
+  --aura-gradient-tile-gloss: radial-gradient(60% 45% at 30% 18%, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 100%);
+  --aura-gradient-sky: linear-gradient(180deg, #CFE6FF 0%, #EAF4FF 60%, var(--aura-canvas) 100%);
+  --aura-gradient-aurora: linear-gradient(135deg, #FF8A3D 0%, #FFB347 30%, #2F80ED 70%, #0A3FCC 100%);
+  --aura-gradient-gold: linear-gradient(135deg, #F9D976 0%, #F39F2C 100%);
+  --aura-gradient-festive: linear-gradient(180deg, var(--aura-brand-600) 0%, #5C0810 100%);
+  --aura-gradient-shimmer: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.55) 50%, transparent 100%);
+
+  /* ---------- Spacing (4pt) ---------- */
+  --aura-space-1: 4px;
+  --aura-space-2: 8px;
+  --aura-space-3: 12px;
+  --aura-space-4: 16px;
+  --aura-space-5: 20px;
+  --aura-space-6: 24px;
+  --aura-space-8: 32px;
+  --aura-space-10: 40px;
+  --aura-space-12: 48px;
+  --aura-space-16: 64px;
+  --aura-gutter: 20px;
+  --aura-touch: 56px;
+
+  /* ---------- Radius ---------- */
+  --aura-r-sm: 10px;
+  --aura-r-md: 14px;
+  --aura-r-lg: 16px;
+  --aura-r-xl: 20px;
+  --aura-r-2xl: 22px;
+  --aura-r-3xl: 28px;
+  --aura-r-pill: 999px;
+
+  /* ---------- Elevation ---------- */
+  --aura-shadow-sm: 0 2px 8px -2px rgba(11, 18, 32, 0.08);
+  --aura-shadow-md: 0 10px 30px -12px rgba(11, 18, 32, 0.14);
+  --aura-shadow-lg: 0 24px 60px -20px rgba(11, 18, 32, 0.22);
+  --aura-shadow-tile: 0 12px 32px -8px rgba(30, 107, 255, 0.45);
+  --aura-shadow-cta: 0 14px 32px -10px rgba(242, 106, 27, 0.55);
+  --aura-halo-tile: 0 0 0 8px rgba(227, 237, 255, 0.6);
+  --aura-focus-ring: 0 0 0 3px rgba(30, 107, 255, 0.4);
+
+  /* ---------- Motion ---------- */
+  --aura-dur-instant: 80ms;
+  --aura-dur-fast: 160ms;
+  --aura-dur-base: 260ms;
+  --aura-dur-slow: 420ms;
+  --aura-dur-cinematic: 700ms;
+  --aura-ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --aura-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --aura-ease-spring: linear(0, 0.009, 0.035 2.1%, 0.141, 0.281 6.7%, 0.723 12.9%, 0.938 16.7%, 1.017, 1.077, 1.121, 1.149 24.3%, 1.159, 1.163, 1.161, 1.154 29.9%, 1.129 32.8%, 1.051 39.6%, 1.017 43.1%, 0.991, 0.977 51%, 0.974 53.8%, 0.975 57.1%, 0.997 69.8%, 1.003 76.9%, 1);
+  --aura-ease-spring-soft: linear(0, 0.006, 0.025 2.8%, 0.101 6.1%, 0.539 18.9%, 0.721 25.3%, 0.849 31.5%, 0.937 38.1%, 0.968 41.8%, 0.991 45.7%, 1.006 50.1%, 1.015 55%, 1.017 63.9%, 1.001);
+  --aura-stagger: 40ms;
+  --aura-press-scale: 0.97;
+  --aura-hover-lift: -2px;
+}
+
+/* ---------- Dark theme ---------- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --aura-canvas: #0B0C10;
+    --aura-surface: #15171E;
+    --aura-surface-2: #1C1F28;
+    --aura-ink-900: #F4F6FB;
+    --aura-ink-700: #C9CFDB;
+    --aura-ink-500: #8A91A3;
+    --aura-ink-300: #4A5062;
+    --aura-line: rgba(255, 255, 255, 0.08);
+    --aura-glass: rgba(21, 23, 30, 0.58);
+    --aura-glass-strong: rgba(21, 23, 30, 0.82);
+    --aura-glass-border: rgba(255, 255, 255, 0.10);
+    --aura-glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    --aura-mint: rgba(14, 138, 78, 0.22);
+    --aura-mint-ink: #5FE0A3;
+    --aura-lilac: rgba(106, 31, 184, 0.28);
+    --aura-lilac-ink: #D3B4FF;
+    --aura-sky: rgba(30, 107, 255, 0.14);
+    --aura-success: #34C77B;
+    --aura-shadow-sm: 0 2px 8px -2px rgba(0, 0, 0, 0.5);
+    --aura-shadow-md: 0 10px 30px -12px rgba(0, 0, 0, 0.6);
+    --aura-shadow-lg: 0 24px 60px -20px rgba(0, 0, 0, 0.7);
+    --aura-halo-tile: 0 0 0 8px rgba(30, 107, 255, 0.14);
+    --aura-gradient-sky: linear-gradient(180deg, #121A2E 0%, #0E1320 60%, var(--aura-canvas) 100%);
+  }
+}
+:root[data-theme="dark"] {
+  --aura-canvas: #0B0C10;
+  --aura-surface: #15171E;
+  --aura-surface-2: #1C1F28;
+  --aura-ink-900: #F4F6FB;
+  --aura-ink-700: #C9CFDB;
+  --aura-ink-500: #8A91A3;
+  --aura-ink-300: #4A5062;
+  --aura-line: rgba(255, 255, 255, 0.08);
+  --aura-glass: rgba(21, 23, 30, 0.58);
+  --aura-glass-strong: rgba(21, 23, 30, 0.82);
+  --aura-glass-border: rgba(255, 255, 255, 0.10);
+  --aura-glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  --aura-mint: rgba(14, 138, 78, 0.22);
+  --aura-mint-ink: #5FE0A3;
+  --aura-lilac: rgba(106, 31, 184, 0.28);
+  --aura-lilac-ink: #D3B4FF;
+  --aura-sky: rgba(30, 107, 255, 0.14);
+  --aura-success: #34C77B;
+  --aura-shadow-sm: 0 2px 8px -2px rgba(0, 0, 0, 0.5);
+  --aura-shadow-md: 0 10px 30px -12px rgba(0, 0, 0, 0.6);
+  --aura-shadow-lg: 0 24px 60px -20px rgba(0, 0, 0, 0.7);
+  --aura-halo-tile: 0 0 0 8px rgba(30, 107, 255, 0.14);
+  --aura-gradient-sky: linear-gradient(180deg, #121A2E 0%, #0E1320 60%, var(--aura-canvas) 100%);
+}
+
+/* ---------- Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --aura-dur-fast: 1ms;
+    --aura-dur-base: 120ms;
+    --aura-dur-slow: 150ms;
+    --aura-dur-cinematic: 150ms;
+    --aura-stagger: 0ms;
+    --aura-press-scale: 1;
+    --aura-hover-lift: 0px;
+    --aura-ease-spring: ease-out;
+    --aura-ease-spring-soft: ease-out;
+  }
+}
+
+/* ---------- Base resets that AURA assumes ---------- */
+.aura, .aura * { box-sizing: border-box; }
+.aura {
+  background: var(--aura-canvas);
+  color: var(--aura-ink-900);
+  font: var(--aura-text-body-md);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Utility classes (optional, framework-free) ---------- */
+.aura-display-lg { font: var(--aura-text-display-lg); letter-spacing: var(--aura-tracking-display); }
+.aura-display-md { font: var(--aura-text-display-md); letter-spacing: var(--aura-tracking-display); }
+.aura-title-lg { font: var(--aura-text-title-lg); }
+.aura-title-md { font: var(--aura-text-title-md); }
+.aura-body-lg { font: var(--aura-text-body-lg); }
+.aura-label-md { font: var(--aura-text-label-md); color: var(--aura-ink-500); }
+.aura-label-sm { font: var(--aura-text-label-sm); color: var(--aura-ink-500); }
+.aura-overline { font: var(--aura-text-overline); letter-spacing: var(--aura-tracking-overline); text-transform: uppercase; color: var(--aura-ink-500); }
+
+.aura-glass {
+  background: var(--aura-glass);
+  border: 1px solid var(--aura-glass-border);
+  box-shadow: var(--aura-shadow-lg), var(--aura-glass-highlight);
+  -webkit-backdrop-filter: var(--aura-glass-blur);
+  backdrop-filter: var(--aura-glass-blur);
+}
+
+.aura-card {
+  background: var(--aura-surface);
+  border-radius: var(--aura-r-3xl);
+  box-shadow: var(--aura-shadow-md);
+  padding: var(--aura-space-5);
+  position: relative;
+  overflow: hidden;
+}
+
+.aura-tile {
+  width: 64px; height: 64px;
+  border-radius: var(--aura-r-2xl);
+  background: var(--aura-gradient-tile);
+  box-shadow: var(--aura-shadow-tile), var(--aura-halo-tile);
+  display: grid; place-items: center;
+  color: #fff; position: relative;
+}
+.aura-tile::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit;
+  background: var(--aura-gradient-tile-gloss); pointer-events: none;
+}
+
+.aura-btn-primary {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  width: 100%; min-height: var(--aura-touch);
+  border: 0; border-radius: var(--aura-r-xl);
+  background: var(--aura-gradient-cta);
+  color: #fff; font: 600 18px/24px var(--aura-font-sans);
+  box-shadow: var(--aura-shadow-cta), inset 0 1px 0 rgba(255,255,255,0.35);
+  cursor: pointer;
+  transition: transform var(--aura-dur-fast) var(--aura-ease-out-expo), box-shadow var(--aura-dur-fast);
+}
+.aura-btn-primary:hover { transform: translateY(var(--aura-hover-lift)); }
+.aura-btn-primary:active { transform: scale(var(--aura-press-scale)); }
+.aura-btn-primary:focus-visible { outline: none; box-shadow: var(--aura-shadow-cta), var(--aura-focus-ring); }
+
+.aura-press { transition: transform var(--aura-dur-fast) var(--aura-ease-out-expo); }
+.aura-press:active { transform: scale(var(--aura-press-scale)); }
+
+@keyframes aura-rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+.aura-rise { animation: aura-rise var(--aura-dur-slow) var(--aura-ease-out-expo) both; }
+.aura-rise[data-i="1"] { animation-delay: calc(1 * var(--aura-stagger)); }
+.aura-rise[data-i="2"] { animation-delay: calc(2 * var(--aura-stagger)); }
+.aura-rise[data-i="3"] { animation-delay: calc(3 * var(--aura-stagger)); }
+.aura-rise[data-i="4"] { animation-delay: calc(4 * var(--aura-stagger)); }
+.aura-rise[data-i="5"] { animation-delay: calc(5 * var(--aura-stagger)); }
+.aura-rise[data-i="6"] { animation-delay: calc(6 * var(--aura-stagger)); }
+.aura-rise[data-i="7"] { animation-delay: calc(7 * var(--aura-stagger)); }
+.aura-rise[data-i="8"] { animation-delay: calc(8 * var(--aura-stagger)); }
+
+@keyframes aura-shimmer { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+.aura-skeleton {
+  position: relative; overflow: hidden;
+  background: var(--aura-surface-2); border-radius: var(--aura-r-md);
+}
+.aura-skeleton::after {
+  content: ""; position: absolute; inset: 0;
+  background: var(--aura-gradient-shimmer);
+  animation: aura-shimmer 1.4s var(--aura-ease-in-out) infinite;
+}
+
+/* ===================== Preview page chrome ===================== */
+html, body { margin: 0; min-height: 100%; }
+body {
+  background: var(--aura-canvas);
+  background-image: radial-gradient(60% 50% at 20% 0%, rgba(30,107,255,0.10), transparent 60%),
+                    radial-gradient(50% 40% at 90% 100%, rgba(242,106,27,0.10), transparent 60%);
+  padding: 24px 16px 48px;
+  display: flex; flex-direction: column; align-items: center; gap: 20px;
+}
+.hero { text-align: center; max-width: 720px; }
+.hero h1 { font: var(--aura-text-display-xl); letter-spacing: var(--aura-tracking-display); margin: 0 0 8px; }
+.hero p { margin: 0; color: var(--aura-ink-500); font: var(--aura-text-body-md); }
+.toolbar {
+  display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+  padding: 8px; border-radius: var(--aura-r-pill);
+}
+.toolbar button {
+  border: 1px solid var(--aura-line); background: var(--aura-surface); color: var(--aura-ink-700);
+  font: var(--aura-text-label-md); padding: 10px 16px; border-radius: var(--aura-r-pill); cursor: pointer;
+  box-shadow: var(--aura-shadow-sm); transition: transform var(--aura-dur-fast) var(--aura-ease-out-expo), background var(--aura-dur-fast), color var(--aura-dur-fast);
+}
+.toolbar button:hover { transform: translateY(var(--aura-hover-lift)); }
+.toolbar button:active { transform: scale(var(--aura-press-scale)); }
+.toolbar button[aria-pressed="true"] { background: var(--aura-ink-900); color: var(--aura-surface); border-color: transparent; }
+.toolbar .swatch { width: 14px; height: 14px; border-radius: 50%; display: inline-block; vertical-align: -2px; margin-right: 6px; }
+
+/* ===================== Phone frame ===================== */
+.phone {
+  width: 390px; height: 844px; max-width: 100%;
+  border-radius: 48px; overflow: hidden; position: relative;
+  background: var(--aura-canvas);
+  box-shadow: 0 40px 100px -30px rgba(11,18,32,0.45), 0 0 0 10px #15171E, 0 0 0 12px #2A2C31;
+}
+.screen { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; }
+.screen::-webkit-scrollbar { display: none; }
+.screen[hidden] { display: none; }
+.statusbar { height: 48px; display: flex; align-items: center; justify-content: space-between; padding: 0 28px; font: 600 15px/1 var(--aura-font-sans); }
+.header-brand .statusbar { color: #fff; }
+
+/* ===================== Header ===================== */
+.header { position: relative; padding: 0 var(--aura-gutter) 44px; }
+.header-brand { background: var(--aura-gradient-header); color: #fff; }
+.header-brand::before { content: ""; position: absolute; inset: 0; background: var(--aura-gradient-header-vignette); pointer-events: none; }
+.header-sky { background: var(--aura-gradient-sky); color: var(--aura-ink-900); overflow: hidden; }
+.cloud { position: absolute; border-radius: 50%; background: #fff; filter: blur(28px); opacity: 0.85; pointer-events: none; }
+.header-row { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 12px; height: 72px; }
+.circle {
+  width: 48px; height: 48px; border-radius: var(--aura-r-pill); display: grid; place-items: center; flex: none;
+  color: inherit; border: 1px solid var(--aura-glass-border); cursor: pointer;
+}
+.header-brand .circle { background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.35); box-shadow: inset 0 1px 0 rgba(255,255,255,0.3); }
+.header-sky .circle { background: var(--aura-glass); box-shadow: var(--aura-shadow-sm), var(--aura-glass-highlight); -webkit-backdrop-filter: var(--aura-glass-blur); backdrop-filter: var(--aura-glass-blur); }
+.promo {
+  flex: 1; height: 56px; border-radius: var(--aura-r-pill); display: flex; align-items: center; gap: 10px; padding: 0 14px 0 8px;
+  background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.35); box-shadow: inset 0 1px 0 rgba(255,255,255,0.3);
+  -webkit-backdrop-filter: var(--aura-glass-blur); backdrop-filter: var(--aura-glass-blur); cursor: pointer; color: #fff; text-decoration: none;
+}
+.promo .badge { width: 40px; height: 40px; border-radius: 50%; background: var(--aura-gradient-gold); display: grid; place-items: center; font: 700 8px/1 var(--aura-font-display); color: #6E0A12; text-align: center; box-shadow: inset 0 0 0 2px rgba(255,255,255,0.5); }
+.promo b { display: block; font: 600 16px/18px var(--aura-font-sans); }
+.promo span { font: 500 13px/16px var(--aura-font-sans); opacity: 0.9; }
+.promo i { margin-left: auto; opacity: 0.9; display: grid; }
+.coin { width: 30px; height: 30px; border-radius: 50%; background: var(--aura-gradient-gold); box-shadow: inset 0 0 0 3px rgba(255,255,255,0.4), 0 2px 6px rgba(0,0,0,0.25); display: grid; place-items: center; font: 700 14px/1 var(--aura-font-display); color: #6E0A12; }
+
+/* ===================== Content panel ===================== */
+.panel { position: relative; margin-top: -28px; background: var(--aura-surface); border-radius: var(--aura-r-3xl) var(--aura-r-3xl) 0 0; padding: var(--aura-space-6) var(--aura-gutter) 120px; }
+.header-sky + .panel { background: transparent; margin-top: -8px; padding-top: 0; }
+
+.bento { display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 127px; gap: 16px; }
+.card { background: var(--aura-surface); border-radius: var(--aura-r-3xl); box-shadow: var(--aura-shadow-md); padding: 18px 20px; position: relative; overflow: hidden; cursor: pointer; border: 1px solid var(--aura-line); }
+.panel .card { box-shadow: 0 1px 0 var(--aura-line), var(--aura-shadow-md); }
+.card.tall { grid-row: span 2; }
+.card h2 { font: var(--aura-text-display-lg); letter-spacing: var(--aura-tracking-display); margin: 0; color: var(--aura-ink-900); }
+.card p { margin: 6px 0 0; font: var(--aura-text-body-lg); color: var(--aura-ink-700); }
+.card p b { color: var(--aura-success); font-weight: 600; }
+.card .img { position: absolute; right: -2px; bottom: -4px; font-size: 62px; line-height: 1; filter: drop-shadow(0 16px 18px rgba(11,18,32,0.22)); pointer-events: none; transition: transform var(--aura-dur-base) var(--aura-ease-out-expo); }
+.card.tall .img { font-size: 132px; right: -14px; bottom: -14px; }
+.card:hover .img { transform: translateY(-6px) scale(1.04); }
+.card .img.float { animation: aura-float 4s ease-in-out infinite; }
+@keyframes aura-float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+.card:hover .img.float { animation-play-state: paused; }
+.badge-new { display: inline-block; vertical-align: middle; margin-left: 8px; position: relative; top: -4px; background: var(--aura-mint); color: var(--aura-mint-ink); font: 600 13px/16px var(--aura-font-sans); padding: 4px 10px; border-radius: var(--aura-r-sm); }
+.card.wide h2 { font-size: 27px; } .card.wide p { padding-right: 36%; font-size: 16px; }
+
+.hover-lift { transition: transform var(--aura-dur-fast) var(--aura-ease-out-expo), box-shadow var(--aura-dur-fast); }
+.hover-lift:hover { transform: translateY(-4px); box-shadow: var(--aura-shadow-lg); }
+.hover-lift:active { transform: scale(var(--aura-press-scale)); }
+
+.features { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+.feature { display: flex; align-items: center; gap: 14px; min-height: 112px; }
+.feature h3 { margin: 0; font: var(--aura-text-title-md); font-size: 19px; color: var(--aura-ink-900); }
+.tile-light { width: 64px; height: 64px; border-radius: 50%; background: radial-gradient(120% 100% at 30% 15%, #fff 0%, var(--aura-tile-100) 60%, #C7DAFF 100%); display: grid; place-items: center; position: relative; flex: none; box-shadow: 0 0 0 8px rgba(227,237,255,0.5), 0 10px 24px -8px rgba(30,107,255,0.35); }
+.tile-light .aura-tile { width: 48px; height: 48px; border-radius: 50%; }
+.pro { position: absolute; left: -6px; bottom: -8px; background: #0B1220; color: #E6F0FF; font: 700 11px/1 "JetBrains Mono", ui-monospace, monospace; letter-spacing: 0.15em; padding: 5px 7px; border-radius: 6px; border: 1px solid #2A3242; }
+.orb { width: 56px; height: 56px; border-radius: 50%; background: conic-gradient(from 0deg, #FF8A3D, #FFB347, #2F80ED, #0A3FCC, #FF8A3D); animation: spin 8s linear infinite; display: grid; place-items: center; box-shadow: var(--aura-shadow-tile); position: relative; }
+.orb::after { content: ""; position: absolute; inset: 6px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff 0, #cfe0ff 30%, #1E6BFF 70%, #0A3FCC 100%); }
+.orb svg { position: relative; z-index: 1; color: #fff; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.aura-tile svg, .tile-light svg { position: relative; z-index: 1; }
+
+.quick-row { display: flex; gap: 12px; margin: 24px -20px 0; padding: 12px 20px 4px; overflow-x: auto; scrollbar-width: none; }
+.quick-row::-webkit-scrollbar { display: none; }
+.quick { flex: none; width: 76px; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; cursor: pointer; text-decoration: none; }
+.quick .wrap { position: relative; }
+.quick .nb { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: var(--aura-lilac); color: var(--aura-lilac-ink); font: 600 12px/16px var(--aura-font-sans); padding: 3px 10px; border-radius: var(--aura-r-sm); box-shadow: var(--aura-shadow-sm); z-index: 2; animation: pop 500ms var(--aura-ease-spring) both; animation-delay: 600ms; }
+@keyframes pop { from { transform: translateX(-50%) scale(0); } to { transform: translateX(-50%) scale(1); } }
+.quick span.lbl { font: var(--aura-text-label-sm); font-size: 14px; color: var(--aura-ink-700); line-height: 18px; }
+.quick .aura-tile { transition: transform var(--aura-dur-fast) var(--aura-ease-spring); }
+.quick:active .aura-tile { transform: scale(0.92); }
+.quick .aura-tile::before { transition: opacity var(--aura-dur-fast); }
+.quick:active .aura-tile::before { opacity: 1.4; }
+
+.campaign { margin-top: 24px; height: 220px; border-radius: var(--aura-r-3xl); background: var(--aura-gradient-festive); position: relative; overflow: hidden; display: grid; place-items: center; box-shadow: var(--aura-shadow-md); }
+.campaign svg.lights { position: absolute; inset: 0; width: 100%; height: 100%; }
+.campaign .word { font: 700 44px/1 var(--aura-font-display); font-style: italic; background: var(--aura-gradient-gold); -webkit-background-clip: text; background-clip: text; color: transparent; text-align: center; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.45)); letter-spacing: -0.02em; position: relative; }
+.campaign .word small { display: block; font: 600 14px/1 var(--aura-font-sans); letter-spacing: 0.2em; text-transform: uppercase; color: #fff; -webkit-text-fill-color: #fff; margin-top: 10px; opacity: 0.9; }
+.light { fill: #FFE28A; filter: drop-shadow(0 0 4px #FFD24D); animation: twinkle 1.8s ease-in-out infinite; }
+@keyframes twinkle { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+.section-title { display: flex; align-items: baseline; gap: 10px; margin: 28px 0 14px; font: var(--aura-text-display-md); letter-spacing: var(--aura-tracking-display); color: var(--aura-ink-900); }
+.section-title em { font-style: italic; color: var(--aura-ink-500); }
+.offers { display: flex; gap: 12px; overflow-x: auto; margin: 0 -20px; padding: 4px 20px 8px; scrollbar-width: none; }
+.offers::-webkit-scrollbar { display: none; }
+.offer { flex: none; width: 240px; height: 120px; border-radius: var(--aura-r-2xl); padding: 16px; color: #fff; position: relative; overflow: hidden; }
+.offer b { font: 700 22px/1.1 var(--aura-font-display); display: block; }
+.offer span { font: 500 13px/18px var(--aura-font-sans); opacity: 0.9; }
+.offer .em { position: absolute; right: 10px; bottom: 6px; font-size: 52px; filter: drop-shadow(0 8px 10px rgba(0,0,0,0.3)); }
+
+/* ===================== Tab bar ===================== */
+.tabbar-wrap { position: absolute; left: 20px; right: 20px; bottom: 16px; display: flex; align-items: center; gap: 12px; z-index: 5; }
+.tabbar { flex: 1; height: 72px; border-radius: var(--aura-r-pill); display: flex; align-items: center; padding: 0 8px; position: relative; }
+.tab { position: relative; flex: 1; height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; background: none; border: 0; cursor: pointer; color: var(--aura-ink-700); font: 500 12px/1 var(--aura-font-sans); transition: color var(--aura-dur-fast); z-index: 1; }
+.tab svg { transition: transform var(--aura-dur-base) var(--aura-ease-spring); }
+.tab[aria-selected="true"] { color: var(--aura-cta-500); font-weight: 600; }
+.tab[aria-selected="true"] svg { transform: scale(1.1); }
+.tab-pill { position: absolute; top: 8px; height: 56px; border-radius: var(--aura-r-pill); background: rgba(242,106,27,0.14); transition: left var(--aura-dur-base) var(--aura-ease-spring), width var(--aura-dur-base) var(--aura-ease-spring); }
+.fab { width: 64px; height: 64px; border-radius: 50%; flex: none; cursor: pointer; border: 0; box-shadow: var(--aura-shadow-lg), 0 0 0 0 rgba(30,107,255,0.35); animation: halo 2.4s ease-out infinite; }
+@keyframes halo { 0% { box-shadow: var(--aura-shadow-lg), 0 0 0 0 rgba(30,107,255,0.35); } 70%,100% { box-shadow: var(--aura-shadow-lg), 0 0 0 16px rgba(30,107,255,0); } }
+.fab .orb { width: 64px; height: 64px; }
+
+/* ===================== Search screen ===================== */
+.segmented { display: flex; padding: 4px; height: 64px; border-radius: var(--aura-r-pill); background: var(--aura-surface-2); position: relative; }
+.seg { flex: 1; border: 0; background: none; font: 500 18px/1 var(--aura-font-sans); color: var(--aura-ink-700); position: relative; z-index: 1; cursor: pointer; transition: color var(--aura-dur-fast); border-radius: var(--aura-r-pill); }
+.seg[aria-selected="true"] { color: #fff; font-weight: 600; }
+.seg-pill { position: absolute; top: 4px; bottom: 4px; width: calc(50% - 4px); left: 4px; border-radius: var(--aura-r-pill); background: #1F2937; transition: left var(--aura-dur-base) var(--aura-ease-spring); }
+:root[data-theme="dark"] .seg-pill { background: var(--aura-tile-500); }
+.form { background: var(--aura-surface); border-radius: var(--aura-r-3xl); box-shadow: var(--aura-shadow-lg); overflow: hidden; margin-top: 8px; }
+.form .segmented { margin: 16px 20px 0; }
+.row { padding: 18px 20px; border-top: 1px solid var(--aura-line); display: flex; justify-content: space-between; align-items: center; gap: 12px; cursor: pointer; transition: background var(--aura-dur-fast); }
+.row:first-of-type { border-top: 0; }
+.row:active { background: var(--aura-surface-2); }
+.row .lbl { font: var(--aura-text-label-md); font-size: 16px; color: var(--aura-ink-500); display: block; margin-bottom: 6px; }
+.row .val { font: 600 26px/30px var(--aura-font-sans); color: var(--aura-ink-900); letter-spacing: -0.01em; }
+.row .val.dim { color: var(--aura-ink-300); }
+.row .r { text-align: right; }
+.route { position: relative; } .route > div { flex: 1 1 0; min-width: 0; }
+.route .code { font: var(--aura-text-overline); font-size: 16px; letter-spacing: 0.02em; text-transform: none; color: var(--aura-ink-500); display: block; margin-bottom: 6px; }
+.route .city { font: 600 24px/30px var(--aura-font-sans); color: var(--aura-ink-900); letter-spacing: -0.02em; }
+.swap { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 60px; height: 60px; border-radius: 50%; background: var(--aura-surface); box-shadow: var(--aura-shadow-md), 0 0 0 1px var(--aura-line); display: grid; place-items: center; border: 0; cursor: pointer; color: var(--aura-ink-900); transition: transform var(--aura-dur-slow) var(--aura-ease-spring); }
+.swap.spun { transform: translate(-50%, -50%) rotate(180deg); }
+.city-anim { display: inline-block; transition: transform var(--aura-dur-base) var(--aura-ease-out-expo), opacity var(--aura-dur-base); }
+.chips { display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none; margin: 0 -20px; padding: 0 20px; }
+.chips::-webkit-scrollbar { display: none; }
+.chip { flex: none; height: 56px; padding: 0 20px; border-radius: var(--aura-r-md); border: 1px solid var(--aura-line); background: var(--aura-surface); font: 500 18px/1 var(--aura-font-sans); color: var(--aura-ink-900); cursor: pointer; transition: background var(--aura-dur-fast), border-color var(--aura-dur-fast), color var(--aura-dur-fast), transform var(--aura-dur-base) var(--aura-ease-spring); display: flex; align-items: center; gap: 8px; }
+.chip[aria-pressed="true"] { background: var(--aura-tile-100); border-color: var(--aura-tile-500); color: var(--aura-tile-700); }
+.chip:active { transform: scale(0.96); }
+.chip svg { display: none; }
+.chip[aria-pressed="true"] svg { display: block; }
+.info { background: var(--aura-sky); display: flex; align-items: center; gap: 14px; padding: 18px 20px; cursor: pointer; }
+.check { width: 26px; height: 26px; border-radius: 8px; border: 2px solid var(--aura-ink-300); background: var(--aura-surface); display: grid; place-items: center; flex: none; transition: background var(--aura-dur-fast), border-color var(--aura-dur-fast); }
+.check svg { opacity: 0; transform: scale(0.5); transition: transform var(--aura-dur-base) var(--aura-ease-spring), opacity var(--aura-dur-fast); color: #fff; }
+.info[aria-checked="true"] .check { background: var(--aura-tile-500); border-color: var(--aura-tile-500); }
+.info[aria-checked="true"] .check svg { opacity: 1; transform: scale(1); }
+.info .t { font: 500 18px/22px var(--aura-font-sans); color: var(--aura-ink-900); }
+.info .s { font: 400 15px/20px var(--aura-font-sans); color: var(--aura-ink-500); }
+.info .shield { margin-left: auto; font-size: 40px; filter: drop-shadow(0 6px 8px rgba(0,0,0,0.25)); transition: transform var(--aura-dur-slow) var(--aura-ease-spring); }
+.info[aria-checked="true"] .shield { animation: wiggle 400ms ease-in-out; }
+@keyframes wiggle { 25% { transform: rotate(-8deg); } 75% { transform: rotate(8deg); } }
+.form .aura-btn-primary { border-radius: 0 0 var(--aura-r-3xl) var(--aura-r-3xl); min-height: 72px; font-size: 24px; position: relative; overflow: hidden; }
+.aura-btn-primary .sheen { position: absolute; top: 0; bottom: 0; width: 40%; background: linear-gradient(100deg, transparent, rgba(255,255,255,0.28), transparent); animation: sheen 6s linear infinite; pointer-events: none; }
+@keyframes sheen { 0% { left: -40%; } 20% { left: 110%; } 100% { left: 110%; } }
+.aura-btn-primary .spinner { width: 22px; height: 22px; border: 3px solid rgba(255,255,255,0.4); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; display: none; }
+.aura-btn-primary.loading .label, .aura-btn-primary.loading .arrow { display: none; }
+.aura-btn-primary.loading .spinner { display: block; }
+.aura-btn-primary.done { background: linear-gradient(180deg, #34C77B, var(--aura-success)); }
+.form .quick-row { margin-top: 16px; }
+
+/* ===================== Bottom sheet ===================== */
+.backdrop { position: absolute; inset: 0; background: rgba(11,18,32,0.4); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); opacity: 0; pointer-events: none; transition: opacity var(--aura-dur-base); z-index: 10; }
+.backdrop.show { opacity: 1; pointer-events: auto; }
+.sheet { position: absolute; left: 0; right: 0; bottom: 0; background: var(--aura-surface); border-radius: var(--aura-r-3xl) var(--aura-r-3xl) 0 0; padding: 8px 20px 32px; box-shadow: var(--aura-shadow-lg); transform: translateY(105%); transition: transform var(--aura-dur-slow) var(--aura-ease-spring-soft); z-index: 11; }
+.sheet.show { transform: translateY(0); }
+.grabber { width: 36px; height: 5px; border-radius: 999px; background: var(--aura-ink-300); margin: 0 auto 16px; }
+.sheet h3 { margin: 0 0 12px; font: var(--aura-text-title-lg); }
+.search { height: 56px; border-radius: var(--aura-r-pill); background: var(--aura-surface-2); display: flex; align-items: center; gap: 10px; padding: 0 18px; color: var(--aura-ink-500); font: var(--aura-text-body-lg); }
+.list { margin-top: 12px; }
+.li { display: flex; align-items: center; gap: 14px; height: 68px; border-top: 1px solid var(--aura-line); cursor: pointer; }
+.li:first-child { border-top: 0; }
+.li .ic { width: 44px; height: 44px; border-radius: 14px; background: var(--aura-tile-100); color: var(--aura-tile-700); display: grid; place-items: center; }
+.li b { display: block; font: 500 17px/22px var(--aura-font-sans); color: var(--aura-ink-900); }
+.li small { font: 400 14px/18px var(--aura-font-sans); color: var(--aura-ink-500); }
+.li .code { margin-left: auto; font: var(--aura-text-overline); letter-spacing: 0.06em; color: var(--aura-ink-500); }
+
+/* ===================== Skeleton state ===================== */
+.skeleton-on .card > *, .skeleton-on .feature > *, .skeleton-on .quick > * { visibility: hidden; }
+.skeleton-on .card::after, .skeleton-on .feature::after, .skeleton-on .quick .wrap::after {
+  content: ""; position: absolute; inset: 0; background: var(--aura-surface-2); border-radius: inherit; visibility: visible;
+  background-image: var(--aura-gradient-shimmer); background-size: 200% 100%; animation: shimmer-bg 1.4s var(--aura-ease-in-out) infinite;
+}
+.skeleton-on .quick .wrap::after { border-radius: 22px; }
+@keyframes shimmer-bg { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+.toast { position: absolute; top: 56px; left: 50%; transform: translate(-50%, -24px); opacity: 0; padding: 12px 18px; border-radius: var(--aura-r-pill); display: flex; align-items: center; gap: 10px; font: var(--aura-text-body-md); font-weight: 500; z-index: 20; transition: transform var(--aura-dur-slow) var(--aura-ease-spring), opacity var(--aura-dur-fast); white-space: nowrap; color: var(--aura-ink-900); }
+.toast.show { transform: translate(-50%, 0); opacity: 1; }
+.toast svg { color: var(--aura-success); }
+
+.notes { max-width: 720px; color: var(--aura-ink-500); font: var(--aura-text-body-md); text-align: center; }
+.notes code { font: 13px/1 var(--aura-font-mono); background: var(--aura-surface-2); padding: 2px 6px; border-radius: 6px; color: var(--aura-ink-700); }
+@media (max-width: 420px) { .phone { height: 92vh; border-radius: 32px; box-shadow: var(--aura-shadow-lg); } }
+</style>
+</head>
+<body class="aura">
+
+<div class="hero aura-rise">
+  <h1>AURA Premium UI</h1>
+  <p>Cinematic header, bento cards, glossy tiles, glass navigation and spring motion. Press, hover, scroll and tap things.</p>
+</div>
+
+<div class="toolbar aura-glass aura-rise" data-i="1">
+  <button id="btn-home" aria-pressed="true">Home screen</button>
+  <button id="btn-search" aria-pressed="false">Search screen</button>
+  <button id="btn-theme" aria-pressed="false">Dark mode</button>
+  <button id="btn-skeleton" aria-pressed="false">Loading state</button>
+  <button id="btn-replay">Replay entrance</button>
+  <button data-preset="crimson" class="preset" aria-pressed="true"><i class="swatch" style="background:#B3121F"></i>Crimson</button>
+  <button data-preset="midnight" class="preset" aria-pressed="false"><i class="swatch" style="background:#1B3A8A"></i>Midnight</button>
+  <button data-preset="emerald" class="preset" aria-pressed="false"><i class="swatch" style="background:#0E8A4E"></i>Emerald</button>
+  <button data-preset="aurora" class="preset" aria-pressed="false"><i class="swatch" style="background:#6A1FB8"></i>Aurora</button>
+</div>
+
+<div class="phone aura-rise" data-i="2">
+
+  <!-- ===================== HOME ===================== -->
+  <section class="screen" id="home">
+    <header class="header header-brand">
+      <div class="statusbar"><span>9:41</span><span>●●● ▲ ▮</span></div>
+      <div class="header-row">
+        <button class="circle aura-press aura-rise" data-i="1" aria-label="Menu"><i data-lucide="menu"></i></button>
+        <a class="promo aura-press aura-rise" data-i="2" href="#"><span class="badge">GRAND<br/>FEST</span><div><b>Flat 15% Off</b><span>on Flights</span></div><i data-lucide="chevron-right"></i></a>
+        <button class="circle aura-press aura-rise" data-i="3" aria-label="Rewards"><span class="coin">₹</span></button>
+      </div>
+    </header>
+
+    <div class="panel aura-rise" data-i="2" id="home-panel">
+      <div class="bento">
+        <article class="card tall hover-lift aura-rise" data-i="3"><h2>Flights</h2><p>Up to <b>25% Off</b></p><span class="img float">✈️</span></article>
+        <article class="card wide hover-lift aura-rise" data-i="4"><h2>Trains</h2><span class="img">🚄</span></article>
+        <article class="card wide hover-lift aura-rise" data-i="5"><h2>Buses</h2><p>Flat <b>15% Off</b></p><span class="img">🚌</span></article>
+        <article class="card tall hover-lift aura-rise" data-i="5"><h2>Hotels</h2><p>Flat <b>80% Off</b></p><span class="img float">🏨</span></article>
+        <article class="card wide hover-lift aura-rise" data-i="6"><h2>Airport<span class="badge-new">New</span><br/>Cabs</h2><p><b>10% Off</b></p><span class="img">🚕</span></article>
+        <article class="card wide hover-lift aura-rise" data-i="7"><h2>Holidays</h2><p>From <b>₹4,999</b></p><span class="img">🏝️</span></article>
+      </div>
+
+      <div class="features">
+        <article class="card feature hover-lift aura-rise" data-i="7">
+          <span class="tile-light"><span class="aura-tile"><i data-lucide="plane"></i></span><span class="pro">PRO</span></span>
+          <h3>Flight<br/>Tracker</h3>
+        </article>
+        <article class="card feature hover-lift aura-rise" data-i="8">
+          <span class="orb"><i data-lucide="sparkles"></i></span>
+          <h3>Your<br/>AI Agents</h3>
+        </article>
+      </div>
+
+      <div class="quick-row">
+        <a class="quick aura-rise" data-i="5" href="#"><span class="wrap"><span class="aura-tile"><i data-lucide="credit-card"></i></span></span><span class="lbl">Credit<br/>Card</span></a>
+        <a class="quick aura-rise" data-i="6" href="#"><span class="wrap"><span class="aura-tile"><i data-lucide="users"></i></span></span><span class="lbl">Group<br/>Booking</span></a>
+        <a class="quick aura-rise" data-i="7" href="#"><span class="wrap"><span class="nb">New</span><span class="aura-tile"><i data-lucide="train-front"></i></span></span><span class="lbl">Metro<br/>Ticket</span></a>
+        <a class="quick aura-rise" data-i="8" href="#"><span class="wrap"><span class="aura-tile"><i data-lucide="globe"></i></span></span><span class="lbl">Book<br/>Visa</span></a>
+        <a class="quick aura-rise" data-i="8" href="#"><span class="wrap"><span class="aura-tile"><i data-lucide="building-2"></i></span></span><span class="lbl">Hotel<br/>Stays</span></a>
+        <a class="quick aura-rise" data-i="8" href="#"><span class="wrap"><span class="aura-tile"><i data-lucide="shield-check"></i></span></span><span class="lbl">Travel<br/>Insurance</span></a>
+      </div>
+
+      <div class="campaign aura-rise" data-i="8">
+        <svg class="lights" viewBox="0 0 350 220" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M0 30 Q 90 70 175 30 T 350 30" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1"/>
+          <path d="M0 80 Q 90 120 175 80 T 350 80" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+          <g id="bulbs"></g>
+        </svg>
+        <div class="word">Grand<br/>Travel Fest<small>Ends 24 Dec</small></div>
+      </div>
+
+      <h2 class="section-title">Deals <em>&amp; Offers</em> <i data-lucide="arrow-right"></i></h2>
+      <div class="offers">
+        <div class="offer" style="background:var(--aura-gradient-tile)"><b>₹1,000 off</b><span>on international flights</span><span class="em">🌍</span></div>
+        <div class="offer" style="background:var(--aura-gradient-gold);color:#5C0810"><b>2X coins</b><span>on hotel bookings</span><span class="em">🪙</span></div>
+        <div class="offer" style="background:var(--aura-gradient-aurora)"><b>AI planner</b><span>build a trip in 30 sec</span><span class="em">✨</span></div>
+      </div>
+    </div>
+
+    <div class="tabbar-wrap">
+      <nav class="tabbar aura-glass" role="tablist">
+        <span class="tab-pill"></span>
+        <button class="tab" role="tab" aria-selected="true"><i data-lucide="house"></i>Home</button>
+        <button class="tab" role="tab" aria-selected="false"><i data-lucide="plane"></i>Flights</button>
+        <button class="tab" role="tab" aria-selected="false"><i data-lucide="hotel"></i>Hotels</button>
+        <button class="tab" role="tab" aria-selected="false"><i data-lucide="luggage"></i>My Trips</button>
+      </nav>
+      <button class="fab aura-press" aria-label="AI assistant"><span class="orb"><i data-lucide="sparkles"></i></span></button>
+    </div>
+    <div class="toast aura-glass" id="toast-home"><i data-lucide="circle-check"></i><span></span></div>
+  </section>
+
+  <!-- ===================== SEARCH ===================== -->
+  <section class="screen" id="search" hidden>
+    <header class="header header-sky">
+      <span class="cloud" style="width:220px;height:90px;left:-40px;top:20px"></span>
+      <span class="cloud" style="width:180px;height:70px;right:-30px;top:60px"></span>
+      <span class="cloud" style="width:160px;height:60px;left:120px;top:120px;opacity:.6"></span>
+      <div class="statusbar"><span>9:41</span><span>●●● ▲ ▮</span></div>
+      <div class="header-row">
+        <button class="circle aura-press aura-rise" data-i="1" aria-label="Menu"><i data-lucide="menu"></i></button>
+        <button class="circle aura-press aura-rise" data-i="2" aria-label="Rewards"><span class="coin">₹</span></button>
+      </div>
+    </header>
+
+    <div class="panel">
+      <div class="form aura-rise" data-i="2">
+        <div class="segmented" role="tablist">
+          <span class="seg-pill"></span>
+          <button class="seg" role="tab" aria-selected="true">One Way</button>
+          <button class="seg" role="tab" aria-selected="false">Round Trip</button>
+        </div>
+        <div class="row route aura-rise" data-i="3" data-sheet="city">
+          <div><span class="code">BBI</span><span class="city city-anim" id="from">Bhubaneswar</span></div>
+          <button class="swap" id="swap" aria-label="Swap cities"><i data-lucide="arrow-left-right"></i></button>
+          <div class="r"><span class="code">HYD</span><span class="city city-anim" id="to">Hyderabad</span></div>
+        </div>
+        <div class="row aura-rise" data-i="4" data-sheet="date">
+          <div><span class="lbl">Departure Date</span><span class="val">Thu, 24 Dec</span></div>
+          <div class="r"><span class="lbl">Return Date</span><span class="val dim">--</span></div>
+        </div>
+        <div class="row aura-rise" data-i="5" data-sheet="travellers">
+          <div><span class="lbl">Travellers</span><span class="val">1 Traveller</span></div>
+          <div class="r"><span class="lbl">Class</span><span class="val">Economy</span></div>
+        </div>
+        <div class="row aura-rise" data-i="6" style="display:block;cursor:default">
+          <span class="lbl" style="margin-bottom:12px">Special Fares (Optional)</span>
+          <div class="chips">
+            <button class="chip" aria-pressed="false"><i data-lucide="check"></i>Student</button>
+            <button class="chip" aria-pressed="false"><i data-lucide="check"></i>Senior Citizen</button>
+            <button class="chip" aria-pressed="false"><i data-lucide="check"></i>Armed Forces</button>
+            <button class="chip" aria-pressed="false"><i data-lucide="check"></i>Doctor</button>
+          </div>
+        </div>
+        <div class="info aura-rise" data-i="7" role="checkbox" aria-checked="false" tabindex="0">
+          <span class="check"><i data-lucide="check"></i></span>
+          <div><div class="t">Always opt for Free Cancellation</div><div class="s">₹0 cancellation fee</div></div>
+          <span class="shield">🛡️</span>
+        </div>
+        <button class="aura-btn-primary aura-rise" data-i="8" id="cta"><span class="sheen"></span><span class="label">Search Flights</span><i data-lucide="arrow-right" class="arrow"></i><span class="spinner"></span></button>
+      </div>
+
+      <div class="quick-row">
+        <a class="quick aura-rise" data-i="6" href="#"><span class="wrap"><span class="aura-tile"><i data-lucide="send"></i></span></span><span class="lbl">Flight<br/>Tracker</span></a>
+        <a class="quick aura-rise" data-i="7" href="#"><span class="wrap"><span class="aura-tile"><i data-lucide="credit-card"></i></span></span><span class="lbl">Credit<br/>Card</span></a>
+        <a class="quick aura-rise" data-i="8" href="#"><span class="wrap"><span class="aura-tile"><i data-lucide="users"></i></span></span><span class="lbl">Group<br/>Booking</span></a>
+        <a class="quick aura-rise" data-i="8" href="#"><span class="wrap"><span class="aura-tile"><i data-lucide="globe"></i></span></span><span class="lbl">Book<br/>Visa</span></a>
+      </div>
+      <h2 class="section-title">Deals <em>&amp; Offers</em> <i data-lucide="arrow-right"></i></h2>
+      <div class="offers">
+        <div class="offer" style="background:var(--aura-gradient-tile)"><b>₹1,000 off</b><span>on international flights</span><span class="em">🌍</span></div>
+        <div class="offer" style="background:var(--aura-gradient-gold);color:#5C0810"><b>2X coins</b><span>on hotel bookings</span><span class="em">🪙</span></div>
+      </div>
+    </div>
+
+    <div class="tabbar-wrap">
+      <nav class="tabbar aura-glass" role="tablist">
+        <span class="tab-pill"></span>
+        <button class="tab" role="tab" aria-selected="false"><i data-lucide="house"></i>Home</button>
+        <button class="tab" role="tab" aria-selected="true"><i data-lucide="plane"></i>Flights</button>
+        <button class="tab" role="tab" aria-selected="false"><i data-lucide="hotel"></i>Hotels</button>
+        <button class="tab" role="tab" aria-selected="false"><i data-lucide="luggage"></i>My Trips</button>
+      </nav>
+      <button class="fab aura-press" aria-label="AI assistant"><span class="orb"><i data-lucide="sparkles"></i></span></button>
+    </div>
+
+    <div class="backdrop" id="backdrop"></div>
+    <div class="sheet" id="sheet">
+      <div class="grabber"></div>
+      <h3 id="sheet-title">Select city</h3>
+      <div class="search"><i data-lucide="search"></i>Search city or airport</div>
+      <div class="list">
+        <div class="li"><span class="ic"><i data-lucide="plane-takeoff"></i></span><div><b>Hyderabad</b><small>Rajiv Gandhi International</small></div><span class="code">HYD</span></div>
+        <div class="li"><span class="ic"><i data-lucide="plane-takeoff"></i></span><div><b>Bengaluru</b><small>Kempegowda International</small></div><span class="code">BLR</span></div>
+        <div class="li"><span class="ic"><i data-lucide="plane-takeoff"></i></span><div><b>Mumbai</b><small>Chhatrapati Shivaji Maharaj</small></div><span class="code">BOM</span></div>
+        <div class="li"><span class="ic"><i data-lucide="plane-takeoff"></i></span><div><b>Delhi</b><small>Indira Gandhi International</small></div><span class="code">DEL</span></div>
+      </div>
+    </div>
+    <div class="toast aura-glass" id="toast-search"><i data-lucide="circle-check"></i><span></span></div>
+  </section>
+</div>
+
+<p class="notes aura-rise" data-i="3">Everything here uses only <code>foundations/tokens.css</code>. Specs: <code>components.md</code> and <code>motion.md</code>. Swap the brand with the preset buttons, which change just four variables.</p>
+
+<script>
+(function () {
+  lucide.createIcons({ attrs: { 'stroke-width': 1.75 } });
+  var root = document.documentElement;
+  var $ = function (s, c) { return (c || document).querySelector(s); };
+  var $$ = function (s, c) { return Array.prototype.slice.call((c || document).querySelectorAll(s)); };
+
+  /* ---------- string lights ---------- */
+  var g = $('#bulbs'); var html = '';
+  for (var i = 0; i <= 14; i++) {
+    var t = i / 14, x = t * 350;
+    var y1 = 30 + 40 * Math.sin(Math.PI * t) * (t < 0.5 ? 1 : 1) * Math.abs(Math.sin(Math.PI * t));
+    var y2 = 80 + 40 * Math.abs(Math.sin(Math.PI * t));
+    html += '<circle class="light" cx="' + x + '" cy="' + y1 + '" r="2.4" style="animation-delay:' + (Math.random() * 1.8).toFixed(2) + 's"/>';
+    html += '<circle class="light" cx="' + (x + 12) + '" cy="' + y2 + '" r="2" style="animation-delay:' + (Math.random() * 1.8).toFixed(2) + 's"/>';
+  }
+  g.innerHTML = html;
+
+  /* ---------- toast ---------- */
+  var toastTimer;
+  function toast(screen, msg) {
+    var el = $('#toast-' + screen); $('span', el).textContent = msg;
+    el.classList.add('show'); clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { el.classList.remove('show'); }, 2200);
+  }
+
+  /* ---------- entrance replay ---------- */
+  function replay(scope) {
+    $$('.aura-rise', scope).forEach(function (el) {
+      el.style.animation = 'none'; void el.offsetWidth; el.style.animation = '';
+    });
+    $$('.nb', scope).forEach(function (el) { el.style.animation = 'none'; void el.offsetWidth; el.style.animation = ''; });
+  }
+
+  /* ---------- screens ---------- */
+  var current = 'home';
+  function showScreen(id) {
+    current = id;
+    $('#home').hidden = id !== 'home'; $('#search').hidden = id !== 'search';
+    $('#btn-home').setAttribute('aria-pressed', id === 'home'); $('#btn-search').setAttribute('aria-pressed', id === 'search');
+    var sc = $('#' + id); sc.scrollTop = 0; replay(sc); positionPills();
+  }
+  $('#btn-home').onclick = function () { showScreen('home'); };
+  $('#btn-search').onclick = function () { showScreen('search'); };
+  $('#btn-replay').onclick = function () { replay($('#' + current)); };
+
+  /* ---------- theme ---------- */
+  var dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  function applyTheme() { root.dataset.theme = dark ? 'dark' : 'light'; $('#btn-theme').setAttribute('aria-pressed', dark); $('#btn-theme').textContent = dark ? 'Light mode' : 'Dark mode'; }
+  $('#btn-theme').onclick = function () { dark = !dark; applyTheme(); };
+  applyTheme();
+
+  /* ---------- skeleton ---------- */
+  $('#btn-skeleton').onclick = function () {
+    var on = $('#home-panel').classList.toggle('skeleton-on');
+    this.setAttribute('aria-pressed', on); if (current !== 'home') showScreen('home');
+    if (!on) replay($('#home'));
+  };
+
+  /* ---------- brand presets ---------- */
+  var presets = {
+    crimson: ['#6E0A12', '#B3121F', '#F26A1B', '#1E6BFF', '#8F0E19', '#F7931E', '#6FA3FF', '#0A3FCC'],
+    midnight: ['#0B1C3D', '#1B3A8A', '#6C5CE7', '#2F80ED', '#132B63', '#8F82F0', '#7FB2FF', '#1554B8'],
+    emerald: ['#063D2E', '#0E8A4E', '#F5A524', '#1E6BFF', '#0A6340', '#FFC14D', '#6FA3FF', '#0A3FCC'],
+    aurora: ['#2B0A5C', '#6A1FB8', '#FF4D8D', '#1E9BFF', '#4A1489', '#FF7AAB', '#7FC6FF', '#0B6BD0']
+  };
+  $$('.preset').forEach(function (b) {
+    b.onclick = function () {
+      var p = presets[b.dataset.preset];
+      root.style.setProperty('--aura-brand-900', p[0]); root.style.setProperty('--aura-brand-600', p[1]);
+      root.style.setProperty('--aura-cta-500', p[2]); root.style.setProperty('--aura-tile-500', p[3]);
+      root.style.setProperty('--aura-brand-700', p[4]); root.style.setProperty('--aura-cta-400', p[5]);
+      root.style.setProperty('--aura-tile-300', p[6]); root.style.setProperty('--aura-tile-700', p[7]);
+      $$('.preset').forEach(function (x) { x.setAttribute('aria-pressed', x === b); });
+      toast(current, 'Brand preset: ' + b.textContent.trim());
+    };
+  });
+
+  /* ---------- sliding pills (tab bar + segmented) ---------- */
+  function positionPills() {
+    $$('.tabbar').forEach(function (bar) {
+      var sel = $('.tab[aria-selected="true"]', bar), pill = $('.tab-pill', bar);
+      if (!sel) return; pill.style.left = sel.offsetLeft + 'px'; pill.style.width = sel.offsetWidth + 'px';
+    });
+    $$('.segmented').forEach(function (seg) {
+      var sel = $('.seg[aria-selected="true"]', seg), pill = $('.seg-pill', seg);
+      pill.style.left = sel.offsetLeft + 'px'; pill.style.width = sel.offsetWidth + 'px';
+    });
+  }
+  $$('.tab').forEach(function (t) {
+    t.onclick = function () {
+      $$('.tab', t.parentNode).forEach(function (x) { x.setAttribute('aria-selected', x === t); });
+      positionPills();
+      var label = t.textContent.trim();
+      if (label === 'Home' && current !== 'home') showScreen('home');
+      else if (label === 'Flights' && current !== 'search') showScreen('search');
+      else toast(current, label + ' tab');
+    };
+  });
+  $$('.seg').forEach(function (s) {
+    s.onclick = function () { $$('.seg', s.parentNode).forEach(function (x) { x.setAttribute('aria-selected', x === s); }); positionPills();
+      var ret = $('.val.dim'); if (ret) ret.textContent = s.textContent.trim() === 'Round Trip' ? 'Sat, 27 Dec' : '--'; ret.classList.toggle('dim', s.textContent.trim() !== 'Round Trip'); };
+  });
+  window.addEventListener('resize', positionPills);
+  document.fonts && document.fonts.ready.then(positionPills); setTimeout(positionPills, 50);
+
+  /* ---------- swap ---------- */
+  var swap = $('#swap');
+  swap.onclick = function (e) {
+    e.stopPropagation(); swap.classList.toggle('spun');
+    var a = $('#from'), b = $('#to');
+    a.style.transform = 'translateX(12px)'; a.style.opacity = 0; b.style.transform = 'translateX(-12px)'; b.style.opacity = 0;
+    setTimeout(function () { var t = a.textContent; a.textContent = b.textContent; b.textContent = t;
+      var codes = $$('.route .code'); var c = codes[0].textContent; codes[0].textContent = codes[1].textContent; codes[1].textContent = c;
+      a.style.transform = ''; a.style.opacity = 1; b.style.transform = ''; b.style.opacity = 1; }, 200);
+  };
+
+  /* ---------- chips, checkbox ---------- */
+  $$('.chip').forEach(function (c) { c.onclick = function () { c.setAttribute('aria-pressed', c.getAttribute('aria-pressed') !== 'true'); }; });
+  var info = $('.info');
+  info.onclick = function () { info.setAttribute('aria-checked', info.getAttribute('aria-checked') !== 'true'); };
+  info.onkeydown = function (e) { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); info.click(); } };
+
+  /* ---------- sheet ---------- */
+  var sheet = $('#sheet'), backdrop = $('#backdrop');
+  var titles = { city: 'Select city', date: 'Departure date', travellers: 'Travellers & class' };
+  function openSheet(kind) { $('#sheet-title').textContent = titles[kind] || 'Select'; sheet.classList.add('show'); backdrop.classList.add('show'); }
+  function closeSheet() { sheet.classList.remove('show'); backdrop.classList.remove('show'); }
+  $$('[data-sheet]').forEach(function (r) { r.onclick = function () { openSheet(r.dataset.sheet); }; });
+  backdrop.onclick = closeSheet;
+  $$('.li').forEach(function (li) { li.onclick = function () { $('#to').textContent = $('b', li).textContent; $$('.route .code')[1].textContent = $('.code', li).textContent; closeSheet(); }; });
+  var startY = 0; sheet.addEventListener('touchstart', function (e) { startY = e.touches[0].clientY; }, { passive: true });
+  sheet.addEventListener('touchend', function (e) { if (e.changedTouches[0].clientY - startY > 80) closeSheet(); });
+
+  /* ---------- CTA loading -> success ---------- */
+  var cta = $('#cta');
+  cta.onclick = function () {
+    if (cta.classList.contains('loading')) return;
+    cta.classList.add('loading');
+    setTimeout(function () { cta.classList.remove('loading'); cta.classList.add('done'); $('.label', cta).textContent = '42 flights found';
+      toast('search', 'Results ready in 1.2s');
+      setTimeout(function () { cta.classList.remove('done'); $('.label', cta).textContent = 'Search Flights'; }, 1600); }, 1200);
+  };
+
+  /* ---------- generic taps ---------- */
+  $$('.card, .quick, .promo, .circle, .fab, .offer').forEach(function (el) {
+    el.addEventListener('click', function (e) {
+      if (el.tagName === 'A') e.preventDefault();
+      var label = (el.querySelector('h2, h3, .lbl, b') || {}).textContent || el.getAttribute('aria-label') || 'Tapped';
+      toast(current, label.replace(/\s+/g, ' ').trim());
+    });
+  });
+})();
+</script>
+</body>
+</html>
