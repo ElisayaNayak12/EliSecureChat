@@ -1,5 +1,30 @@
 # Changelog — SignConnect AI
 
+## 2026-11-17 — Fingerspelling recognition: spell any word in a call
+
+### Added
+- **Live fingerspelling reader** (`apps/web/src/ai/fingerspellDetector.ts`):
+  - It watches for **holds** (a still handshape) and compares each one with letter examples: the signer's own recorded letters, plus built-in ASL examples taken from the app's letter photos with MediaPipe.
+  - Left-handed signers are read the same as right-handed signers.
+  - A double letter needs a small bounce.
+  - When unsure it shows "unsure" and sends nothing.
+- **In calls:**
+  - A spelling bar builds the word letter by letter, with ⌫, Clear and Send.
+  - The word is sent when the hands are lowered.
+  - Built-in gestures are ignored while spelling, so letter shapes like ✊ ✌️ ☝️ aren't sent as gestures.
+  - Letters from a published model (`FS-A`...) also go onto the bar.
+- **Recording:**
+  - Translator › "Record your alphabet": tap a letter, then sign it.
+  - The dataset vocabulary now includes the alphabet for ISL, ASL, BSL and Auslan, so the community can help train letter models.
+- **Tests:**
+  - `fingerspellDetector.test.ts` (7 tests).
+  - `scripts/e2e-fingerspell-reading-test.mjs`: a real call where Ravi's camera fingerspells C-A-B in ASL and Asha receives "CAB".
+
+### Honest limits
+- Built-in examples exist only for ASL, from one photo per letter; real-world accuracy will be lower than in the tests until people record letters.
+- ISL letters mostly use two hands. MediaPipe missed hands in several ISL photos, so ISL (and BSL, Auslan) letters come from recordings.
+- J and Z involve movement and are learned from recordings.
+
 ## 2026-11-16 — Brand: logo, app icons, launch animation, emails
 
 ### Added

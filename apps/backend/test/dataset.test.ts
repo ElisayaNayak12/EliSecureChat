@@ -74,8 +74,17 @@ test("validateManifest requires honest metrics and the app's feature format", ()
 
 test("the ISL vocabulary is seeded with labels on first use", async () => {
   const r = await json("GET", "/dataset/vocabulary?language=isl");
-  assert.equal(r.body.length, STARTER_VOCABULARY.length);
+  // Everyday words plus the ISL fingerspelling alphabet (A-Z, 1-9), so any word can be spelled.
+  assert.equal(r.body.length, STARTER_VOCABULARY.length + 35);
   assert.ok(r.body.some((v: { gloss: string }) => v.gloss === "THANK-YOU"));
+  assert.ok(r.body.some((v: { gloss: string; meaning: string }) => v.gloss === "FS-A" && v.meaning === "Letter A"));
+});
+
+test("every supported sign language gets its fingerspelling alphabet", async () => {
+  const bsl = await json("GET", "/dataset/vocabulary?language=bsl");
+  assert.equal(bsl.body.filter((v: { gloss: string }) => v.gloss.startsWith("FS-")).length, 26);
+  const asl = await json("GET", "/dataset/vocabulary?language=asl");
+  assert.ok(asl.body.some((v: { gloss: string }) => v.gloss === "FS-Z"));
 });
 
 let consentId = "";

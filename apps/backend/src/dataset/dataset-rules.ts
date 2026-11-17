@@ -141,3 +141,11 @@ export function validateManifest(raw: unknown): { value?: SignModelManifest; iss
   if (typeof m.trainedAt !== "string") issues.push("trainedAt is required.");
   return issues.length ? { issues } : { issues, value: m as SignModelManifest };
 }
+
+/** Fingerspelling letters for each sign language (glosses FS-A ... FS-Z, plus numbers where the alphabet has them). */
+export const SUPPORTED_SIGN_LANGUAGES = ["isl", "asl", "bsl", "auslan"] as const;
+export function fingerspellVocabulary(language: string): { gloss: string; meaning: string }[] {
+  const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+  const chars = language === "isl" || language === "asl" ? [...letters, ..."123456789".split("")] : letters;
+  return chars.map((c) => ({ gloss: `FS-${c}`, meaning: /\d/.test(c) ? `Number ${c}` : `Letter ${c}` }));
+}

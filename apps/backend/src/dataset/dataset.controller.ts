@@ -30,6 +30,8 @@ import {
   FEATURE_VERSION,
   GLOSS_PATTERN,
   STARTER_VOCABULARY,
+  SUPPORTED_SIGN_LANGUAGES,
+  fingerspellVocabulary,
   normalizeGloss,
   validateConsent,
   validateManifest,
@@ -55,12 +57,23 @@ export class DatasetController {
   }
 
   private vocabularyFor(language: string) {
+    const now = new Date().toISOString();
+    let changed = false;
     if (!this.store.vocabulary.some((v) => v.language === language) && language === "isl") {
       // First use: seed a starter list of everyday words (labels only).
-      const now = new Date().toISOString();
       for (const v of STARTER_VOCABULARY) this.store.vocabulary.push({ id: randomUUID(), language, gloss: v.gloss, meaning: v.meaning, createdAt: now });
-      this.store.persist();
+      changed = true;
     }
+    // Every supported sign language gets its fingerspelling alphabet, so any word can be spelled.
+    if ((SUPPORTED_SIGN_LANGUAGES as readonly string[]).includes(language)) {
+      for (const v of fingerspellVocabulary(language)) {
+        if (!this.store.vocabulary.some((x) => x.language === language && x.gloss === v.gloss)) {
+          this.store.vocabulary.push({ id: randomUUID(), language, gloss: v.gloss, meaning: v.meaning, createdAt: now });
+          changed = true;
+        }
+      }
+    }
+    if (changed) this.store.persist();
     return this.store.vocabulary.filter((v) => v.language === language).sort((a, b) => a.gloss.localeCompare(b.gloss));
   }
 

@@ -5,6 +5,7 @@ import { ASR_MODEL, HAND_MODEL, formatBytes, isAsrModelInstalled, isHandModelIns
 import { getHandTracker } from "../ai/handTracker";
 import { SignSession, type SignSessionState } from "../ai/signSession";
 import { MIN_SAMPLES_PER_SIGN, PersonalSignClassifier, type Recognition } from "../ai/signRecognizer";
+import { fingerspellGlosses } from "../ai/fingerspellDetector";
 import { addSample, deleteGloss, listSamples, loadGestureMeanings, saveGestureMeanings, toTemplates, type StoredSample } from "../ai/signStore";
 import { GESTURES, GESTURE_INFO, defaultMeanings, type GestureMeanings, type GestureName } from "../ai/gestures";
 import type { LiveReading } from "../ai/signSession";
@@ -507,6 +508,23 @@ export default function TranslatorPanel({ currentUser, preferences, resolveUrl }
             </button>
           </div>
           {captureMsg && <p className="ts-msg">{captureMsg}</p>}
+
+          <div className="ts-alphabet">
+            <strong>Record your alphabet</strong>
+            <span>Tap a letter, then hold that letter still for the recording (3 times each is best). In calls you can then fingerspell any word: names, medicines, places.{language === "asl" ? " ASL already has built-in letter examples; your own recordings make it more accurate for you." : ""}</span>
+            <div className="ts-alphabet-grid">
+              {fingerspellGlosses(language).map((l) => {
+                const n = samples.filter((x) => x.gloss === l.gloss).length;
+                const ch = l.gloss.slice(3);
+                return (
+                  <button key={l.gloss} type="button" className={`${gloss === l.gloss ? "on" : ""} ${n >= 3 ? "done" : n > 0 ? "some" : ""}`} onClick={() => { setGloss(l.gloss); setMeaning(ch); }} title={`${l.meaning}: ${n} recorded`}>
+                    {ch}
+                    {n > 0 && <small>{n}</small>}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
           <div className="ts-signs">
             {glossSummary.length === 0 && <p className="ts-footnote">No signs recorded yet. Record each sign at least {MIN_SAMPLES_PER_SIGN} times (5+ is better), with small natural variations.</p>}

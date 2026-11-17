@@ -15,6 +15,18 @@ import FingerspellPlayer, { type SpellItem } from "../components/FingerspellPlay
 import { ALPHABETS, alphabetFor } from "../ai/fingerspell";
 import type { CallMode } from "./CallManager";
 import MedicalBoard from "./MedicalBoard";
+import { FS_PREFIX, FingerspellDetector, letterOf, templatesFromRaw, templatesFromSamples, type LetterTemplate } from "../ai/fingerspellDetector";
+
+/** Built-in letter examples (from the app's real hand photos); other languages learn letters from recordings. */
+async function builtInLetters(language: string | null): Promise<LetterTemplate[]> {
+  if (language !== "asl") return [];
+  try {
+    const data = await (await fetch("/signs/asl/landmarks.json")).json();
+    return templatesFromRaw(data.letters, true);
+  } catch {
+    return [];
+  }
+}
 
 const MODE_LABEL: Record<CallMode, string> = { "deaf-deaf": "Deaf ↔ Deaf", "deaf-hearing": "Deaf ↔ Hearing", standard: "Standard" };
 
@@ -135,6 +147,12 @@ export default function CallScreen({ manager, snap, currentUserId, preferences, 
 
   // Incoming assistance
   const [speakIncoming, setSpeakIncoming] = useState(!signLanguage);
+  // Fingerspelling: letters read from the camera build a word here, sent after a short pause (or with Send).
+  const [spelled, setSpelled] = useState("");
+  const [spellLetters, setSpellLetters] = useState(0);
+  const [spellHint, setSpellHint] = useState<string | null>(null);
+  const lastLetterAt = useRef(0);
+  const lastHandsAt = useRef(0);
   const [signVideo, setSignVideo] = useState<{ text: string; result: SignVideoLookup | null; error?: string } | null>(null);
   const [playbackRate, setPlaybackRate] = useState(1);
   const signVideoRef = useRef<HTMLVideoElement | null>(null);
@@ -319,7 +337,12 @@ export default function CallScreen({ manager, snap, currentUserId, preferences, 
     (async () => {
       const samples = await listSamples(currentUserId, signLanguage ?? "isl");
       if (cancelled) return;
-      const classifier = new PersonalSignClassifier(toTemplates(samples));
+      // Letters (glosses FS-A, FS-B...) go to the fingerspelling reader; words to the personal sign classifier.
+      const classifier = new PersonalSignClassifier(toTemplates(samples.filter((x) => !x.gloss.startsWith(FS_PREFIX))));
+      const letterTemplates = [...templatesFromSamples(samples.filter((x) => x.gloss.startsWith(FS_PREFIX))), ...(await builtInLetters(signLanguage))];
+      const speller = letterTemplates.length ? new FingerspellDetector(letterTemplates) : null;
+      setSpellLetters(speller?.letterCount ?? 0);
+      const spelling = () => performance.now() - lastLetterAt.current < 2000;
       const meanings = loadGestureMeanings(currentUserId);
       // Trained sign-language model for the user's sign language (published by an admin), if any.
       let model: IslRecognizer | null = null;
@@ -351,7 +374,19 @@ export default function CallScreen({ manager, snap, currentUserId, preferences, 
           if (s !== "running") setLive(null);
         },
         onLive: setLive,
+        onFrame: (features, handCount) => {
+          if (handCount > 0) lastHandsAt.current = performance.now();
+          const e = speller?.push(features, performance.now());
+          if (e?.kind === "letter") {
+            lastLetterAt.current = performance.now();
+            setSpelled((w) => (w + e.char).slice(0, 40));
+            setSpellHint(null);
+          } else if (e?.kind === "unsure") {
+            setSpellHint(`Unsure: ${e.best}${e.second ? ` or ${e.second}` : ""}? Hold the letter a little longer.`);
+          }
+        },
         onGesture: (g) => {
+          if (spelling()) return; // letter shapes look like gestures (fist, V, point): ignore them while spelling
           const meaning = meanings[g.gesture];
           if (!meaning) return; // user disabled this gesture
           setRejectNote(null);
@@ -359,6 +394,14 @@ export default function CallScreen({ manager, snap, currentUserId, preferences, 
           void deliverDetection({ label: info.label, emoji: info.emoji, meaning, confidence: g.score, engine: "mediapipe-gesture" });
         },
         onModelRecognition: (r) => {
+          // A published model that knows letters (FS-A...) adds them to the spelled word, like the letter reader.
+          const letter = r.accepted ? letterOf(r.gloss) : null;
+          if (letter) {
+            lastLetterAt.current = performance.now();
+            setSpelled((w) => (w + letter).slice(0, 40));
+            return;
+          }
+          if (spelling()) return;
           if (r.accepted) {
             setRejectNote(null);
             void deliverDetection({ label: r.gloss, meaning: r.meaning, confidence: r.confidence, engine: "isl-model" });
@@ -367,6 +410,7 @@ export default function CallScreen({ manager, snap, currentUserId, preferences, 
           }
         },
         onRecognition: (r) => {
+          if (spelling()) return;
           if (r.accepted) {
             setRejectNote(null);
             void deliverDetection({ label: r.gloss, meaning: r.meaning, confidence: r.confidence, engine: "personal-dtw" });
@@ -441,6 +485,26 @@ export default function CallScreen({ manager, snap, currentUserId, preferences, 
     setDetections((prev) => prev.filter((x) => x.status !== "pending"));
     setSuggestion(null);
   };
+
+  const sendSpelled = useCallback(() => {
+    const word = spelled.trim();
+    if (!word) return;
+    setSpelled("");
+    void send({ source: "sign", text: word, final: true, confidence: null, gloss: word.split("").map((c) => `${FS_PREFIX}${c}`), language: spokenLang, engine: "fingerspelling" });
+  }, [spelled, send, spokenLang]);
+
+  // The word is finished when the signer lowers their hands (or stops for 6 s): then it is sent.
+  // Waiting for the hands to drop means a slow letter in the middle never splits the word.
+  useEffect(() => {
+    if (!spelled) return;
+    const t = window.setInterval(() => {
+      const now = performance.now();
+      const sinceLetter = now - lastLetterAt.current;
+      const sinceHands = now - lastHandsAt.current;
+      if ((sinceLetter >= 1500 && sinceHands >= 900) || sinceLetter >= 6000) sendSpelled();
+    }, 250);
+    return () => window.clearInterval(t);
+  }, [spelled, sendSpelled]);
 
   const sendMedical = (text: string) => {
     void send({ source: "typed", text, final: true, confidence: null, language: spokenLang, engine: "medical-phrase" });
@@ -574,6 +638,23 @@ export default function CallScreen({ manager, snap, currentUserId, preferences, 
                 </p>
               </section>
               {medical && <MedicalBoard onSend={sendMedical} disabled={!active} />}
+              {signOn && spellLetters > 0 && (
+                <section className={`cp-spell ${spelled ? "has" : ""}`} aria-label="Fingerspelling" aria-live="polite">
+                  <div className="cp-spell-head">
+                    <strong>Fingerspelling</strong>
+                    <span>{spelled ? "Lower your hands to send" : `Hold each letter still. ${spellLetters} letters known.`}</span>
+                  </div>
+                  <div className="cp-spell-word">{spelled ? spelled.split("").map((c, i) => <b key={i}>{c}</b>) : <em>Spell any word, a name or a medicine…</em>}</div>
+                  {spellHint && <p className="cp-spell-hint">{spellHint}</p>}
+                  {spelled && (
+                    <div className="cp-spell-actions">
+                      <button type="button" className="btn btn-ghost btn-xs" onClick={() => setSpelled((w) => w.slice(0, -1))} aria-label="Delete last letter">⌫</button>
+                      <button type="button" className="btn btn-ghost btn-xs" onClick={() => setSpelled("")}>Clear</button>
+                      <button type="button" className="btn btn-primary btn-xs" onClick={sendSpelled}>Send “{spelled}”</button>
+                    </div>
+                  )}
+                </section>
+              )}
               {myAlphabet && (
                 <section className="cp-sign-stage" aria-label="Speech to sign">
                   <FingerspellPlayer
