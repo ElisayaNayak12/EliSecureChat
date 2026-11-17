@@ -8,11 +8,10 @@ import { useEffect, useRef, useState } from "react";
  *  - covers the screen the moment the Windows / Command key goes down (before Win+Shift+S, Cmd+Shift+3/4/5
  *    can capture), when the window loses focus (snipping tools, other apps) and when the tab is hidden;
  *  - wipes the clipboard after Print Screen, so the copied screenshot is gone;
- *  - blocks printing / "Save as PDF";
- *  - shows a faint watermark with the viewer's name and number, so a photo of the screen shows who took it.
+ *  - blocks printing / "Save as PDF".
  * The Android app blocks screenshots completely (FLAG_SECURE).
  */
-export default function ScreenShield({ viewerLabel, onAttempt }: { viewerLabel: string; onAttempt?: (how: string) => void }) {
+export default function ScreenShield({ onAttempt }: { onAttempt?: (how: string) => void }) {
   const [covered, setCovered] = useState(false);
   const [reason, setReason] = useState("");
   const release = useRef<number | null>(null);
@@ -90,14 +89,8 @@ export default function ScreenShield({ viewerLabel, onAttempt }: { viewerLabel: 
     };
   }, [onAttempt]);
 
-  const stamp = `${viewerLabel} · ${new Date().toLocaleDateString()}`;
   return (
     <>
-      <div className="screen-watermark" aria-hidden="true">
-        {Array.from({ length: 24 }, (_, i) => (
-          <span key={i}>{stamp}</span>
-        ))}
-      </div>
       {covered && (
         <div className="screen-shield-cover" role="status" onClick={() => setCovered(false)}>
           <div>

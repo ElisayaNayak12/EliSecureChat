@@ -1256,7 +1256,7 @@ The messages will be removed from your screen only. ${peerName} will still have 
       {currentUser && (
         <CallLayer manager={callManager} currentUserId={currentUser.id} preferences={preferences} resolveUrl={resolveAttachmentUrl} />
       )}
-      {currentUser && <ScreenShield viewerLabel={`${currentUser.name} · ${currentUser.phone}`} />}
+      {currentUser && <ScreenShield />}
     </main>
   );
 }

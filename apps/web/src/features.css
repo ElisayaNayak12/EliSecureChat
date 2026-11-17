@@ -79,14 +79,7 @@
 .contact-remove { margin-left: auto; border: 0; background: transparent; color: var(--aura-ink-500); cursor: pointer; padding: 4px; border-radius: 8px; }
 .contact-remove:hover { background: var(--aura-active-fill); color: var(--aura-ink-900); }
 
-/* ---- Screen shield: watermark + cover (see components/ScreenShield.tsx) ---- */
-.screen-watermark {
-  position: fixed; inset: -20%; z-index: 1500; pointer-events: none; user-select: none;
-  display: grid; grid-template-columns: repeat(4, 1fr); align-content: space-around; justify-items: center; row-gap: 90px;
-  transform: rotate(-24deg); opacity: 0.07;
-  font: 700 15px/1 var(--aura-font-sans, Inter, sans-serif); color: var(--aura-ink-900, #fff); white-space: nowrap;
-}
-html[data-theme="light"] .screen-watermark { opacity: 0.06; }
+/* ---- Screen shield: cover (see components/ScreenShield.tsx) ---- */
 .screen-shield-cover {
   position: fixed; inset: 0; z-index: 2500; display: grid; place-items: center; cursor: pointer;
   background: rgba(8, 14, 11, 0.94); -webkit-backdrop-filter: blur(30px); backdrop-filter: blur(30px);

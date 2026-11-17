@@ -23,11 +23,10 @@ try {
   await page.waitForSelector(".main-app-layout-shell", { state: "attached", timeout: 15000 });
   await page.waitForSelector(".brand-splash", { state: "detached", timeout: 8000 }).catch(() => {});
 
-  const wm = await page.locator(".screen-watermark span").first().innerText();
-  check("A faint watermark with the viewer's name and number covers the app", /Ravi/.test(wm) && /9111100002/.test(wm), wm);
+  check("No name/number watermark is shown over the app", (await page.locator(".screen-watermark").count()) === 0);
   check("Normal use is not blocked (no cover while using the app)", !(await covered()));
   await page.click('.sidebar-nav-btn[title="Contacts"]');
-  check("Clicks still work through the watermark", (await page.locator(".contacts-find").count()) === 1);
+  check("Clicks work normally", (await page.locator(".contacts-find").count()) === 1);
 
   await page.keyboard.down("Meta");
   check("Pressing the Windows/Command key covers the screen at once (before a snipping tool can capture)", await covered());
